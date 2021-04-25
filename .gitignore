@@ -26,6 +26,8 @@ wheels/
 *.egg
 MANIFEST
 data/input/
+/data/taxi_zones/
+/data/trip_data/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -115,4 +117,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/workspace.xml
-/notebooks/PDS_Project.ipynb
+
+# OS
+.DS_Store
