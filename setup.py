@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='yellowcab',
@@ -6,9 +6,10 @@ setup(
     description="Semester Project - Programming Data Science",
     author="Student",
     author_email="student@uni-koeln.de",
-    packages=["yellowcab"],
+    packages=find_packages(include=['yellowcab', 'yellowcab.*']),
     install_requires=[
         'pandas',
+        'numpy',
         'click',
         'scikit-learn'
     ],
