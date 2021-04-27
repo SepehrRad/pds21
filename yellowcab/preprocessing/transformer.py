@@ -1,6 +1,7 @@
-import pandas as pd
-import numpy as np
 import math
+
+import numpy as np
+import pandas as pd
 
 
 def _cyclical_feature_transformer(cyclical_col):
@@ -37,7 +38,7 @@ def _categorical_feature_transformer(df, categorical_col_names, drop_first=False
     :returns
         pandas.Series: the encoded categorical features
     """
-    df[categorical_col_names] = df[categorical_col_names].astype('str')
+    df[categorical_col_names] = df[categorical_col_names].astype("str")
     return pd.get_dummies(df[categorical_col_names], drop_first=drop_first)
 
 
@@ -60,20 +61,25 @@ def transform_columns(df, col_dict, drop_cols=True, drop_first=False):
     """
 
     if col_dict is None or len(col_dict) == 0:
-        raise ValueError('The columns dictionary can not be null!')
+        raise ValueError("The columns dictionary can not be null!")
     if df is None:
-        raise ValueError('The data frame can not be null!')
+        raise ValueError("The data frame can not be null!")
 
-    if len(col_dict.get('cyclical_features')) != 0:
-        for feature in col_dict.get('cyclical_features'):
-            df[f"{feature}_sine"], df[f"{feature}_cosine"] = _cyclical_feature_transformer(df[feature])
+    if len(col_dict.get("cyclical_features")) != 0:
+        for feature in col_dict.get("cyclical_features"):
+            (
+                df[f"{feature}_sine"],
+                df[f"{feature}_cosine"],
+            ) = _cyclical_feature_transformer(df[feature])
 
-    if len(col_dict.get('categorical_features')) != 0:
-        _ = _categorical_feature_transformer(df, col_dict.get('categorical_features'), drop_first=drop_first)
+    if len(col_dict.get("categorical_features")) != 0:
+        _ = _categorical_feature_transformer(
+            df, col_dict.get("categorical_features"), drop_first=drop_first
+        )
         df = df.join(_)
 
     if drop_cols:
-        df.drop(col_dict.get('cyclical_features'), inplace=True, axis=1)
-        df.drop(col_dict.get('categorical_features'), inplace=True, axis=1)
+        df.drop(col_dict.get("cyclical_features"), inplace=True, axis=1)
+        df.drop(col_dict.get("categorical_features"), inplace=True, axis=1)
 
     return df
