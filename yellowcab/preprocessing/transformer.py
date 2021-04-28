@@ -65,8 +65,9 @@ def transform_columns(df, col_dict, drop_cols=True, drop_first=False):
     if df is None:
         raise ValueError("The data frame can not be null!")
 
-    if len(col_dict.get("cyclical_features")) != 0:
-        for feature in col_dict.get("cyclical_features"):
+    cyclical_features = col_dict.get("cyclical_features")
+    if len(cyclical_features) != 0:
+        for feature in cyclical_features:
             (
                 df[f"{feature}_sine"],
                 df[f"{feature}_cosine"],
