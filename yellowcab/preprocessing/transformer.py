@@ -80,7 +80,7 @@ def transform_columns(df, col_dict, drop_cols=True, drop_first=False):
         df = df.join(_)
 
     if drop_cols:
-        df.drop(col_dict.get("cyclical_features"), inplace=True, axis=1)
-        df.drop(col_dict.get("categorical_features"), inplace=True, axis=1)
+        df.drop(cyclical_features, inplace=True, axis=1)
+        df.drop(categorical_features, inplace=True, axis=1)
 
     return df
