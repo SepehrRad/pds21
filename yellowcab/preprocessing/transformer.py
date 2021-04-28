@@ -36,7 +36,7 @@ def _categorical_feature_transformer(df, categorical_col_names, drop_first=False
         drop_first (bool): the decision to drop one category per feature
 
     :returns
-        pandas.Series: the encoded categorical features
+        pandas.DataFrame: dummy-coded DataFrame
     """
     df[categorical_col_names] = df[categorical_col_names].astype("str")
     return pd.get_dummies(df[categorical_col_names], drop_first=drop_first)
