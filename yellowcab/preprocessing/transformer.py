@@ -73,9 +73,10 @@ def transform_columns(df, col_dict, drop_cols=True, drop_first=False):
                 df[f"{feature}_cosine"],
             ) = _cyclical_feature_transformer(df[feature])
 
-    if len(col_dict.get("categorical_features")) != 0:
+    categorical_features = col_dict.get("categorical_features")
+    if len(categorical_features) != 0:
         _ = _categorical_feature_transformer(
-            df, col_dict.get("categorical_features"), drop_first=drop_first
+            df, categorical_features, drop_first=drop_first
         )
         df = df.join(_)
 
