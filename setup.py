@@ -7,6 +7,6 @@ setup(
     author="Student",
     author_email="student@uni-koeln.de",
     packages=["yellowcab"],
-    install_requires=["pandas", "click", "scikit-learn"],
+    install_requires=["pandas", "click", "scikit-learn", "pyarrow"],
     entry_points={"console_scripts": ["yellowcab=yellowcab.cli:main"]},
 )
