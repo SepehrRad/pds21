@@ -3,6 +3,15 @@ from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 
 def get_season_in_ny(date_time):
+    """
+                This function says what season the input belongs to.
+                ----------------------------------------------
+                :param
+                    datr_time
+
+                :returns
+                    String
+        """
     seasons = [('winter', (date(2020, 1, 1), date(2020, 3, 18))),
                ('spring', (date(2020, 3, 19), date(2020, 6, 19))),
                ('summer', (date(2020, 6, 20), date(2020, 9, 20))),
@@ -17,9 +26,17 @@ def get_season_in_ny(date_time):
 
 
 def create_season_column(data_set, date_column):
-    # cloning the input dataset.
+    """
+            This function adds a column saying if the date is a holiday day in NY.
+            ----------------------------------------------
+            :param
+                data_set
+                date_column
+
+            :returns
+                data_set
+    """
     local = data_set.copy()
-    # The apply method calls a function on each row
     local['Season'] = local[date_column].apply(get_season_in_ny)
     return local
 
