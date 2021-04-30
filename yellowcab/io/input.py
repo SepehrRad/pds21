@@ -6,14 +6,6 @@ import pandas as pd
 from .utils import get_data_path
 
 
-def read_file(path=os.path.join(get_data_path(), "input/trip_data", "<My_data>.parquet")):
-    try:
-        df = pd.read_csv(path)
-        return df
-    except FileNotFoundError:
-        print("Data file not found. Path was " + path)
-
-
 def read_parquet(file, base_path=get_data_path(), relative_path="input/trip_data"):
     """
     This function reads a parquet file & returns it as a pd.DataFrame.
