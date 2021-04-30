@@ -47,6 +47,39 @@ def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_da
         print("Data file not found. Path was " + path)
 
 
+def read_parquet_sample(file, base_path=get_data_path(), relative_path="input/trip_data", n=1000):
+    """
+    This function reads a parquet file & returns a random data sample as a pd.DataFrame.
+    ----------------------------------------------
+    :param
+        file(String): Name of file
+        base_path(String): Path to data directory. Defaults to wd/data.
+        relative_path(String): Path to directory with file in base_path. Defaults to input/trip_data.
+        n(int): Sample size. Default is 1000.
+    :returns
+        pd.DataFrame: DataFrame containing a random data sample from a single parquet file.
+    """
+    df = read_parquet(file=file, base_path=base_path, relative_path=relative_path)
+    df = df.sample(n).sort_index()
+    return df
+
+
+def read_parquet_dataset_sample(base_path=get_data_path(), relative_path="input/trip_data", n=1000):
+    """
+    This function reads a directory of parquet files & returns a random data sample in a single pd.DataFrame.
+    ----------------------------------------------
+    :param
+        base_path(String): Path to data directory. Defaults to wd/data.
+        relative_path(String): Path to directory with parquet dataset in base_path. Defaults to input/trip_data.
+        n(int): Sample size. Default is 1000.
+    :returns
+        pd.DataFrame: DataFrame containing a random data sample from all parquet files in path.
+    """
+    df = read_parquet_dataset(base_path=base_path, relative_path=relative_path)
+    df = df.sample(n).sort_index()
+    return df
+
+
 def read_model(name="model.pkl"):
     path = os.path.join(get_data_path(), "output", name)
     with open(path, "rb") as f:
