@@ -26,13 +26,14 @@ def create_season_column(data_set, date_column):
 
 def create_holiday_column(data_set, date_column):
     """
-            This function adds a column saying of the date is a holiday day in NY.
+            This function adds a column saying if the date is a holiday day in NY.
             ----------------------------------------------
             :param
-                timestamp
+                data_set
+                date_column
 
             :returns
-                boolean
+                data_set
         """
     cal = calendar()
     holidays = cal.holidays(data_set[date_column].min(), data_set[date_column].max())
