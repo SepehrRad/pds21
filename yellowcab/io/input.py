@@ -1,7 +1,8 @@
 import os
 import pickle
-import pyarrow.parquet as pq
+
 import pandas as pd
+import pyarrow.parquet as pq
 
 from .utils import get_data_path
 
@@ -47,7 +48,9 @@ def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_da
         print("Data file not found. Path was " + path)
 
 
-def read_parquet_sample(file, base_path=get_data_path(), relative_path="input/trip_data", n=1000):
+def read_parquet_sample(
+    file, base_path=get_data_path(), relative_path="input/trip_data", n=1000
+):
     """
     This function reads a parquet file & returns a random data sample as a pd.DataFrame.
     ----------------------------------------------
@@ -64,7 +67,9 @@ def read_parquet_sample(file, base_path=get_data_path(), relative_path="input/tr
     return df
 
 
-def read_parquet_dataset_sample(base_path=get_data_path(), relative_path="input/trip_data", n=1000):
+def read_parquet_dataset_sample(
+    base_path=get_data_path(), relative_path="input/trip_data", n=1000
+):
     """
     This function reads a directory of parquet files & returns a random data sample in a single pd.DataFrame.
     ----------------------------------------------
