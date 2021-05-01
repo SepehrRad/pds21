@@ -1,4 +1,14 @@
-def get_date_components(df):
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import IsolationForest
+from sklearn.covariance import EllipticEnvelope
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.svm import OneClassSVM
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+
+
+def __get_date_components(df):
     df["start_month"] = df["tpep_pickup_datetime"].dt.month
     df["start_day"] = df["tpep_pickup_datetime"].dt.day
     df["start_hour"] = df["tpep_pickup_datetime"].dt.hour
@@ -8,26 +18,37 @@ def get_date_components(df):
     return df
 
 
-def is_weekend(df):
+def __is_weekend(df):
     # get day of week from pickup
     df["weekend"] = df["tpep_pickup_datetime"].dt.dayofweek > 4
     return df
 
 
-def get_position(df):
-    df["centers"] = df["geometry"].centroid
+def __get_duration(df):
+    df["trip_duration_minutes"] = (df["tpep_dropoff_datetime"] - df["tpep_pickup_datetime"]).dt.total_seconds() / 60
     return df
 
 
-def get_duration(df):
-    df["trip_duration_minutes"] = df["tpep_dropoff_datetime"] - df["tpep_pickup_datetime"]
-    return df
-
-
-def to_int(df):
+def __to_int(df):
     df["passenger_count"] = df["passenger_count"].astype("int")
-    df["RatecodeID"] = df["RatecodeID"].astype("int")
-    df["payment_type"] = df["payment_type"].astype("int")
+    return df
+
+
+def __replace_ids(df):
+    rate_id_dict = {1.0: 'Standard rate', 2.0: 'JFK', 3.0: 'Newark', 4.0: 'Nassau/Westchester', 5.0: 'Negotiated fare',
+                    6.0: 'Group ride'}
+    payment_type_dict = {1.0: 'Credit card', 2.0: 'Cash', 3.0: 'No charge', 4.0: 'Dispute', 5.0: 'Unknown',
+                         6.0: 'Voided trip'}
+    df['RatecodeID'].replace(rate_id_dict, inplace=True)
+    df['payment_type'].replace(payment_type_dict, inplace=True)
+    return df
+
+
+def __categorical(df):
+    df['RatecodeID'] = df['RatecodeID'].astype('category')
+    df['payment_type'] = df['payment_type'].astype('category')
+    df['PULocationID'] = df['PULocationID'].astype('category')
+    df['DOLocationID'] = df['DOLocationID'].astype('category')
     return df
 
 
@@ -75,3 +96,84 @@ def remove_outliers(df):
     time = df[(df["trip_duration_minutes"].dt.seconds > 28800) | (df["trip_duration_minutes"].dt.seconds < 0)]
     df = df[~df.isin(time).all(1)]
     return df
+
+
+def clean_dataset(df, y_column, random_state=42):
+    # df = __replace_ids(df)
+    df = __categorical(df)
+    df = __to_int(df)
+    df = __get_date_components(df)
+    df = __is_weekend(df)
+    df = __get_duration(df)
+    df = df.drop(columns=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
+    # split data into train and test set
+    X_train, X_test, y_train, y_test = __split_data(df, y_column, random_state)
+    __baseline(X_train, X_test, y_train, y_test)
+    __isolation_forest(X_train, X_test, y_train, y_test, random_state)
+    # __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state)
+    # __local_outlier_factor(X_train, X_test, y_train, y_test)
+    # __one_class_svm(X_train, X_test, y_train, y_test)
+    # TODO: return dataframe without outliers
+    return df
+
+
+def __baseline(X_train, X_test, y_train, y_test):
+    # summarize the shape of the training dataset
+    print('Shape with outliers:', X_train.shape, y_train.shape)
+    # fit the model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    # evaluate the model
+    yhat = model.predict(X_test)
+    # evaluate predictions
+    mae = mean_absolute_error(y_test, yhat)
+    print('MAE with outliers: %.3f' % mae)
+
+
+def __isolation_forest(X_train, X_test, y_train, y_test, random_state):
+    # identify outliers in the training dataset
+    iso = IsolationForest(random_state=random_state)
+    yhat = iso.fit_predict(X_train)
+    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "isolation forest")
+
+
+def __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state):
+    # identify outliers in the training dataset
+    ee = EllipticEnvelope(random_state=random_state)
+    yhat = ee.fit_predict(X_train)
+    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "minimum covariance determinant")
+
+
+def __local_outlier_factor(X_train, X_test, y_train, y_test):
+    # identify outliers in the training dataset
+    lof = LocalOutlierFactor()
+    yhat = lof.fit_predict(X_train)
+    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "local outlier factor")
+
+
+def __one_class_svm(X_train, X_test, y_train, y_test):
+    # identify outliers in the training dataset
+    ocsvm = OneClassSVM()
+    yhat = ocsvm.fit_predict(X_train)
+    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "one class SVM")
+
+
+def __split_data(df, y_column, random_state):
+    X, y = df.drop(columns=y_column).values, df[y_column].values
+    return train_test_split(X, y, test_size=0.3, random_state=random_state)
+
+
+def __lr_model_performance(X_train, X_test, y_train, y_test, yhat, name):
+    # select all rows that are not outliers
+    mask = yhat != -1
+    X_train, y_train = X_train[mask, :], y_train[mask]
+    # summarize the shape of the updated training dataset
+    print(f'Shape {name}:', X_train.shape, y_train.shape)
+    # fit the model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    # evaluate the model
+    yhat = model.predict(X_test)
+    # evaluate predictions
+    mae = mean_absolute_error(y_test, yhat)
+    print(f'MAE {name}: %.3f' % mae)
