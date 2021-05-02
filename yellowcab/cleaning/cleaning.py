@@ -98,7 +98,7 @@ def remove_outliers(df):
     return df
 
 
-def clean_dataset(df, y_column, random_state=42):
+def clean_dataset(df, y_column, method='isolation', random_state=42):
     # df = __replace_ids(df)
     df = __categorical(df)
     df = __to_int(df)
@@ -108,13 +108,22 @@ def clean_dataset(df, y_column, random_state=42):
     df = df.drop(columns=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
     # split data into train and test set
     X_train, X_test, y_train, y_test = __split_data(df, y_column, random_state)
+    # Testing several outlier detection algorithms
     __baseline(X_train, X_test, y_train, y_test)
-    __isolation_forest(X_train, X_test, y_train, y_test, random_state)
-    # __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state)
-    # __local_outlier_factor(X_train, X_test, y_train, y_test)
-    # __one_class_svm(X_train, X_test, y_train, y_test)
-    # TODO: return dataframe without outliers
-    return df
+    if method == 'isolation':
+        X_train, y_train = __isolation_forest(X_train, X_test, y_train, y_test, random_state)
+    elif method == 'covariance':
+        X_train, y_train = __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state)
+    elif method == 'local':
+        X_train, y_train = __local_outlier_factor(X_train, X_test, y_train, y_test)
+    elif method == 'svm':
+        X_train, y_train = __one_class_svm(X_train, X_test, y_train, y_test)
+    # concat the X and y data together using the old column names
+    column_names_x = list(df.columns)
+    column_names_x.remove(y_column)
+    X_train = pd.DataFrame(X_train, columns=column_names_x)
+    y_train = pd.DataFrame(y_train, columns=[y_column])
+    return pd.concat([X_train, y_train], axis=1)
 
 
 def __baseline(X_train, X_test, y_train, y_test):
@@ -134,28 +143,28 @@ def __isolation_forest(X_train, X_test, y_train, y_test, random_state):
     # identify outliers in the training dataset
     iso = IsolationForest(random_state=random_state)
     yhat = iso.fit_predict(X_train)
-    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "isolation forest")
+    return __lr_model_performance(X_train, X_test, y_train, y_test, yhat, 'isolation forest')
 
 
 def __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state):
     # identify outliers in the training dataset
     ee = EllipticEnvelope(random_state=random_state)
     yhat = ee.fit_predict(X_train)
-    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "minimum covariance determinant")
+    return __lr_model_performance(X_train, X_test, y_train, y_test, yhat, 'minimum covariance determinant')
 
 
 def __local_outlier_factor(X_train, X_test, y_train, y_test):
     # identify outliers in the training dataset
     lof = LocalOutlierFactor()
     yhat = lof.fit_predict(X_train)
-    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "local outlier factor")
+    return __lr_model_performance(X_train, X_test, y_train, y_test, yhat, 'local outlier factor')
 
 
 def __one_class_svm(X_train, X_test, y_train, y_test):
     # identify outliers in the training dataset
     ocsvm = OneClassSVM()
     yhat = ocsvm.fit_predict(X_train)
-    __lr_model_performance(X_train, X_test, y_train, y_test, yhat, "one class SVM")
+    return __lr_model_performance(X_train, X_test, y_train, y_test, yhat, 'one class SVM')
 
 
 def __split_data(df, y_column, random_state):
@@ -177,3 +186,4 @@ def __lr_model_performance(X_train, X_test, y_train, y_test, yhat, name):
     # evaluate predictions
     mae = mean_absolute_error(y_test, yhat)
     print(f'MAE {name}: %.3f' % mae)
+    return X_train, y_train
