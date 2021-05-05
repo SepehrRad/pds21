@@ -1,7 +1,6 @@
 import os
 import pickle
 
-import pandas as pd
 import pyarrow.parquet as pq
 
 from .utils import get_data_path
@@ -39,7 +38,7 @@ def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_da
     :returns
         pd.DataFrame: DataFrame containing data from all parquet files in path.
     :raises
-        FileNotFoundError: Data file not found in given directory.
+        FileNotFoundError: ParquetDataset not found in given directory.
     """
     path = os.path.join(base_path, relative_path)
     try:
@@ -53,7 +52,7 @@ def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_da
 
 
 def read_parquet_sample(
-    file, base_path=get_data_path(), relative_path="input/trip_data", n=1000
+    file, base_path=get_data_path(), relative_path="input/trip_data", frac=0.1
 ):
     """
     This function reads a parquet file & returns a random data sample as a pd.DataFrame.
@@ -62,17 +61,17 @@ def read_parquet_sample(
         file(String): Name of file.
         base_path(String): Path to data directory. Defaults to wd/data.
         relative_path(String): Path to directory with file in base_path. Defaults to input/trip_data.
-        n(int): Sample size. Default is 1000.
+        frac(float): Sample size in % (0.0 - 1.0). Default is 0.1.
     :returns
         pd.DataFrame: DataFrame containing a random data sample from a single parquet file.
     """
     df = read_parquet(file=file, base_path=base_path, relative_path=relative_path)
-    df = df.sample(n).sort_index()
+    df = df.sample(frac=frac).reset_index()
     return df
 
 
 def read_parquet_dataset_sample(
-    base_path=get_data_path(), relative_path="input/trip_data", n=1000
+    base_path=get_data_path(), relative_path="input/trip_data", frac=0.1
 ):
     """
     This function reads a directory of parquet files & returns a random data sample in a single pd.DataFrame.
@@ -80,12 +79,12 @@ def read_parquet_dataset_sample(
     :param
         base_path(String): Path to data directory. Defaults to wd/data.
         relative_path(String): Path to directory with parquet dataset in base_path. Defaults to input/trip_data.
-        n(int): Sample size. Default is 1000.
+        frac(float): Sample size in % (0.0 - 1.0). Default is 0.1.
     :returns
         pd.DataFrame: DataFrame containing a random data sample from all parquet files in path.
     """
     df = read_parquet_dataset(base_path=base_path, relative_path=relative_path)
-    df = df.sample(n).sort_index()
+    df = df.sample(frac=frac).reset_index()
     return df
 
 
