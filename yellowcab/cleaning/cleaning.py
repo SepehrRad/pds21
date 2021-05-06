@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_error
 
 def __get_date_components(df):
     """
-    This function splits the pickup- and dropoff-time columns into 3 columns each, devided by month, day and hour &
+    This function splits the pickup- and dropoff-time columns into 3 columns each, divided by month, day and hour &
     returns the processed DataFrame.
 
     ----------------------------------------------
@@ -19,7 +19,7 @@ def __get_date_components(df):
     :param
         df(pd.DataFrame): DataFrame to be processed.
     :returns
-        df(pd.DataFrame): Processed DataFrame.
+        pd.DataFrame: Processed DataFrame.
     """
     df["start_month"] = df["tpep_pickup_datetime"].dt.month
     df["start_day"] = df["tpep_pickup_datetime"].dt.day
@@ -40,7 +40,7 @@ def __is_weekend(df):
     :param
         df(pd.DataFrame): DataFrame to be processed.
     :returns
-        df(pd.DataFrame): Processed DataFrame.
+        pd.DataFrame: Processed DataFrame.
     """
     # get day of week from pickup
     df["weekend"] = df["tpep_pickup_datetime"].dt.dayofweek > 4
@@ -56,7 +56,7 @@ def __get_duration(df):
     :param
         df(pd.DataFrame): DataFrame to be processed.
     :returns
-        df(pd.DataFrame): Processed DataFrame.
+        pd.DataFrame: Processed DataFrame.
     """
     df["trip_duration_minutes"] = (df["tpep_dropoff_datetime"] - df["tpep_pickup_datetime"]).dt.total_seconds() / 60
     return df
@@ -72,7 +72,7 @@ def __to_int(df):
     :param
         df(pd.DataFrame): DataFrame to be processed.
     :returns
-        df(pd.DataFrame): Processed DataFrame.
+        pd.DataFrame: Processed DataFrame.
     """
     df["passenger_count"] = df["passenger_count"].astype("int")
     return df
@@ -87,7 +87,7 @@ def __replace_ids(df):
     :param
         df(pd.DataFrame): DataFrame to be processed.
     :returns
-        df(pd.DataFrame): Processed DataFrame.
+        pd.DataFrame: Processed DataFrame.
     """
     rate_id_dict = {1.0: 'Standard rate', 2.0: 'JFK', 3.0: 'Newark', 4.0: 'Nassau/Westchester', 5.0: 'Negotiated fare',
                     6.0: 'Group ride'}
@@ -100,15 +100,15 @@ def __replace_ids(df):
 
 def __categorical(df):
     """
-     This function sets several columns as type 'category' & returns the processed DataFrame.
+    This function sets several columns as type 'category' & returns the processed DataFrame.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         df(pd.DataFrame): DataFrame to be processed.
-     :returns
-         df(pd.DataFrame): Processed DataFrame.
-     """
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+    :returns
+        pd.DataFrame: Processed DataFrame.
+    """
     df['RatecodeID'] = df['RatecodeID'].astype('category')
     df['payment_type'] = df['payment_type'].astype('category')
     df['PULocationID'] = df['PULocationID'].astype('category')
@@ -118,15 +118,15 @@ def __categorical(df):
 
 def remove_faulty_data(df):
     """
-     This function combines several detections of faulty data, drops them & returns the processed DataFrame.
+    This function combines several detections of faulty data, drops them & returns the processed DataFrame.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         df(pd.DataFrame): DataFrame to be processed.
-     :returns
-         df(pd.DataFrame): Processed DataFrame.
-     """
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+    :returns
+        pd.DataFrame: Processed DataFrame.
+    """
     for column in ['passenger_count', 'trip_distance']:
         df[column] = df.loc[df[column] > 0, [column]]
 
@@ -158,20 +158,20 @@ def remove_faulty_data(df):
 
 def clean_dataset(df, y_column, method='isolation', random_state=42):
     """
-     This function calls several DataFrame optimization functions from this package,
-     calls a chosen ('method') outlier detection algorithm & returns the processed DataFrame.
+    This function calls several DataFrame optimization functions from this package,
+    calls a chosen ('method') outlier detection algorithm & returns the processed DataFrame.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         df(pd.DataFrame): DataFrame to be processed.
-         y_column(String): Name of the target feature column.
-         method(String): Name of the outlier detection method that is called within this function.
-         random_state(int): Value of random_state variable to make the train and test splits deterministic and
-         reproducible results.
-     :returns
-         pd.DataFrame: Processed DataFrame.
-     """
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        y_column(String): Name of the target feature column.
+        method(String): Name of the outlier detection method that is called within this function.
+        random_state(int): Value of random_state variable to make the train and test splits deterministic and
+        reproducible results.
+    :returns
+        pd.DataFrame: Processed DataFrame.
+    """
     # df = __replace_ids(df)
     df = __categorical(df)
     df = __to_int(df)
@@ -201,20 +201,20 @@ def clean_dataset(df, y_column, method='isolation', random_state=42):
 
 def __baseline(X_train, X_test, y_train, y_test):
     """
-     This function provides a baseline in performance to which we can compare different outlier identification
-     and removal procedures & prints the shape and MAE of the DataFrame with outliers included.
+    This function provides a baseline in performance to which we can compare different outlier identification
+    and removal procedures & prints the shape and MAE of the DataFrame with outliers included.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         X_train(pd.DataFrame): Features of the training set.
-         X_test(pd.DataFrame): Features of the test set.
-         y_train(pd.DataFrame): Target features of the training set.
-         y_test(pd.DataFrame): Target features of the test set.
-     :returns
-         print(): Shape of the training set with outliers included.
-         print(): MAE with outliers.
-     """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+    :returns
+        print(): Shape of the training set with outliers included.
+        print(): MAE with outliers.
+    """
     # summarize the shape of the training dataset
     print('Shape with outliers:', X_train.shape, y_train.shape)
     # fit the model
@@ -229,20 +229,20 @@ def __baseline(X_train, X_test, y_train, y_test):
 
 def __isolation_forest(X_train, X_test, y_train, y_test, random_state):
     """
-     This function detects outliers by making use of Isolation Forest from the sklearn-package & calls the
-     __lr_model_performance function.
+    This function detects outliers by making use of Isolation Forest from the sklearn-package & calls the
+    __lr_model_performance function.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         X_train(pd.DataFrame): Features of the training set.
-         X_test(pd.DataFrame): Features of the test set.
-         y_train(pd.DataFrame): Target features of the training set.
-         y_test(pd.DataFrame): Target features of the test set.
-         random_state(int): Value of random_state variable for reproducible results.
-     :returns
-         calls(): __lr_model_performance with train and test split and detected outliers.
-     """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+        random_state(int): Value of random_state variable for reproducible results.
+    :returns
+        calls(): __lr_model_performance with train and test split and detected outliers.
+    """
     # identify outliers in the training dataset
     iso = IsolationForest(random_state=random_state)
     yhat = iso.fit_predict(X_train)
@@ -251,20 +251,20 @@ def __isolation_forest(X_train, X_test, y_train, y_test, random_state):
 
 def __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_state):
     """
-     This function detects outliers by making use of Minimum Covariance Determinant method from the sklearn-package &
-      calls the __lr_model_performance function.
+    This function detects outliers by making use of Minimum Covariance Determinant method from the sklearn-package &
+    calls the __lr_model_performance function.
 
-     ----------------------------------------------
+    ----------------------------------------------
 
-     :param
-         X_train(pd.DataFrame): Features of the training set.
-         X_test(pd.DataFrame): Features of the test set.
-         y_train(pd.DataFrame): Target features of the training set.
-         y_test(pd.DataFrame): Target features of the test set.
-         random_state(int): Value of random_state variable for reproducible results.
-     :returns
-         calls(): __lr_model_performance with train and test split and detected outliers.
-     """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+        random_state(int): Value of random_state variable for reproducible results.
+    :returns
+        calls(): __lr_model_performance with train and test split and detected outliers.
+    """
     # identify outliers in the training dataset
     ee = EllipticEnvelope(random_state=random_state)
     yhat = ee.fit_predict(X_train)
@@ -273,19 +273,19 @@ def __minimum_covariance_determinant(X_train, X_test, y_train, y_test, random_st
 
 def __local_outlier_factor(X_train, X_test, y_train, y_test):
     """
-      This function detects outliers by making use of Local Outlier Factor technique from the sklearn-package &
-       calls the __lr_model_performance function.
+    This function detects outliers by making use of Local Outlier Factor technique from the sklearn-package &
+    calls the __lr_model_performance function.
 
-      ----------------------------------------------
+    ----------------------------------------------
 
-      :param
-          X_train(pd.DataFrame): Features of the training set.
-          X_test(pd.DataFrame): Features of the test set.
-          y_train(pd.DataFrame): Target features of the training set.
-          y_test(pd.DataFrame): Target features of the test set.
-      :returns
-          calls(): __lr_model_performance with train and test split and detected outliers.
-      """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+    :returns
+        calls(): __lr_model_performance with train and test split and detected outliers.
+    """
     # identify outliers in the training dataset
     lof = LocalOutlierFactor()
     yhat = lof.fit_predict(X_train)
@@ -294,19 +294,19 @@ def __local_outlier_factor(X_train, X_test, y_train, y_test):
 
 def __one_class_svm(X_train, X_test, y_train, y_test):
     """
-      This function detects outliers by making use of One-Class SVM from the sklearn-package &
-       calls the __lr_model_performance function.
+    This function detects outliers by making use of One-Class SVM from the sklearn-package &
+    calls the __lr_model_performance function.
 
-      ----------------------------------------------
+    ----------------------------------------------
 
-      :param
-          X_train(pd.DataFrame): Features of the training set.
-          X_test(pd.DataFrame): Features of the test set.
-          y_train(pd.DataFrame): Target features of the training set.
-          y_test(pd.DataFrame): Target features of the test set.
-      :returns
-          calls(): __lr_model_performance with train and test split and detected outliers.
-      """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+    :returns
+        calls(): __lr_model_performance with train and test split and detected outliers.
+    """
     # identify outliers in the training dataset
     ocsvm = OneClassSVM()
     yhat = ocsvm.fit_predict(X_train)
@@ -315,42 +315,42 @@ def __one_class_svm(X_train, X_test, y_train, y_test):
 
 def __split_data(df, y_column, random_state):
     """
-      This function splits the given DataFrame into training and test splits.
+    This function splits the given DataFrame into training and test splits.
 
-      ----------------------------------------------
+    ----------------------------------------------
 
-      :param
-          df(pd.DataFrame): DataFrame to be processed.
-          y_column(String): Name of the target feature column.
-          random_state(int): Value of random_state variable to make the train and test splits deterministic and
-          reproducible results.
-      :returns
-          pd.DataFrame: X_train, X_test, y_train, y_test as DataFrames
-      """
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        y_column(String): Name of the target feature column.
+        random_state(int): Value of random_state variable to make the train and test splits deterministic and
+        reproducible results.
+    :returns
+        pd.DataFrame: X_train, X_test, y_train, y_test as DataFrames
+    """
     X, y = df.drop(columns=y_column).values, df[y_column].values
     return train_test_split(X, y, test_size=0.3, random_state=random_state)
 
 
 def __lr_model_performance(X_train, X_test, y_train, y_test, yhat, name):
     """
-      This function generates Linear Regression models considering the dropped outliers ('yhat') &
-       calls the __lr_model_performance function.
+    This function generates Linear Regression models considering the dropped outliers ('yhat') &
+    calls the __lr_model_performance function.
 
-      ----------------------------------------------
+    ----------------------------------------------
 
-      :param
-          X_train(pd.DataFrame): Features of the training set.
-          X_test(pd.DataFrame): Features of the test set.
-          y_train(pd.DataFrame): Target features of the training set.
-          y_test(pd.DataFrame): Target features of the test set.
-          yhat(pd.DataFrame): Outliers to drop
-          name(String): Name of the used method to determine outliers
-      :returns
-          print(): Shape of the Training DataFrames
-          print(): MAE of y_test and yhat
-          X_train(pd.DataFrame): Feature training split
-          Y_train(pd.DataFrame): Target feature training split
-      """
+    :param
+        X_train(pd.DataFrame): Features of the training set.
+        X_test(pd.DataFrame): Features of the test set.
+        y_train(pd.DataFrame): Target features of the training set.
+        y_test(pd.DataFrame): Target features of the test set.
+        yhat(pd.DataFrame): Outliers to drop
+        name(String): Name of the used method to determine outliers
+    :returns
+        print(): Shape of the Training DataFrames
+        print(): MAE of y_test and yhat
+        pd.DataFrame: Feature training split
+        pd.DataFrame: Target feature training split
+    """
     # select all rows that are not outliers
     mask = yhat != -1
     X_train, y_train = X_train[mask, :], y_train[mask]
