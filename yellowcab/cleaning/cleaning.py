@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import IsolationForest
 from sklearn.covariance import EllipticEnvelope
@@ -115,9 +116,9 @@ def __categorical(df):
     return df
 
 
-def remove_outliers(df):
+def remove_faulty_data(df):
     """
-     This function combines several detections of outliers,drops them & returns the processed DataFrame.
+     This function combines several detections of faulty data, drops them & returns the processed DataFrame.
 
      ----------------------------------------------
 
@@ -126,49 +127,33 @@ def remove_outliers(df):
      :returns
          df(pd.DataFrame): Processed DataFrame.
      """
-    # remove voyages
-    voyages = df[df["passenger_count"] <= 0]
-    df = df[~df.isin(voyages).all(1)]
-    # remove trips with trip_distance = 0
-    trips = df[df["trip_distance"] <= 0]
-    df = df[~df.isin(trips).all(1)]
+    for column in ['passenger_count', 'trip_distance']:
+        df[column] = df.loc[df[column] > 0, [column]]
+
+    for column in ['fare_amount', 'extra', 'tip_amount', 'tolls_amount', 'congestion_surcharge']:
+        df[column] = df.loc[df[column] >= 0, [column]]
+
     # remove invalid ratecodes
-    ratecodes = df[(df["RatecodeID"] > 6) | (df["RatecodeID"] < 1)]
-    df = df[~df.isin(ratecodes).all(1)]
+    df['RatecodeID'] = df.loc[(df['RatecodeID'] <= 6) & (df['RatecodeID'] >= 1), ['RatecodeID']]
     # remove invalid PULocations (no geojson data for zones > 263 and unknown boroughs)
-    PU = df[(df["PULocationID"] > 263) | (df["PULocationID"] < 1)]
-    df = df[~df.isin(PU).all(1)]
+    df['PULocationID'] = df.loc[(df['PULocationID'] <= 263) & (df['PULocationID'] >= 1), ['PULocationID']]
     # remove invalid DOLocations (no geojson data for zones > 263 and unknown boroughs)
-    DO = df[(df["DOLocationID"] > 263) | (df["DOLocationID"] < 1)]
-    df = df[~df.isin(DO).all(1)]
+    df['DOLocationID'] = df.loc[(df['DOLocationID'] <= 263) & (df['DOLocationID'] >= 1), ['DOLocationID']]
     # remove invalid payments types
-    payment = df[(df["payment_type"] > 6) | (df["payment_type"] < 1)]
-    df = df[~df.isin(payment).all(1)]
-    # remove trips with fare amount < 0
-    fare = df[df["fare_amount"] < 0]
-    df = df[~df.isin(fare).all(1)]
-    # remove trips with extra < 0
-    extra = df[df["extra"] < 0]
-    df = df[~df.isin(extra).all(1)]
+    df['payment_type'] = df.loc[(df['payment_type'] <= 6) & (df['payment_type'] >= 1), ['payment_type']]
     # remove trips with mta_tax != 0 or != 0.5
-    mta = df[(df["mta_tax"] != 0) & (df["mta_tax"] != 0.5)]
-    df = df[~df.isin(mta).all(1)]
-    # remove trips with tips < 0
-    tip = df[df["tip_amount"] < 0]
-    df = df[~df.isin(tip).all(1)]
-    # remove trips with tolls < 0
-    tolls = df[df["tolls_amount"] < 0]
-    df = df[~df.isin(tolls).all(1)]
+    df['mta_tax'] = df.loc[(df['mta_tax'] == 0) | (df['mta_tax'] == 0.5), ['mta_tax']]
     # remove trips with improvement_surcharge != 0 or != 0.3
-    surcharge = df[(df["improvement_surcharge"] != 0) & (df["improvement_surcharge"] != 0.3)]
-    df = df[~df.isin(surcharge).all(1)]
-    # remove trips with congestion_surcharge < 0
-    congestion = df[df["congestion_surcharge"] < 0]
-    df = df[~df.isin(congestion).all(1)]
-    # remove trips with driving time larger than 8 hours or smaller than 0
-    time = df[(df["trip_duration_minutes"].dt.seconds > 28800) | (df["trip_duration_minutes"].dt.seconds < 0)]
-    df = df[~df.isin(time).all(1)]
-    return df
+    df['improvement_surcharge'] = df.loc[(df['improvement_surcharge'] == 0) | (df['improvement_surcharge'] == 0.3),
+                                         ['improvement_surcharge']]
+    df.rename(columns={'tpep_pickup_datetime': 'pickup_datetime', 'tpep_dropoff_datetime': 'dropoff_datetime'},
+              inplace=True)
+    # remove pickups before 1.1.2020 or after 31.12.2020
+    df['pickup_datetime'] = df.loc[(df['pickup_datetime'] >= datetime.datetime(2020, 1, 1)) &
+                                   (df['pickup_datetime'] <= datetime.datetime(2020, 12, 31)), ['pickup_datetime']]
+    df['dropoff_datetime'] = df.loc[(df['dropoff_datetime'] >= datetime.datetime(2020, 1, 1)) &
+                                    (df['dropoff_datetime'] <= datetime.datetime(2020, 12, 31)), ['dropoff_datetime']]
+    return df.dropna()
 
 
 def clean_dataset(df, y_column, method='isolation', random_state=42):
@@ -193,7 +178,7 @@ def clean_dataset(df, y_column, method='isolation', random_state=42):
     df = __get_date_components(df)
     df = __is_weekend(df)
     df = __get_duration(df)
-    df = df.drop(columns=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
+    df = df.drop(columns=['pickup_datetime', 'dropoff_datetime'])
     # split data into train and test set
     X_train, X_test, y_train, y_test = __split_data(df, y_column, random_state)
     # Testing several outlier detection algorithms
