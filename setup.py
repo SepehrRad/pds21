@@ -10,7 +10,8 @@ setup(
     install_requires=[
         'pandas',
         'click',
-        'scikit-learn'
+        'scikit-learn',
+        'pyarrow'
     ],
     entry_points={
         'console_scripts': ['yellowcab=yellowcab.cli:main']
