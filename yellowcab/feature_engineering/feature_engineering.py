@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+import pandas as pd
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 
@@ -145,3 +146,12 @@ def create_covid_relevant_features(data_set, date_column):
     data_set["covid_school_restrictions"].fillna(0, inplace=True)
 
     return data_set
+
+
+def agg_stats(time_series, data_series, agg_functions=["min", "max", "mean", "median", "std", "var", "sem"]):
+    time_series_name = time_series.name
+    data_series_name = data_series.name
+    df = pd.concat([time_series, data_series], axis=1)
+    df = df.groupby(time_series_name)[data_series_name].agg(agg_functions)
+    df = df.add_suffix("_" + data_series_name)
+    return df
