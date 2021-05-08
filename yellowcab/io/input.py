@@ -6,7 +6,9 @@ import pyarrow.parquet as pq
 from .utils import get_data_path
 
 
-def read_parquet(file, base_path=get_data_path(), relative_path="input/trip_data", columns=None):
+def read_parquet(
+    file, base_path=get_data_path(), relative_path="input/trip_data", columns=None
+):
     """
     This function reads a parquet file & returns it as a pd.DataFrame.
     ----------------------------------------------
@@ -29,7 +31,9 @@ def read_parquet(file, base_path=get_data_path(), relative_path="input/trip_data
         print("Data file not found. Path was " + path)
 
 
-def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_data", columns=None):
+def read_parquet_dataset(
+    base_path=get_data_path(), relative_path="input/trip_data", columns=None
+):
     """
     This function reads a directory of parquet files & returns them as a single pd.DataFrame.
     ----------------------------------------------
@@ -53,7 +57,11 @@ def read_parquet_dataset(base_path=get_data_path(), relative_path="input/trip_da
 
 
 def read_parquet_sample(
-    file, base_path=get_data_path(), relative_path="input/trip_data", columns=None, frac=0.1
+    file,
+    base_path=get_data_path(),
+    relative_path="input/trip_data",
+    columns=None,
+    frac=0.1,
 ):
     """
     This function reads a parquet file & returns a random data sample as a pd.DataFrame.
@@ -68,7 +76,9 @@ def read_parquet_sample(
     :returns
         pd.DataFrame: DataFrame containing a random data sample from a single parquet file.
     """
-    df = read_parquet(file=file, base_path=base_path, relative_path=relative_path, columns=columns)
+    df = read_parquet(
+        file=file, base_path=base_path, relative_path=relative_path, columns=columns
+    )
     df = df.sample(frac=frac).reset_index(drop=True)
     return df
 
@@ -88,7 +98,9 @@ def read_parquet_dataset_sample(
     :returns
         pd.DataFrame: DataFrame containing a random data sample from all parquet files in path.
     """
-    df = read_parquet_dataset(base_path=base_path, relative_path=relative_path, columns=columns)
+    df = read_parquet_dataset(
+        base_path=base_path, relative_path=relative_path, columns=columns
+    )
     df = df.sample(frac=frac).reset_index(drop=True)
     return df
 
