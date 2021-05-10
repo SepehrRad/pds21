@@ -18,8 +18,6 @@ def write_parquet(df, filename, base_path=get_data_path(), relative_path="output
         file(String): Name of file.
         base_path(String): Path to data directory. Defaults to wd/data.
         relative_path(String): Path to directory with file in base_path. Defaults to input/trip_data.
-    :raises
-        FileNotFoundError: Data file not found in given directory.
     """
     path = os.path.join(base_path, relative_path, filename)
     try:

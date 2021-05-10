@@ -11,7 +11,10 @@ setup(
         'pandas',
         'click',
         'scikit-learn',
-        'pyarrow'
+        'pyarrow',
+        'numpy',
+        'scipy',
+        'pyod'
     ],
     entry_points={
         'console_scripts': ['yellowcab=yellowcab.cli:main']
