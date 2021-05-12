@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import datetime
 from pyod.models.hbos import HBOS
 from scipy.stats import zscore
@@ -74,6 +75,8 @@ def __replace_ids(df):
                          6.0: 'Voided trip'}
     df['RatecodeID'].replace(rate_id_dict, inplace=True)
     df['payment_type'].replace(payment_type_dict, inplace=True)
+    df = df[pd.to_numeric(df['RatecodeID'], errors='coerce').isna()]
+    df = df[pd.to_numeric(df['payment_type'], errors='coerce').isna()]
     return df
 
 
@@ -206,9 +209,12 @@ def clean_dataset(df, month, verbose=False):
     df = __remove_invalid_numeric_data(df, verbose=verbose)
     df = __remove_date_outliers(df, month=month, verbose=verbose)
     __get_duration(df)
-    df = __remove_outliers(df, density_sensitive_cols=['congestion_surcharge', 'passenger_count', 'total_amount',
-                                                       'trip_duration_minutes'], verbose=verbose)
+    df = __replace_ids(df)
+    df = __remove_outliers(df,
+                           density_sensitive_cols=['passenger_count', 'total_amount', 'trip_duration_minutes',
+                                                   'trip_distance', 'congestion_surcharge', 'tip_amount'],
+                           n_bins='auto',
+                           verbose=verbose)
     __get_date_components(df)
     __is_weekend(df)
-    __replace_ids(df)
     return df
