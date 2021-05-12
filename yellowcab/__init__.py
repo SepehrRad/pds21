@@ -1,1 +1,1 @@
-from . import io, model, preprocessing, cleaning
+from . import io, model, preprocessing, feature_engineering, cleaning
