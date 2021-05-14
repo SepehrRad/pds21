@@ -30,7 +30,7 @@ def __get_date_components(df):
 
 def __is_weekend(df):
     """
-    This function adds a "weekend"-column to the given DataFrame. It indicates whether the the trip is on the
+    This function adds a 'weekend'-column to the given DataFrame. It indicates whether the the trip is on the
     weekend (TRUE) or not (FALSE) & returns the processed DataFrame.
 
     ----------------------------------------------
@@ -46,7 +46,7 @@ def __is_weekend(df):
 
 def __get_duration(df):
     """
-    This function adds a "trip_duration_minutes"-column to the given DataFrame & returns the processed DataFrame
+    This function adds a 'trip_duration_minutes'-column to the given DataFrame & returns the processed DataFrame.
 
     ----------------------------------------------
 
@@ -60,7 +60,7 @@ def __get_duration(df):
 
 def __replace_ids(df):
     """
-    This function replaces the IDs of "rate_id_dict" and "payment_type_dict" & returns the processed DataFrame.
+    This function replaces the IDs of 'rate_id_dict' and 'payment_type_dict' & returns the processed DataFrame.
 
     ----------------------------------------------
 
@@ -98,6 +98,16 @@ def __set_column_types(df):
 
 
 def __remove_invalid_numeric_data(df, verbose=False):
+    """
+    This functions removes negative (faulty) numeric values from the given DataFrame & returns the processed DataFrame.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+    :returns
+        pd.DataFrame: Processed DataFrame.
+    """
     df_numeric_view = df.select_dtypes(include='number')
     sum_negative_entries = 0
     for col in df_numeric_view.columns:
@@ -115,6 +125,27 @@ def __remove_invalid_numeric_data(df, verbose=False):
 
 def __remove_outliers(df, density_sensitive_cols, excluded_cols=None, n_bins=10,
                       zscore_threshold=4.5, verbose=False, contamination=0.1, tol=0.5, alpha=0.1):
+    """
+    This functions removes outliers by applying two different algorithms on specific columns:
+
+    - outliers in density sensitive columns get detected by 'zscore'-algorthm.
+    - outliers in other columns get detected by 'HBOS'-algorithm.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        density_sensitive_cols(list): Columns to run 'zscore'-algorithm on.
+        excluded_cols(list): Columns without outlier detection.
+        n_bins(int): Hyperparameter for 'HBOS'-algorithm.
+        zscore_threshold(float): Hyperparameter for 'zscore'-algorithm.
+        verbose(boolean): Set 'True' to get detailed logging information.
+        contamination(float): Hyperparameter for 'HBOS'-algorithm.
+        tol(float): Hyperparameter for 'HBOS'-algorithm.
+        alpha(float): Hyperparameter for 'HBOS'-algorithm.
+    :returns
+        pd.DataFrame: Processed DataFrame.
+    """
     if n_bins == 'auto':
         n_bins = int(1 + 3.322 * np.log(df.shape[0]))  # Sturge’s Rule for detecting bin numbers automatically
 
@@ -151,15 +182,16 @@ def __remove_outliers(df, density_sensitive_cols, excluded_cols=None, n_bins=10,
 
 def __remove_date_outliers(df, month, verbose=False):
     """
+    This function removes trips from the given DataFrame, which do not start in the expected month.
 
     ----------------------------------------------
 
     :param
-        df(pd.DataFrame):
-        month(integer):
-        verbose(boolean):
+        df(pd.DataFrame): DataFrame to be processed.
+        month(integer): Month of the year (1 = January, 2 = February...).
+        verbose(boolean): Set 'True' to get detailed logging information.
     :returns:
-        pd.DataFrame:
+        pd.DataFrame: Processed DataFrame.
     """
     day = __get_days_per_month(month=month)
     early_outliers = df[df['pickup_datetime'] < datetime.datetime(2020, month, 1)]
@@ -177,13 +209,14 @@ def __remove_date_outliers(df, month, verbose=False):
 
 def __get_days_per_month(month):
     """
+    This function returns the month days of the given month.
 
     ----------------------------------------------
 
     :param
-        month(integer):
+        month(integer): Month of the year (1 = January, 2 = February...).
     :returns:
-        integer:
+        integer: Number of days.
     """
     if month == 2:
         return 29
@@ -195,11 +228,14 @@ def __get_days_per_month(month):
 
 def clean_dataset(df, month, verbose=False):
     """
+    This function combines all functions of this 'cleaning'-class to detect and delete outliers and faulty trips.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
+        month(integer): Month of the year (1 = January, 2 = February...).
+        verbose(boolean): Set 'True' to get detailed logging information.
     :returns
         pd.DataFrame: Processed DataFrame.
     """
