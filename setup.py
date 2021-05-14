@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-requirements = ["pandas", "numpy", "click", "scikit-learn"]
+requirements = ["pandas", "numpy", "click", "scikit-learn", "pyarrow"]
 
 setup(
     name="yellowcab",
@@ -21,5 +21,5 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Topic :: Education",
-    ]
+    ],
 )
