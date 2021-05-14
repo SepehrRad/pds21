@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import datetime
 from pyod.models.hbos import HBOS
 from scipy.stats import zscore
 
@@ -11,7 +10,7 @@ column_description = {
     'spatial_features': ['PULocationID', 'DOLocationID']}
 
 
-def __get_date_components(df):
+def _get_date_components(df):
     """
     This function splits the pickup- and dropoff-time columns into 3 columns each, divided by month, day and hour &
     returns the processed DataFrame.
@@ -28,37 +27,33 @@ def __get_date_components(df):
         df[f'{name}_hour'] = df[col].dt.hour
 
 
-def __is_weekend(df):
+def _is_weekend(df):
     """
     This function adds a 'weekend'-column to the given DataFrame. It indicates whether the the trip is on the
-    weekend (TRUE) or not (FALSE) & returns the processed DataFrame.
+    weekend (TRUE) or not (FALSE).
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
-    :returns
-        pd.DataFrame: Processed DataFrame.
     """
     # get day of week from pickup
     df['weekend'] = df['pickup_datetime'].dt.dayofweek > 4
 
 
-def __get_duration(df):
+def _get_duration(df):
     """
-    This function adds a 'trip_duration_minutes'-column to the given DataFrame & returns the processed DataFrame.
+    This function adds a 'trip_duration_minutes'-column to the given DataFrame.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
-    :returns
-        pd.DataFrame: Processed DataFrame.
     """
     df['trip_duration_minutes'] = (df['dropoff_datetime'] - df['pickup_datetime']).dt.total_seconds() / 60
 
 
-def __replace_ids(df):
+def _replace_ids(df):
     """
     This function replaces the IDs of 'rate_id_dict' and 'payment_type_dict' & returns the processed DataFrame.
 
@@ -80,7 +75,7 @@ def __replace_ids(df):
     return df
 
 
-def __set_column_types(df):
+def _set_column_types(df):
     """
     Sets the column types for the given DataFrame.
 
@@ -97,7 +92,7 @@ def __set_column_types(df):
     df[spatial_cols] = df[spatial_cols].astype('str')
 
 
-def __remove_invalid_numeric_data(df, verbose=False):
+def _remove_invalid_numeric_data(df, verbose=False):
     """
     This functions removes negative (faulty) numeric values from the given DataFrame & returns the processed DataFrame.
 
@@ -105,6 +100,7 @@ def __remove_invalid_numeric_data(df, verbose=False):
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
+        verbose(boolean): Set 'True' to get detailed logging information.
     :returns
         pd.DataFrame: Processed DataFrame.
     """
@@ -123,8 +119,8 @@ def __remove_invalid_numeric_data(df, verbose=False):
     return df.reset_index(drop=True)
 
 
-def __remove_outliers(df, density_sensitive_cols, excluded_cols=None, n_bins=10,
-                      zscore_threshold=4.5, verbose=False, contamination=0.1, tol=0.5, alpha=0.1):
+def _remove_outliers(df, density_sensitive_cols, excluded_cols=None, n_bins=10,
+                     zscore_threshold=4.5, verbose=False, contamination=0.1, tol=0.5, alpha=0.1):
     """
     This functions removes outliers by applying two different algorithms on specific columns:
 
@@ -180,7 +176,7 @@ def __remove_outliers(df, density_sensitive_cols, excluded_cols=None, n_bins=10,
     return df.reset_index(drop=True)
 
 
-def __remove_date_outliers(df, month, verbose=False):
+def _remove_date_outliers(df, month):
     """
     This function removes trips from the given DataFrame, which do not start in the expected month.
 
@@ -189,41 +185,15 @@ def __remove_date_outliers(df, month, verbose=False):
     :param
         df(pd.DataFrame): DataFrame to be processed.
         month(integer): Month of the year (1 = January, 2 = February...).
-        verbose(boolean): Set 'True' to get detailed logging information.
     :returns:
         pd.DataFrame: Processed DataFrame.
     """
-    day = __get_days_per_month(month=month)
-    early_outliers = df[df['pickup_datetime'] < datetime.datetime(2020, month, 1)]
-    late_outliers = df[df['pickup_datetime'] > datetime.datetime(2020, month, day, 23, 59, 59)]
-    if verbose:
-        print(f'--> {early_outliers.shape[0]} earlier date entries found in pickup')
-        print(f'--> {late_outliers.shape[0]} later date entries found in pickup')
-    df.drop(early_outliers.index, inplace=True)
-    df.drop(late_outliers.index, inplace=True)
-    date_outliers = early_outliers.shape[0] + late_outliers.shape[0]
+    date_outliers = df.shape[0]
+    df = df[~((df['pickup_datetime'].dt.year != 2020) | (df['pickup_datetime'].dt.month != month))]
+    date_outliers -= df.shape[0]
     print(f'{date_outliers} invalid date entries have been successfully dropped!')
-
+    
     return df.reset_index(drop=True)
-
-
-def __get_days_per_month(month):
-    """
-    This function returns the month days of the given month.
-
-    ----------------------------------------------
-
-    :param
-        month(integer): Month of the year (1 = January, 2 = February...).
-    :returns:
-        integer: Number of days.
-    """
-    if month == 2:
-        return 29
-    m = [1, 3, 5, 7, 8, 10, 12]
-    if month in m:
-        return 31
-    return 30
 
 
 def clean_dataset(df, month, verbose=False):
@@ -241,16 +211,17 @@ def clean_dataset(df, month, verbose=False):
     """
     df.rename(columns={'tpep_pickup_datetime': 'pickup_datetime', 'tpep_dropoff_datetime': 'dropoff_datetime'},
               inplace=True)
-    __set_column_types(df)
-    df = __remove_invalid_numeric_data(df, verbose=verbose)
-    df = __remove_date_outliers(df, month=month, verbose=verbose)
-    __get_duration(df)
-    df = __replace_ids(df)
-    df = __remove_outliers(df,
-                           density_sensitive_cols=['passenger_count', 'total_amount', 'trip_duration_minutes',
-                                                   'trip_distance', 'congestion_surcharge', 'tip_amount'],
-                           n_bins='auto',
-                           verbose=verbose)
-    __get_date_components(df)
-    __is_weekend(df)
+    _set_column_types(df)
+    df = _remove_invalid_numeric_data(df, verbose=verbose)
+
+    df = _remove_date_outliers(df, month=month)
+    _get_duration(df)
+    df = _replace_ids(df)
+    df = _remove_outliers(df,
+                          density_sensitive_cols=['passenger_count', 'total_amount', 'trip_duration_minutes',
+                                                  'trip_distance', 'congestion_surcharge', 'tip_amount'],
+                          n_bins='auto',
+                          verbose=verbose)
+    _get_date_components(df)
+    _is_weekend(df)
     return df
