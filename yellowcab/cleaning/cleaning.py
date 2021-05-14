@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
+import geopandas
 from pyod.models.hbos import HBOS
 from scipy.stats import zscore
+
+import yellowcab.io
 
 column_description = {
     'cyclical_features': ['start_month', 'start_day', 'start_hour', 'end_hour', 'end_day', 'end_month'],
@@ -194,6 +197,22 @@ def _remove_date_outliers(df, month):
     print(f'{date_outliers} invalid date entries have been successfully dropped!')
     
     return df.reset_index(drop=True)
+
+
+def merge_geodata(df):
+    zones_gdf = yellowcab.io.read_geo_dataset('taxi_zones.csv', 'taxi_zones.geojson')
+    zones_gdf['centers_long'] = zones_gdf['geometry'].centroid.x
+    zones_gdf['centers_lat'] = zones_gdf['geometry'].centroid.y
+    df_gdf = df.merge(
+        zones_gdf[['LocationID', 'geometry', 'Borough', 'Zone', 'service_zone', 'centers_lat', 'centers_long']],
+        how="left", left_on='PULocationID', right_on='LocationID')
+    df_gdf = df_gdf.merge(
+        zones_gdf[['LocationID', 'geometry', 'Borough', 'Zone', 'service_zone', 'centers_lat', 'centers_long']],
+        how="left", left_on='DOLocationID', right_on='LocationID', suffixes=("_pickup", "_dropoff"))
+
+    # remove
+    df_gdf.dropna(inplace=True)
+    df_gdf.head()
 
 
 def clean_dataset(df, month, verbose=False):
