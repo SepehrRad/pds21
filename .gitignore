@@ -29,8 +29,6 @@ wheels/
 MANIFEST
 data/input/
 data/output/
-/data/taxi_zones/
-/data/trip_data/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
