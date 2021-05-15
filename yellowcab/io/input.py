@@ -106,7 +106,7 @@ def read_parquet_dataset_sample(
     return df
 
 
-def read_geo_dataset(csv_file, geojson_file, base_path=get_data_path(), relative_path="input/trip_data"):
+def read_geo_dataset(csv_file, geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"):
     """
     This function reads a geojson and an associated csv file & returns it as a pd.DataFrame.
     ----------------------------------------------
