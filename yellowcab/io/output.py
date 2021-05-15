@@ -1,15 +1,12 @@
 import os
 import pickle
-
-import pyarrow as pa
-import pyarrow.parquet as pq
-
+import geopandas
 from .utils import get_data_path
 
 
 def write_parquet(df, filename, base_path=get_data_path(), relative_path="output"):
     """
-    This function reads a pd.Dataframe file & returns it as a parquet file.
+    This function reads a pd.Dataframe, casts it to a GeoDataFrame and saves it as a parquet.
 
     ----------------------------------------------
 
@@ -21,8 +18,8 @@ def write_parquet(df, filename, base_path=get_data_path(), relative_path="output
     """
     path = os.path.join(base_path, relative_path, filename)
     try:
-        table = pa.Table.from_pandas(df)
-        pq.write_table(table, path)
+        gdf = geopandas.GeoDataFrame(df)
+        gdf.to_parquet(path)
     except FileNotFoundError:
         print("Data file not found. Path was " + path)
 
