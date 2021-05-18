@@ -106,7 +106,7 @@ def read_parquet_dataset_sample(
     return df
 
 
-def read_geo_dataset(csv_file, geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"):
+def read_geo_dataset(geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"):
     """
     This function reads a geojson and an associated csv file & returns it as a pd.DataFrame.
     ----------------------------------------------
@@ -118,13 +118,6 @@ def read_geo_dataset(csv_file, geojson_file, base_path=get_data_path(), relative
     :returns
         pd.DataFrame: DataFrame containing data from both input files.
     """
-    csv_path = os.path.join(base_path, relative_path, csv_file)
-    try:
-        taxi_zone_df = pd.read_csv(csv_path)
-        taxi_zone_df.dropna(inplace=True)
-    except FileNotFoundError:
-        print("Data file not found. Path was " + csv_path)
-
     geojson_path = os.path.join(base_path, relative_path, geojson_file)
     try:
         nyc_zones = gpd.read_file(geojson_path)
@@ -132,8 +125,7 @@ def read_geo_dataset(csv_file, geojson_file, base_path=get_data_path(), relative
         nyc_zones = nyc_zones.to_crs('EPSG:4326')
     except FileNotFoundError:
         print("Data file not found. Path was " + geojson_path)
-    zones_gdf = nyc_zones.merge(taxi_zone_df, how='left', on="LocationID")
-    return zones_gdf
+    return nyc_zones
 
 
 def read_model(name="model.pkl"):

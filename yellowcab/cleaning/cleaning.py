@@ -211,15 +211,15 @@ def _merge_geodata(df):
     :returns:
         pd.DataFrame: Merged DataFrame.
     """
-    zones_gdf = yellowcab.io.read_geo_dataset('taxi_zones.csv', 'taxi_zones.geojson')
+    zones_gdf = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
     zones_gdf['centers_long'] = zones_gdf['geometry'].centroid.x
     zones_gdf['centers_lat'] = zones_gdf['geometry'].centroid.y
     zones_gdf['LocationID'] = zones_gdf['LocationID'].astype('str')
     df_gdf = df.merge(
-        zones_gdf[['LocationID', 'geometry', 'Borough', 'Zone', 'service_zone', 'centers_lat', 'centers_long']],
+        zones_gdf[['LocationID', 'geometry', 'centers_lat', 'centers_long']],
         how="left", left_on='PULocationID', right_on='LocationID')
     df_gdf = df_gdf.merge(
-        zones_gdf[['LocationID', 'geometry', 'Borough', 'Zone', 'service_zone', 'centers_lat', 'centers_long']],
+        zones_gdf[['LocationID', 'geometry', 'centers_lat', 'centers_long']],
         how="left", left_on='DOLocationID', right_on='LocationID', suffixes=("_pickup", "_dropoff"))
     zone_outliers = df_gdf.shape[0]
     df_gdf.dropna(inplace=True)
@@ -259,4 +259,4 @@ def clean_dataset(df, month, verbose=False):
                           verbose=verbose)
     _get_date_components(df)
     _is_weekend(df)
-    return df.drop(columns=['PULocationID', 'DOLocationID'])
+    return df.drop(columns=['LocationID_pickup', 'LocationID_dropoff'])
