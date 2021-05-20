@@ -1,6 +1,8 @@
 import os
 import pickle
 
+import geopandas as gpd
+import pandas as pd
 import pyarrow.parquet as pq
 
 from .utils import get_data_path
@@ -103,6 +105,30 @@ def read_parquet_dataset_sample(
     )
     df = df.sample(frac=frac).reset_index(drop=True)
     return df
+
+
+def read_geo_dataset(
+    geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"
+):
+    """
+    This function reads a geojson and an associated csv file & returns it as a pd.DataFrame.
+    ----------------------------------------------
+    :param
+        csv_file(String): Name of csv file.
+        geojson_file(String): Name of geojson file.
+        base_path(String): Path to data directory. Defaults to wd/data.
+        relative_path(String): Path to directory with file in base_path. Defaults to input/trip_data.
+    :returns
+        pd.DataFrame: DataFrame containing data from both input files.
+    """
+    geojson_path = os.path.join(base_path, relative_path, geojson_file)
+    try:
+        nyc_zones = gpd.read_file(geojson_path)
+        nyc_zones.crs = "epsg:2263"
+        nyc_zones = nyc_zones.to_crs("EPSG:4326")
+    except FileNotFoundError:
+        print("Data file not found. Path was " + geojson_path)
+    return nyc_zones
 
 
 def read_model(name="model.pkl"):
