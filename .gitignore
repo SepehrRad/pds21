@@ -27,6 +27,8 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+data/input/
+data/output/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -116,3 +118,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/workspace.xml
+
+# OS
+.DS_Store
