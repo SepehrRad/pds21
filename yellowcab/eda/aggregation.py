@@ -1,7 +1,11 @@
 import pandas as pd
 
 
-def agg_stats(group_series, data_series, agg_functions=["min", "max", "mean", "median", "std", "var", "sem"]):
+def agg_stats(
+    group_series,
+    data_series,
+    agg_functions=["min", "max", "mean", "median", "std", "var", "sem"],
+):
     """
     This function calculates (user specified) aggregated statistics of two input series & returns them as DataFrame.
     ----------------------------------------------
@@ -23,14 +27,14 @@ def agg_stats(group_series, data_series, agg_functions=["min", "max", "mean", "m
 
 def describe_stats(group_series, data_series):
     """
-     This function calculates a set of aggregated statistics of two input series & returns them as DataFrame.
-     ----------------------------------------------
-     :param
-         group_series(pd.Series): Data you want to group by.
-         data_series(pd.Series): Data you want aggregated.
-     :returns
-         pd.DataFrame: DataFrame containing aggregated statistics.
-     """
+    This function calculates a set of aggregated statistics of two input series & returns them as DataFrame.
+    ----------------------------------------------
+    :param
+        group_series(pd.Series): Data you want to group by.
+        data_series(pd.Series): Data you want aggregated.
+    :returns
+        pd.DataFrame: DataFrame containing aggregated statistics.
+    """
     group_series_name = group_series.name
     data_series_name = data_series.name
     df = pd.concat([group_series, data_series], axis=1)
