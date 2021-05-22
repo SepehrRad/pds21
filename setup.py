@@ -11,7 +11,7 @@ requirements = [
     "geopandas",
     "folium",
     "plotly",
-    "branca"
+    "branca",
 ]
 
 setup(
