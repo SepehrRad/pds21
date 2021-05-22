@@ -2,9 +2,9 @@ import pandas as pd
 
 
 def agg_stats(
-        group_series,
-        data_series,
-        agg_functions=None,
+    group_series,
+    data_series,
+    agg_functions=None,
 ):
     """
     This function calculates (user specified) aggregated statistics of two input series & returns them as DataFrame.
