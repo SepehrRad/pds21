@@ -129,7 +129,7 @@ def _generate_base_map(default_location="New York", map_style='cartodbpositron',
     if default_location is not None and default_location not in locations:
         raise ValueError("Could not find the given location coordinates.")
 
-    if default_location is "Manhattan":
+    if default_location == "Manhattan":
         default_zoom_start = 12
 
     default_location = locations.get(default_location)
