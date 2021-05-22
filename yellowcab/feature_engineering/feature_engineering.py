@@ -145,3 +145,5 @@ def create_covid_relevant_features(data_set, date_column):
     data_set["covid_school_restrictions"].fillna(0, inplace=True)
 
     return data_set
+
+
