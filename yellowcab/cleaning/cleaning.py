@@ -279,7 +279,7 @@ def _merge_geodata(df):
     return df_gdf.reset_index(drop=True)
 
 
-def clean_dataset(df, month, verbose=False):
+def _clean_dataset(df, month, verbose=False):
     """
     This function combines all functions of this 'cleaning'-class to detect and delete outliers and faulty trips.
     Furthermore the geodata is getting merged.
@@ -333,7 +333,15 @@ def clean_dataset(df, month, verbose=False):
 
 def clean_all_datasets(base_path=get_data_path(), relative_path="input/trip_data", verbose=False):
     """
-    Doc String!
+    This function reads in all the data, cleans it and saves the cleaned dataframes as parquet files in the output
+    directory.
+
+    ----------------------------------------------
+
+    :param
+        base_path(String): Path to data directory. Defaults to wd/data.
+        relative_path(String): Path to directory with file in base_path. Defaults to input/trip_data.
+        verbose(boolean): Set 'True' to get detailed logging information.
     """
     data_path = join(base_path, relative_path)
     data_sets = [dataset for dataset in listdir(data_path) if isfile(join(data_path, dataset))]
@@ -343,6 +351,6 @@ def clean_all_datasets(base_path=get_data_path(), relative_path="input/trip_data
         # assumes 01.parquet,02.parquet,...
         month = int(parquet_file.split('.parquet')[0])
         print(f'Started cleaning the {calendar.month_name[month]} data set')
-        cleaned_df = clean_dataset(read_parquet(parquet_file), month=month, verbose=verbose)
+        cleaned_df = _clean_dataset(read_parquet(parquet_file), month=month, verbose=verbose)
         write_parquet(cleaned_df, filename=f'{calendar.month_name[month]}_cleaned.parquet')
         print(f'Finished cleaning the {calendar.month_name[month]} data set')
