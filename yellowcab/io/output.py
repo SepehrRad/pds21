@@ -1,8 +1,6 @@
 import os
 import pickle
-
 import geopandas
-
 from .utils import get_data_path
 
 
@@ -20,8 +18,7 @@ def write_parquet(df, filename, base_path=get_data_path(), relative_path="output
     """
     path = os.path.join(base_path, relative_path, filename)
     try:
-        gdf = geopandas.GeoDataFrame(df)
-        gdf.to_parquet(path)
+        df.to_parquet(path)
     except FileNotFoundError:
         print("Data file not found. Path was " + path)
 

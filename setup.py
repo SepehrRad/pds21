@@ -1,15 +1,6 @@
 from setuptools import find_packages, setup
 
-requirements = [
-    "pandas",
-    "numpy",
-    "click",
-    "scikit-learn",
-    "pyarrow",
-    "scipy",
-    "pyod",
-    "geopandas",
-]
+requirements = ["pandas", "numpy", "click", "scikit-learn", "pyarrow", 'scipy', 'pyod', 'geopandas', 'tqdm']
 
 setup(
     name="yellowcab",
