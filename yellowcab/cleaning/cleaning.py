@@ -345,6 +345,7 @@ def clean_all_datasets(base_path=get_data_path(), relative_path="input/trip_data
     """
     data_path = join(base_path, relative_path)
     data_sets = [dataset for dataset in listdir(data_path) if isfile(join(data_path, dataset))]
+    data_sets = sorted(data_sets)
     if not all('.parquet' in name for name in data_sets):
         raise ValueError("The given directory includes non parquet files")
     for parquet_file in tqdm(data_sets):
