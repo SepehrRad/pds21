@@ -153,15 +153,15 @@ def _remove_invalid_numeric_data(df, verbose=False):
 
 
 def _remove_outliers(
-        df,
-        density_sensitive_cols,
-        excluded_cols=None,
-        n_bins=10,
-        zscore_threshold=4.5,
-        verbose=False,
-        contamination=0.1,
-        tol=0.5,
-        alpha=0.1,
+    df,
+    density_sensitive_cols,
+    excluded_cols=None,
+    n_bins=10,
+    zscore_threshold=4.5,
+    verbose=False,
+    contamination=0.1,
+    tol=0.5,
+    alpha=0.1,
 ):
     """
     This functions removes outliers by applying two different algorithms on specific columns:
@@ -241,8 +241,8 @@ def _remove_date_outliers(df, month):
     date_outliers = df.shape[0]
     df = df[
         ~(
-                (df["pickup_datetime"].dt.year != 2020)
-                | (df["pickup_datetime"].dt.month != month)
+            (df["pickup_datetime"].dt.year != 2020)
+            | (df["pickup_datetime"].dt.month != month)
         )
     ]
     date_outliers -= df.shape[0]
