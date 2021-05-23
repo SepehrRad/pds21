@@ -1,16 +1,17 @@
-import warnings
-import numpy as np
-import pandas as pd
 import calendar
-from pyod.models.hbos import HBOS
-from scipy.stats import zscore
-from yellowcab.io.input import read_geo_dataset
-from yellowcab.io.utils import get_data_path
+import warnings
 from os import listdir
 from os.path import isfile, join
+
+import numpy as np
+import pandas as pd
+from pyod.models.hbos import HBOS
+from scipy.stats import zscore
 from tqdm import tqdm
-from yellowcab.io.input import read_parquet
+
+from yellowcab.io.input import read_geo_dataset, read_parquet
 from yellowcab.io.output import write_parquet
+from yellowcab.io.utils import get_data_path
 
 warnings.filterwarnings("ignore")
 
@@ -70,8 +71,8 @@ def _get_duration(df):
         df(pd.DataFrame): DataFrame to be processed.
     """
     df["trip_duration_minutes"] = (
-                                          df["dropoff_datetime"] - df["pickup_datetime"]
-                                  ).dt.total_seconds() / 60
+        df["dropoff_datetime"] - df["pickup_datetime"]
+    ).dt.total_seconds() / 60
 
 
 def _replace_ids(df):
@@ -262,16 +263,23 @@ def _merge_geodata(df):
     :returns:
         pd.DataFrame: Merged DataFrame.
     """
-    zones_gdf = read_geo_dataset('taxi_zones.geojson')
-    zones_gdf['centers_long'] = zones_gdf['geometry'].centroid.x
-    zones_gdf['centers_lat'] = zones_gdf['geometry'].centroid.y
-    zones_gdf['LocationID'] = zones_gdf['LocationID'].astype('str')
+    zones_gdf = read_geo_dataset("taxi_zones.geojson")
+    zones_gdf["centers_long"] = zones_gdf["geometry"].centroid.x
+    zones_gdf["centers_lat"] = zones_gdf["geometry"].centroid.y
+    zones_gdf["LocationID"] = zones_gdf["LocationID"].astype("str")
     df_gdf = df.merge(
-        zones_gdf[['LocationID', 'centers_lat', 'centers_long']],
-        how="left", left_on='PULocationID', right_on='LocationID')
+        zones_gdf[["LocationID", "centers_lat", "centers_long"]],
+        how="left",
+        left_on="PULocationID",
+        right_on="LocationID",
+    )
     df_gdf = df_gdf.merge(
-        zones_gdf[['LocationID', 'centers_lat', 'centers_long']],
-        how="left", left_on='DOLocationID', right_on='LocationID', suffixes=("_pickup", "_dropoff"))
+        zones_gdf[["LocationID", "centers_lat", "centers_long"]],
+        how="left",
+        left_on="DOLocationID",
+        right_on="LocationID",
+        suffixes=("_pickup", "_dropoff"),
+    )
     zone_outliers = df_gdf.shape[0]
     df_gdf.dropna(inplace=True)
     zone_outliers -= df_gdf.shape[0]
@@ -327,11 +335,13 @@ def _clean_dataset(df, month, verbose=False):
     )
     _get_date_components(df)
     _is_weekend(df)
-    df = df.loc[~(df['payment_type'] == 'Unknown')]
-    return df.drop(columns=['LocationID_pickup', 'LocationID_dropoff'])
+    df = df.loc[~(df["payment_type"] == "Unknown")]
+    return df.drop(columns=["LocationID_pickup", "LocationID_dropoff"])
 
 
-def clean_all_datasets(base_path=get_data_path(), relative_path="input/trip_data", verbose=False):
+def clean_all_datasets(
+    base_path=get_data_path(), relative_path="input/trip_data", verbose=False
+):
     """
     This function reads in all the data, cleans it and saves the cleaned dataframes as parquet files in the output
     directory.
@@ -344,14 +354,20 @@ def clean_all_datasets(base_path=get_data_path(), relative_path="input/trip_data
         verbose(boolean): Set 'True' to get detailed logging information.
     """
     data_path = join(base_path, relative_path)
-    data_sets = [dataset for dataset in listdir(data_path) if isfile(join(data_path, dataset))]
+    data_sets = [
+        dataset for dataset in listdir(data_path) if isfile(join(data_path, dataset))
+    ]
     data_sets = sorted(data_sets)
-    if not all('.parquet' in name for name in data_sets):
+    if not all(".parquet" in name for name in data_sets):
         raise ValueError("The given directory includes non parquet files")
     for parquet_file in tqdm(data_sets):
         # assumes 01.parquet,02.parquet,...
-        month = int(parquet_file.split('.parquet')[0])
-        print(f'Started cleaning the {calendar.month_name[month]} data set')
-        cleaned_df = _clean_dataset(read_parquet(parquet_file), month=month, verbose=verbose)
-        write_parquet(cleaned_df, filename=f'{calendar.month_name[month]}_cleaned.parquet')
-        print(f'Finished cleaning the {calendar.month_name[month]} data set')
+        month = int(parquet_file.split(".parquet")[0])
+        print(f"Started cleaning the {calendar.month_name[month]} data set")
+        cleaned_df = _clean_dataset(
+            read_parquet(parquet_file), month=month, verbose=verbose
+        )
+        write_parquet(
+            cleaned_df, filename=f"{calendar.month_name[month]}_cleaned.parquet"
+        )
+        print(f"Finished cleaning the {calendar.month_name[month]} data set")
