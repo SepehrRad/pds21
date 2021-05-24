@@ -59,6 +59,7 @@ def _is_weekend(df):
     """
     # get day of week from pickup
     df["weekend"] = df["pickup_datetime"].dt.dayofweek > 4
+    df["weekend"] = df["weekend"].astype(int)
 
 
 def _get_duration(df):
