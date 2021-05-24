@@ -9,6 +9,7 @@ requirements = [
     "scipy",
     "pyod",
     "geopandas",
+    "tqdm",
 ]
 
 setup(
