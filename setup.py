@@ -12,8 +12,7 @@ requirements = [
     "folium",
     "plotly",
     "branca",
-    "tqdm"
-
+    "tqdm",
 ]
 
 setup(
