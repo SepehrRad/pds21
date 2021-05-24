@@ -12,13 +12,14 @@ from panel.interact import fixed, interact
 from yellowcab.io.input import read_geo_dataset
 
 
+
+
 def _create_monthly_choropleth(
     df,
     month="Jan",
     aspect="pickup",
     log_count=False,
     cmap="YlGn",
-    zoom=11,
     map_style="cartodbpositron",
     location="New York",
 ):
@@ -80,7 +81,7 @@ def _create_monthly_choropleth(
             raise ValueError("Unknown aggregation aspect")
 
     base_map = _generate_base_map(
-        default_location=location, map_style=map_style, default_zoom_start=zoom
+        default_location=location, map_style=map_style
     )
     choropleth = folium.Choropleth(
         geo_data=nyc_zones,
@@ -94,7 +95,6 @@ def _create_monthly_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
-    folium.LayerControl().add_to(base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
@@ -137,16 +137,12 @@ def _create_choropleth_tab(df):
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan"]
     )
-    zoom_option = pn.widgets.IntSlider(
-        name="Zoom Factor", start=5, end=20, step=1, value=10
-    )
     log_checkbox = pn.widgets.Checkbox(name="Log scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_monthly_choropleth,
         location=focus_area_options,
         map_style=map_options,
-        zoom=zoom_option,
         log_count=log_checkbox,
         cmap=cmap_option,
         month=month_options,
@@ -162,7 +158,7 @@ def _create_choropleth_tab(df):
 
 
 def _generate_base_map(
-    default_location="New York", map_style="cartodbpositron", default_zoom_start=10
+    default_location="New York", map_style="cartodbpositron"
 ):
     """
     This function creates a base folium map.
@@ -184,14 +180,15 @@ def _generate_base_map(
 
     if default_location == "Manhattan":
         default_zoom_start = 12
-
+    else:
+        default_zoom_start = 10
     default_location = locations.get(default_location)
 
     base_map = folium.Map(
         location=default_location,
         tiles=map_style,
         control_scale=True,
-        zoom_start=default_zoom_start,
+        zoom_start=default_zoom_start
     )
     return base_map
 
@@ -261,7 +258,6 @@ def _create_heat_map(
     df,
     aspect="pickup",
     radius=15,
-    zoom=11,
     map_style="cartodbpositron",
     location="New York",
     log_count=False,
@@ -283,7 +279,7 @@ def _create_heat_map(
         folium.Heatmap: The created Heatmap
     """
     base_map = _generate_base_map(
-        default_location=location, map_style=map_style, default_zoom_start=zoom
+        default_location=location, map_style=map_style
     )
     map_data = df
     if log_count:
@@ -294,11 +290,11 @@ def _create_heat_map(
     if inferno_colormap:
         inferno_colormap, inferno_gradient = _create_inferno_cmap()
         HeatMap(
-            data=map_data, radius=radius, max_zoom=zoom, gradient=inferno_gradient
+            data=map_data, radius=radius,  gradient=inferno_gradient
         ).add_to(base_map)
         inferno_colormap.add_to(base_map)
     else:
-        HeatMap(data=map_data, radius=radius, max_zoom=zoom).add_to(base_map)
+        HeatMap(data=map_data, radius=radius).add_to(base_map)
 
     return base_map
 
@@ -324,11 +320,9 @@ def _create_general_heatmap_tab(df):
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan"]
     )
-    zoom_option = pn.widgets.IntSlider(
-        name="Zoom Factor", start=5, end=20, step=1, value=10
-    )
+
     radius_option = pn.widgets.IntSlider(
-        name="Heatmap Radius", start=5, end=20, step=1, value=8
+        name="Heatmap Radius", start=5, end=20, step=1, value=15
     )
     log_checkbox = pn.widgets.Checkbox(name="Log scale")
     inferno_checkbox = pn.widgets.Checkbox(name="Inferno colormap")
@@ -336,7 +330,6 @@ def _create_general_heatmap_tab(df):
         _create_heat_map,
         location=focus_area_options,
         map_style=map_options,
-        zoom=zoom_option,
         radius=radius_option,
         log_count=log_checkbox,
         inferno_colormap=inferno_checkbox,
