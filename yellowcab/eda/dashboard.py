@@ -12,8 +12,6 @@ from panel.interact import fixed, interact
 from yellowcab.io.input import read_geo_dataset
 
 
-
-
 def _create_monthly_choropleth(
     df,
     month="Jan",
@@ -80,9 +78,7 @@ def _create_monthly_choropleth(
         else:
             raise ValueError("Unknown aggregation aspect")
 
-    base_map = _generate_base_map(
-        default_location=location, map_style=map_style
-    )
+    base_map = _generate_base_map(default_location=location, map_style=map_style)
     choropleth = folium.Choropleth(
         geo_data=nyc_zones,
         name="choropleth",
@@ -157,9 +153,7 @@ def _create_choropleth_tab(df):
     return monthly_choropleth_tab
 
 
-def _generate_base_map(
-    default_location="New York", map_style="cartodbpositron"
-):
+def _generate_base_map(default_location="New York", map_style="cartodbpositron"):
     """
     This function creates a base folium map.
     ----------------------------------------------
@@ -188,7 +182,7 @@ def _generate_base_map(
         location=default_location,
         tiles=map_style,
         control_scale=True,
-        zoom_start=default_zoom_start
+        zoom_start=default_zoom_start,
     )
     return base_map
 
@@ -278,9 +272,7 @@ def _create_heat_map(
     :returns
         folium.Heatmap: The created Heatmap
     """
-    base_map = _generate_base_map(
-        default_location=location, map_style=map_style
-    )
+    base_map = _generate_base_map(default_location=location, map_style=map_style)
     map_data = df
     if log_count:
         map_data = _create_aggregator(df, aspect=aspect, log_count=True).values.tolist()
@@ -289,9 +281,9 @@ def _create_heat_map(
 
     if inferno_colormap:
         inferno_colormap, inferno_gradient = _create_inferno_cmap()
-        HeatMap(
-            data=map_data, radius=radius,  gradient=inferno_gradient
-        ).add_to(base_map)
+        HeatMap(data=map_data, radius=radius, gradient=inferno_gradient).add_to(
+            base_map
+        )
         inferno_colormap.add_to(base_map)
     else:
         HeatMap(data=map_data, radius=radius).add_to(base_map)
