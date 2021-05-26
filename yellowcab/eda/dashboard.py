@@ -167,10 +167,10 @@ def _generate_base_map(default_location="New York", map_style="cartodbpositron")
     """
     locations = {
         "New York": [40.693943, -73.985880],
-        "Manhattan": [40.754932, -73.984016],
+        "Manhattan": [40.790932, -73.964016],
         "Brooklyn": [40.650002, -73.949997],
         "Bronx": [40.837048, -73.865433],
-        "Queens": [40.706501, -73.823964],# [40.742054, -73.769417],
+        "Queens": [40.706501, -73.823964],
         "Staten Island": [40.579021, -74.151535]
     }
 
