@@ -349,8 +349,6 @@ def _create_general_heatmap_tab(df):
     return general_heatmap_tab
 
 
-
-
 def _create_events_tab(df):
     """
         This function creates a folium choropleth tab with interactive widgets.
@@ -576,7 +574,7 @@ def _create_zone_choropleth(
         df,
         month="all",
         zone="1",
-        aspect="pickup",
+        aspect="outbound",
         log_count=False,
         cmap="YlGn",
         map_style="cartodbpositron",
@@ -599,10 +597,14 @@ def _create_zone_choropleth(
     :raises
         ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
     """
-    if month == "all":
+    if month == "All":
         month = None
     else:
         month = strptime(month, "%b").tm_mon
+    if aspect == "outbound":
+        aspect_abr = "DO"
+    else:
+        aspect_abr = "PU"
     data = _create_zone_aggregator(
         df, month=month, zone=zone, aspect=aspect, log_count=log_count, choropleth=True
     )
@@ -612,47 +614,25 @@ def _create_zone_choropleth(
     columns = []
     legend_name = ""
     if log_count:
-        if aspect == "pickup":
-            legend_name = "Outbound Count (Log Scale)"
-        else:
-            legend_name = "Inbound Count (Log Scale)"
-        columns.append("DOLocationID") if aspect == "pickup" else columns.append(
-            "PULocationID"
-        )
-        columns.append(f"{aspect}_count_log")
+        legend_name = f"{aspect} Count (Log Scale)"
+        columns.append(f"{aspect_abr}LocationID")
 
     else:
-        if aspect == "pickup":
-            legend_name = "Outbound Count"
-        else:
-            legend_name = "Inbound Count"
-        columns.append("DOLocationID") if aspect == "pickup" else columns.append(
-            "PULocationID"
-        )
-        if aspect == "pickup":
-            columns.append("outbound_count")
-            info.append("outbound_count")
-        else:
-            columns.append("inbound_count")
-            info.append("inbound_count")
-        if aspect == "pickup":
+        legend_name = f"{aspect} Count"
+        columns.append(f"{aspect_abr}LocationID")
+        columns.append(f"{aspect}_count")
+        info.append(f"{aspect}_count")
+        if aspect in ["outbound", "inbound"]:
             nyc_zones = nyc_zones.merge(
-                data[["DOLocationID", "outbound_count"]],
+                data[[f"{aspect_abr}LocationID", f"{aspect}_count"]],
                 how="left",
                 left_on="LocationID",
-                right_on="DOLocationID",
-            )
-        elif aspect == "dropoff":
-            nyc_zones = nyc_zones.merge(
-                data[["PULocationID", "inbound_count"]],
-                how="left",
-                left_on="LocationID",
-                right_on="PULocationID",
+                right_on=f"{aspect_abr}LocationID",
             )
         else:
             raise ValueError("Unknown aggregation aspect")
 
-        highlight_zone = nyc_zones.loc[nyc_zones["LocationID"] == zone]
+    highlight_zone = nyc_zones.loc[nyc_zones["LocationID"] == zone]
 
     base_map = _generate_base_map(default_location=location, map_style=map_style)
     choropleth = folium.Choropleth(
@@ -667,7 +647,7 @@ def _create_zone_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
-    highlight_zone = folium.Choropleth(
+    highlighted_zone = folium.Choropleth(
         geo_data=highlight_zone,
         name="selected zone",
         data=data,
@@ -679,6 +659,7 @@ def _create_zone_choropleth(
     ).add_to(base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
+    highlighted_zone.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
 
 
@@ -713,13 +694,13 @@ def _create_zone_tab(df):
         "YlOrRd",
     ]
     months = [calendar.month_abbr[i] for i in range(1, 13)]
-    months.append("all")
+    months.append("All")
     month_options = pn.widgets.Select(name="Month", options=months)
     zones = list(df["PULocationID"].unique())
     zones.sort(key=int)
     zone_options = pn.widgets.Select(name="Zone", options=zones)
     map_options = pn.widgets.Select(name="Tiles", options=folium_tiles)
-    location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
+    direction_options = pn.widgets.Select(name="Direction", options={"Outbound": "outbound", "Inbound": "inbound"})
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
     )
@@ -733,7 +714,7 @@ def _create_zone_tab(df):
         cmap=cmap_option,
         month=month_options,
         zone=zone_options,
-        aspect=location_options,
+        aspect=direction_options,
         df=fixed(df)
     )
     title = pn.pane.Markdown("""# New York Inbound and Outbound""")
@@ -745,8 +726,7 @@ def _create_zone_tab(df):
 
 
 def _create_zone_aggregator(
-        df, month=None, zone=None, aspect="pickup", choropleth=False, log_count=False
-):
+        df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False):
     """
     This function creates a base folium map.
     ----------------------------------------------
@@ -765,39 +745,39 @@ def _create_zone_aggregator(
     """
     pickup_cols_grp = ["centers_lat_pickup", "centers_long_pickup"]
     dropoff_cols_grp = ["centers_lat_dropoff", "centers_long_dropoff"]
-    if aspect == 'pickup':
-        aspect_abr = "PU"
+
+    if aspect == "outbound":
+        location = "pickup"
+        location_abr = "PU"
     else:
-        aspect_abr = "DO"
+        location = "dropoff"
+        location_abr = "DO"
 
     if zone is not None:
         if month is not None:
-            df = df.loc[(df[f"{aspect}_month"] == month) & (df[f"{aspect_abr}LocationID"] == zone)]
+            df = df.loc[(df[f"{location}_month"] == month) & (df[f"{location_abr}LocationID"] == zone)]
         else:
-            df = df.loc[df[f"{aspect_abr}LocationID"] == zone]
+            df = df.loc[df[f"{location_abr}LocationID"] == zone]
     if choropleth:
         pickup_cols_grp.extend(["PULocationID"])
         dropoff_cols_grp.extend(["DOLocationID"])
 
-    if aspect == "pickup":
+    if location == "pickup":
         df_agg = (
-            df.groupby(dropoff_cols_grp).size().to_frame("outbound_count").reset_index()
+            df.groupby(dropoff_cols_grp).size().to_frame(f"{aspect}_count").reset_index()
         )
-    elif aspect == "dropoff":
+    elif location == "dropoff":
         df_agg = (
-            df.groupby(pickup_cols_grp).size().to_frame("inbound_count").reset_index()
+            df.groupby(pickup_cols_grp).size().to_frame(f"{aspect}_count").reset_index()
         )
     else:
         raise ValueError("Unknown aggregation aspect")
 
     if log_count:
-        if aspect == "pickup":
-            df_agg["outbound_count_log"] = np.log(df_agg["outbound_count"])
-            df_agg.pop("outbound_count")
-        else:
-            df_agg["inbound_count_log"] = np.log(df_agg["inbound_count"])
-            df_agg.pop("inbound_count")
+        df_agg[f"{aspect}_count_log"] = np.log(df_agg[f"{aspect}_count"])
+        df_agg.pop(f"{aspect}_count")
     return df_agg
+
 
 def create_dashboard(df):
     """
@@ -816,9 +796,3 @@ def create_dashboard(df):
     dashboard = pn.Tabs(heatmap_general, choropleth_monthly, events, zones)
     return dashboard
 
-
-
-"""
-aggregator -> Für eine gegebene ZonenID alle eingehende Fahrten (DOLocationID = gegebene Zone) oder alle ausgehenden Fahrten (PULocationID = gegebene Zone) 
-all fuer Month einsetzen
-"""
