@@ -1,19 +1,20 @@
 import calendar
 from collections import defaultdict
 from time import strptime
-from plotly import express as px
+
 import branca.colormap
 import folium
 import numpy as np
 import panel as pn
 from folium.plugins import HeatMap
 from panel.interact import fixed, interact
+from plotly import express as px
 
 from yellowcab.io.input import read_geo_dataset
 from yellowcab.io.utils import get_zone_information
 
 
-def create_animated_monthly_plot(df, aspect='pickup'):
+def create_animated_monthly_plot(df, aspect="pickup"):
     """
     This function creates an animated plotly express plot based on different aspects of the given data.
     ----------------------------------------------
@@ -24,25 +25,30 @@ def create_animated_monthly_plot(df, aspect='pickup'):
         plotly.scatter_mapbox: The animated scatter_mapbox
     """
     data = _create_aggregator(df, aspect=aspect, animated=True)
-    data = get_zone_information(data, aspect=aspect, zone_file='taxi_zones.csv')
+    data = get_zone_information(data, aspect=aspect, zone_file="taxi_zones.csv")
     data = data.sort_values(by=f"{aspect}_month")
-    fig = px.scatter_mapbox(data,
-                            lat=f'centers_lat_{aspect}',
-                            lon=f'centers_long_{aspect}',
-                            size=f'{aspect}_count',
-                            color=f'{aspect}_count',
-                            hover_name='Zone',
-                            animation_frame=f'{aspect}_month',
-                            color_continuous_scale='inferno',
-                            height=700, width=850,
-                            zoom=10)
-    fig = fig.update_layout(mapbox_style='carto-positron')
+    fig = px.scatter_mapbox(
+        data,
+        lat=f"centers_lat_{aspect}",
+        lon=f"centers_long_{aspect}",
+        size=f"{aspect}_count",
+        color=f"{aspect}_count",
+        hover_name="Zone",
+        animation_frame=f"{aspect}_month",
+        color_continuous_scale="inferno",
+        height=700,
+        width=850,
+        zoom=10,
+    )
+    fig = fig.update_layout(mapbox_style="carto-positron")
     fig = fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     fig = fig.update_traces(marker=dict(sizemin=1))
     return fig
 
 
-def _create_plotly_monthly_plot(df, map_style='carto-positron', month=1, aspect='pickup', cmap='inferno'):
+def _create_plotly_monthly_plot(
+    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
+):
     """
     This function creates a plotly express plot based on different aspects of the given data.
     ----------------------------------------------
@@ -56,18 +62,21 @@ def _create_plotly_monthly_plot(df, map_style='carto-positron', month=1, aspect=
         plotly.scatter_mapbox: The created scatter_mapbox
     """
     data = _create_aggregator(df, aspect=aspect, animated=True)
-    data = get_zone_information(data, aspect=aspect, zone_file='taxi_zones.csv')
+    data = get_zone_information(data, aspect=aspect, zone_file="taxi_zones.csv")
     data = data.sort_values(by=f"{aspect}_month")
     data = data.loc[data[f"{aspect}_month"] == month]
-    fig = px.scatter_mapbox(data,
-                            lat=f'centers_lat_{aspect}',
-                            lon=f'centers_long_{aspect}',
-                            size=f'{aspect}_count',
-                            color=f'{aspect}_count',
-                            hover_name='Zone',
-                            color_continuous_scale=cmap,
-                            height=700, width=1200,
-                            zoom=10)
+    fig = px.scatter_mapbox(
+        data,
+        lat=f"centers_lat_{aspect}",
+        lon=f"centers_long_{aspect}",
+        size=f"{aspect}_count",
+        color=f"{aspect}_count",
+        hover_name="Zone",
+        color_continuous_scale=cmap,
+        height=700,
+        width=1200,
+        zoom=10,
+    )
     fig = fig.update_layout(mapbox_style=map_style)
     fig = fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     fig = fig.update_traces(marker=dict(sizemin=1))
@@ -84,33 +93,55 @@ def _create_monthly_animated_tab(df):
         pn.Column: the created plotly express animated panel element
 
     """
-    mapbox_tiles = ["carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner", "open-street-map"]
-    cmap = ['viridis', 'inferno', 'balance', 'icefire', 'hsv', 'mint', 'purp', 'ice',
-            'twilight', 'sunsetdark', 'cividis', 'teal']
-    map_options = pn.widgets.Select(name='Tiles', options=mapbox_tiles)
-    month_options = pn.widgets.IntSlider(name='Month', start=1, end=12, step=1, value=1)
-    location_options = pn.widgets.Select(name='Location', options=['pickup', 'dropoff'])
-    cmap_option = pn.widgets.Select(name='Color Map', options=cmap)
-    dashboard = (interact(_create_plotly_monthly_plot,
-                          map_style=map_options,
-                          cmap=cmap_option,
-                          month=month_options,
-                          aspect=location_options,
-                          df=fixed(df)))
-    title = pn.pane.Markdown('''# New York Monthly Map''')
+    mapbox_tiles = [
+        "carto-positron",
+        "carto-darkmatter",
+        "stamen-terrain",
+        "stamen-toner",
+        "open-street-map",
+    ]
+    cmap = [
+        "viridis",
+        "inferno",
+        "balance",
+        "icefire",
+        "hsv",
+        "mint",
+        "purp",
+        "ice",
+        "twilight",
+        "sunsetdark",
+        "cividis",
+        "teal",
+    ]
+    map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
+    month_options = pn.widgets.IntSlider(name="Month", start=1, end=12, step=1, value=1)
+    location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
+    cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
+    dashboard = interact(
+        _create_plotly_monthly_plot,
+        map_style=map_options,
+        cmap=cmap_option,
+        month=month_options,
+        aspect=location_options,
+        df=fixed(df),
+    )
+    title = pn.pane.Markdown("""# New York Monthly Map""")
 
-    monthly_animated_tab = pn.Column(title, pn.Row(dashboard[1], dashboard[0], height=1000, width=1200))
+    monthly_animated_tab = pn.Column(
+        title, pn.Row(dashboard[1], dashboard[0], height=1000, width=1200)
+    )
     return monthly_animated_tab
 
 
 def _create_monthly_choropleth(
-        df,
-        month="Jan",
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        map_style="cartodbpositron",
-        location="New York",
+    df,
+    month="Jan",
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    map_style="cartodbpositron",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -276,7 +307,7 @@ def _generate_base_map(default_location="New York", map_style="cartodbpositron")
 
 
 def _create_aggregator(
-        df, month=None, aspect="pickup", animated=False, choropleth=False, log_count=False
+    df, month=None, aspect="pickup", animated=False, choropleth=False, log_count=False
 ):
     """
     This function creates a base folium map.
@@ -305,10 +336,10 @@ def _create_aggregator(
         dropoff_cols_grp.extend(["DOLocationID"])
 
     if animated:
-        pickup_cols_grp.extend(['pickup_month'])
-        dropoff_cols_grp.extend(['dropoff_month'])
-        pickup_cols_grp.extend(['PULocationID'])
-        dropoff_cols_grp.extend(['DOLocationID'])
+        pickup_cols_grp.extend(["pickup_month"])
+        dropoff_cols_grp.extend(["dropoff_month"])
+        pickup_cols_grp.extend(["PULocationID"])
+        dropoff_cols_grp.extend(["DOLocationID"])
 
     if aspect == "pickup":
         df_agg = (
@@ -346,13 +377,13 @@ def _create_inferno_cmap():
 
 
 def _create_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        map_style="cartodbpositron",
-        location="New York",
-        log_count=False,
-        inferno_colormap=False,
+    df,
+    aspect="pickup",
+    radius=15,
+    map_style="cartodbpositron",
+    location="New York",
+    log_count=False,
+    inferno_colormap=False,
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
@@ -444,6 +475,11 @@ def create_dashboard(df):
 
     heatmap_general = ("Heatmap General", _create_general_heatmap_tab(df))
     choropleth_monthly = ("Choropleth Monthly", _create_choropleth_tab(df))
-    plotly_express_animated_monthly = ("Monthly Scatter Plot", _create_monthly_animated_tab(df))
-    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, plotly_express_animated_monthly)
+    plotly_express_animated_monthly = (
+        "Monthly Scatter Plot",
+        _create_monthly_animated_tab(df),
+    )
+    dashboard = pn.Tabs(
+        heatmap_general, choropleth_monthly, plotly_express_animated_monthly
+    )
     return dashboard
