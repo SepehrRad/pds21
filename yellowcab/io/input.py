@@ -131,8 +131,8 @@ def read_geo_dataset(
     return nyc_zones
 
 
-def read_model(name="model.pkl"):
-    path = os.path.join(get_data_path(), "output", name)
+def read_model(model):
+    path = os.path.join(get_data_path(), "output", "{}".format(model))
     with open(path, "rb") as f:
         model = pickle.load(f)
     return model
