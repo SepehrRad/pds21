@@ -13,7 +13,36 @@ from yellowcab.io.input import read_geo_dataset
 from yellowcab.io.utils import get_zone_information
 
 
-def _create_animated_monthly_plot(df, map_style='carto-positron',month=1, aspect='pickup', cmap='inferno'):
+def create_animated_monthly_plot(df, aspect='pickup'):
+    """
+    This function creates an animated plotly express plot based on different aspects of the given data.
+    ----------------------------------------------
+    :param
+        df(pd.DataFrame): Data that is used to make the animated plot.
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
+    :returns
+        plotly.scatter_mapbox: The animated scatter_mapbox
+    """
+    data = _create_aggregator(df, aspect=aspect, animated=True)
+    data = get_zone_information(data, aspect=aspect, zone_file='taxi_zones.csv')
+    data = data.sort_values(by=f"{aspect}_month")
+    fig = px.scatter_mapbox(data,
+                            lat=f'centers_lat_{aspect}',
+                            lon=f'centers_long_{aspect}',
+                            size=f'{aspect}_count',
+                            color=f'{aspect}_count',
+                            hover_name='Zone',
+                            animation_frame=f'{aspect}_month',
+                            color_continuous_scale='inferno',
+                            height=700, width=850,
+                            zoom=10)
+    fig = fig.update_layout(mapbox_style='carto-positron')
+    fig = fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig = fig.update_traces(marker=dict(sizemin=1))
+    return fig
+
+
+def _create_plotly_monthly_plot(df, map_style='carto-positron', month=1, aspect='pickup', cmap='inferno'):
     """
     This function creates a plotly express plot based on different aspects of the given data.
     ----------------------------------------------
@@ -23,11 +52,8 @@ def _create_animated_monthly_plot(df, map_style='carto-positron',month=1, aspect
         cmap(String): The chosen colormap
         month(int): Used to show the data for this month only
         map_style(String): Tile layer style of the choropleth map
-        location(String): The focus area
     :returns
-        folium.Choropleth: The created choropleth
-    :raises
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        plotly.scatter_mapbox: The created scatter_mapbox
     """
     data = _create_aggregator(df, aspect=aspect, animated=True)
     data = get_zone_information(data, aspect=aspect, zone_file='taxi_zones.csv')
@@ -44,6 +70,7 @@ def _create_animated_monthly_plot(df, map_style='carto-positron',month=1, aspect
                             zoom=10)
     fig = fig.update_layout(mapbox_style=map_style)
     fig = fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig = fig.update_traces(marker=dict(sizemin=1))
     return fig
 
 
@@ -57,14 +84,14 @@ def _create_monthly_animated_tab(df):
         pn.Column: the created plotly express animated panel element
 
     """
-    mapbox_tiles = ["carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner","open-street-map"]
+    mapbox_tiles = ["carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner", "open-street-map"]
     cmap = ['viridis', 'inferno', 'balance', 'icefire', 'hsv', 'mint', 'purp', 'ice',
             'twilight', 'sunsetdark', 'cividis', 'teal']
     map_options = pn.widgets.Select(name='Tiles', options=mapbox_tiles)
     month_options = pn.widgets.IntSlider(name='Month', start=1, end=12, step=1, value=1)
     location_options = pn.widgets.Select(name='Location', options=['pickup', 'dropoff'])
     cmap_option = pn.widgets.Select(name='Color Map', options=cmap)
-    dashboard = (interact(_create_animated_monthly_plot,
+    dashboard = (interact(_create_plotly_monthly_plot,
                           map_style=map_options,
                           cmap=cmap_option,
                           month=month_options,
