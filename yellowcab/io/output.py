@@ -25,5 +25,14 @@ def write_parquet(df, filename, base_path=get_data_path(), relative_path="output
         print("Data file not found. Path was " + path)
 
 
-def save_model(model):
-    pickle.dump(model, open(os.path.join(get_data_path(), "output", "model.pkl"), "wb"))
+
+def save_model(model, model_name):
+    """
+    This function saves a trained model in a pickle file in our output folder.
+    :param model: The name of the model that we want to save.
+    :param model_name: For specifying to what task the model belongs to.
+    :return:
+    """
+    file_name = "{}.pkl".format(model_name)
+    pickle.dump(model, open(os.path.join(get_data_path(), "output", file_name), "wb"))
+
