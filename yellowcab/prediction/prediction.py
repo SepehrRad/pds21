@@ -71,7 +71,7 @@ def _make_data_preparation(df, prediction_type, target):
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     if prediction_type == "regression":
         if target == "trip_distance":
-            print("TRIP DISTANCE")
+            print("\nTRIP DISTANCE:")
             column_description = _get_column_description_for_prediction()
             new_df = transform_columns(df,column_description)
             new_df.drop(column_description.get('temporal_features'),inplace=True, axis=1)
@@ -82,27 +82,24 @@ def _make_data_preparation(df, prediction_type, target):
             new_df = new_df[new_df.columns.drop(['tolls_amount', 'tip_amount', 'trip_duration_minutes', 'DOLocationID'])]
             new_df.pop('weekend') # remove after Simons correction
         if target == "fare_amount":
-            print("FARE AMOUNT")
-            df.info()
+            print("\nFARE AMOUNT:")
             column_description = _get_column_description_for_prediction()
+            cols = [col for col in df.columns if 'Zone' in col]
+            cols.append("fare_amount")
+            cols.append('pickup_month')
+            cols.append('pickup_day')
+            cols.append('pickup_hour')
+            cols.append('dropoff_hour')
+            cols.append('dropoff_day')
+            cols.append('dropoff_month')
+            cols
+            df = df[cols]
+            column_description["categorical_features"] = df.loc[:, df.columns.str.contains('^Zone')].columns.tolist()
+            column_description.pop("temporal_features")
+            column_description.pop("spatial_features")
             new_df = transform_columns(df, column_description)
-            print("transofrmed")
-            new_df.info()
-            new_df = new_df[['pickup_month_cosine', 'pickup_day_sine', 'pickup_day_cosine', 'pickup_hour_sine', 'pickup_hour_cosine', 'dropoff_hour_sine', 'dropoff_hour_cosine', 'Zone_dropoff', 'Zone_pickup', 'fare_amount']]
-            #new_df = new_df['pickup_month_cosine', 'pickup_day_sine', 'pickup_day_cosine', 'pickup_hour_sine', 'pickup_hour_cosine', 'dropoff_hour_sine', 'dropoff_hour_cosine', 'Zone_dropoff', 'Zone_pickup']
-            #new_df = new_df[new_df.loc[:, new_df.columns.str.contains('^sine')].columns, new_df.loc[:, new_df.columns.str.contains('^cosine')].columns,
-            #                new_df.loc[:, new_df.columns.str.contains('^Zone')].columns]
-            #new_df.drop(['LocationID_pickup', 'Borough_pickup', 'service_zone_pickup', 'LocationID_dropoff', 'Borough_dropoff', 'service_zone_dropoff'], inplace=True, axis=1)
-            #column_description["categorical_features"] = new_df.loc[:, new_df.columns.str.contains(
-            #    '^Rate')].columns.tolist(), new_df.loc[:, new_df.columns.str.contains('^pay')].columns.tolist(), new_df.loc[:, new_df.columns.str.contains('^Season')].columns.tolist()
-            #column_description["categorical_features"] = sum(column_description["categorical_features"], [])
-            #new_df.drop(column_description.get('temporal_features'), inplace=True, axis=1)
-            #new_df.drop(column_description.get('categorical_features'), inplace=True, axis=1)
-            new_df = pd.get_dummies(new_df, columns=['Zone_pickup', 'Zone_dropoff'])
-            new_df.info()
-            new_df
     else:
-        print("CLASSIFICATION")
+        print("\nCLASSIFICATION:")
         column_description = _get_column_description_for_prediction()
         column_description['categorical_features'] = ['RatecodeID', 'Season'] #payment type should not be transofrmed here
         new_df = transform_columns(df,column_description)
