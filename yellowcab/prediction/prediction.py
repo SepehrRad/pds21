@@ -1,4 +1,3 @@
-# %%
 from imblearn.under_sampling import NearMiss
 from sklearn.model_selection import train_test_split
 from yellowcab.preprocessing import transform_columns
@@ -17,7 +16,7 @@ import matplotlib.pyplot as plt
 from yellowcab.io.utils import get_zone_information
 from yellowcab.feature_engineering import add_relevant_features  # sepehr fraaaaaagen
 import re
-
+import math
 
 def _get_random_state():
     """
@@ -62,23 +61,12 @@ def _make_data_preparation(df, prediction_type, target):
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     if prediction_type == "regression":
+        relevant_features = ['fare_amount','pickup_month','pickup_day','pickup_hour','Zone_dropoff','Zone_pickup','passenger_count']
 
-        column_description = _get_column_description_for_prediction()
-        regex_pickup = re.compile("pickup*")
-        regex_zone = re.compile("Zone*")
-        # We use zone from spatial features, as it is a good descriptor for spatial features, since
-        # zone is a String it will be handeld as a categorical variable.
-        column_description['cyclical_features'] = list(
-            filter(regex_pickup.match, column_description.get('cyclical_features')))
-        column_description['categorical_features'] = list(
-            filter(regex_zone.match, column_description.get('spatial_features')))
-        print(column_description)
-        relevant_features = column_description.get('cyclical_features').copy()
-        relevant_features.extend(column_description.get('categorical_features'))
-        relevant_features.append(target)
+        column_description = {'categorical_features':['Zone_dropoff','Zone_pickup'],
+                     'cyclical_features':['pickup_month','pickup_day','pickup_hour']}
+
         df = df[relevant_features]
-        df.info()
-        print(column_description)
         df = transform_columns(df=df, col_dict=column_description, drop_first=True)
 
     else:
@@ -86,7 +74,7 @@ def _make_data_preparation(df, prediction_type, target):
         # regex_zone = re.compile("Zone*")
         # As the target is in itself a catregorical variable it should be removed from the column describtion
         column_description.get('categorical_features').remove(target)
-        # column_description['categorical_features'] = list(filter(regex_zone.match,column_description.get('spatial_features')))
+        column_description['categorical_features'] = list(filter(regex_zone.match,column_description.get('spatial_features')))
         df = transform_columns(df=df, col_dict=column_description)
         df.drop(column_description.get('spatial_features'), inplace=True, axis=1)
         df.drop(column_description.get('temporal_features'), inplace=True, axis=1)
@@ -157,32 +145,14 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
     if prediction_type == "classification":
         print(classification_report_imbalanced(y_test, pipeline.predict(X_test)))
     else:
-        print("RMSE: ", np.sqrt(metrics.mean_squared_error(y_test, pipeline.predict(X_test))))
-        print("MAE: ", metrics.mean_absolute_error(y_test, pipeline.predict(X_test)))
-        print("R2: ", metrics.r2_score(y_test, pipeline.predict(X_test)))
+        y_pred = pipeline.predict(X_test)
+        print(f'MAE: {metrics.mean_absolute_error(y_test, y_pred): .3f}')
+        print(f'MSE: {metrics.mean_squared_error(y_test, y_pred): .3f}')
+        print(f'RMSE: {math.sqrt(metrics.mean_squared_error(y_test, y_pred)): .3f}')
+        print(f'R2: {100 * metrics.r2_score(y_test, y_pred): .3f} %')
 
 
-def _get_coefficients(X_train, model, prediction_type):
-    """
-    This function lists the coefficients of the passed model and plots those.
-    :param X_train (pandas.DataFrame): Regressors used for training a model
-           model: Used model for prediction.
-           prediction_type (String): Denotes whether used for regression or classification.
-    :return:
-    """
-    feature_list = X_train.columns
-    # feature_list_with_intercept = feature_list.insert(0, "Intercept")
-    mod = read_model("{}.pkl".format(model))
-    if prediction_type == "classification":
-        coefs = pd.DataFrame(mod.coef_[0], index=feature_list)
-    if prediction_type == "regression":
-        coefs = pd.DataFrame(mod.coef_.flatten(), index=feature_list)
-    coefs.rename(columns={0: "Coef"}, inplace=True)
-    coefs = coefs.sort_values(coefs.columns[0], ascending=False)
 
-    coefs.plot(kind='barh', figsize=(9, 7))
-    plt.title('Coefficients')
-    plt.show()
 
 
 def make_predictions(df, prediction_type, target, model, model_name, scaler_type, sampler_name=None, use_sampler=False,
@@ -206,14 +176,10 @@ def make_predictions(df, prediction_type, target, model, model_name, scaler_type
     X_train, X_test, y_train, y_test = _make_train_test_split(df=df, target=target, sampler=sampler,
                                                               use_sampler=use_sampler)
     pipeline = _make_pipeline(model=model, model_name=model_name, scaler_type=scaler_type)
-    print(pipeline)
-    X_train.info()
-    y_train.shape
-    pipeline.fit(X_train, y_train)  # test
+    pipeline = pipeline.fit(X_train, y_train)
     save_model(pipeline.named_steps[model_name], model_name)
     _print_prediction_scores(prediction_type=prediction_type, y_test=y_test, X_test=X_test,
                              pipeline=pipeline)
-    _get_coefficients(X_train, model_name, prediction_type)
 
 
 def make_baseline_predictions(df):
@@ -256,5 +222,3 @@ def make_baseline_predictions(df):
         df=df, prediction_type="regression", target="fare_amount", model=regression_model,
         scaler_type=None, model_name="base_reg_fare_amount", use_sampler=False, sampler=None
     )
-
-# %%
