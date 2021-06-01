@@ -2,21 +2,15 @@ from imblearn.under_sampling import NearMiss
 from sklearn.model_selection import train_test_split
 from yellowcab.preprocessing import transform_columns
 from yellowcab.io.output import save_model
-from yellowcab.io.input import read_model
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import RobustScaler
 from imblearn.metrics import classification_report_imbalanced
 from sklearn.linear_model import LogisticRegression, LinearRegression
-import numpy as np
-import pandas as pd
 from sklearn import metrics
-import matplotlib.pyplot as plt
 from yellowcab.io.utils import get_zone_information
-from yellowcab.feature_engineering import add_relevant_features  # sepehr fraaaaaagen
-import re
 import math
+
 
 def _get_random_state():
     """
@@ -24,7 +18,7 @@ def _get_random_state():
     every application
     ----------------------------------------------
     :return:
-        int: the integer used for random state paramenter
+        int: the integer used for random state parameter
     """
     RANDOM_STATE = 7
     return RANDOM_STATE
@@ -54,27 +48,31 @@ def _make_data_preparation(df, prediction_type, target):
     for prediction purposes.
     ----------------------------------------------
     :param df (pandas.DataFrame): The given pandas data frame with all initial features
-           prediction_type (String): Denotes whether used for regression or classification.
+           prediction_type: Denotes whether used for regression or classification.
            target: Dependent variable for prediction purposes.
     :return: pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     if prediction_type == "regression":
-        relevant_features = ['fare_amount','pickup_month','pickup_day','pickup_hour','Zone_dropoff','Zone_pickup','passenger_count']
+        print(f'\n{target} regression')
+        relevant_features = [target, 'pickup_month', 'pickup_day', 'pickup_hour', 'Zone_dropoff', 'Zone_pickup',
+                             'passenger_count']
 
-        column_description = {'categorical_features':['Zone_dropoff','Zone_pickup'],
-                     'cyclical_features':['pickup_month','pickup_day','pickup_hour']}
+        column_description = {'categorical_features': ['Zone_dropoff', 'Zone_pickup'],
+                              'cyclical_features': ['pickup_month', 'pickup_day', 'pickup_hour']}
 
         df = df[relevant_features]
         df = transform_columns(df=df, col_dict=column_description, drop_first=True)
 
     else:
+        print('\nclassification')
         column_description = _get_column_description_for_prediction()
         # regex_zone = re.compile("Zone*")
-        # As the target is in itself a catregorical variable it should be removed from the column describtion
+        # As the target is in itself a categorical variable it should be removed from the column description
         column_description.get('categorical_features').remove(target)
-        column_description['categorical_features'] = list(filter(regex_zone.match,column_description.get('spatial_features')))
+        # column_description['categorical_features'] =
+        #       list(filter(regex_zone.match, column_description.get('spatial_features')))
         df = transform_columns(df=df, col_dict=column_description)
         df.drop(column_description.get('spatial_features'), inplace=True, axis=1)
         df.drop(column_description.get('temporal_features'), inplace=True, axis=1)
@@ -111,7 +109,8 @@ def _make_train_test_split(df, target, use_sampler, sampler):
     This function splits the input data set into a train an a test set, each
     for the regressors X and the dependent variable y.
     ----------------------------------------------
-    :param df (pandas.DataFrame): The given pandas data frame containing data which need to be split into train and test data sets.
+    :param df (pandas.DataFrame): The given pandas data frame containing data which
+                                  need to be split into train and test data sets.
            target: Dependent variable for prediction purposes.
            use_sampler: Denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: What sampler should be used for over-/ under-sampling.
@@ -136,7 +135,7 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
     This function prints the prediction scores for either a regression or
     a classification.
     ----------------------------------------------
-    :param prediction_type (String): Denotes whether used for regression or classification.
+    :param prediction_type: Denotes whether used for regression or classification.
            y_test (pandas.Series): Target values for testing a model
            X_test (pandas.DataFrame): Regressors used for testing a model
            pipeline: Sequentially applies a list of transforms and a final estimator.
@@ -152,26 +151,23 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
         print(f'R2: {100 * metrics.r2_score(y_test, y_pred): .3f} %')
 
 
-
-
-
 def make_predictions(df, prediction_type, target, model, model_name, scaler_type, sampler_name=None, use_sampler=False,
                      sampler=None):
     """
-        This function predicts and prints the prediction scores of a prediction
-        task dynamically defined by the input parameters.
-        ----------------------------------------------
-        :param df (pandas.DataFrame): the given pandas data frame containing data used for prediction.
-        :param prediction_type (String): Denotes whether used for regression or classification.
-        :param target: Dependent variable for prediction purposes.
-        :param model: Used model for prediction.
-        :param model_name: Name of used model for prediction.
-        :param scaler_type: scaler_type: What scaler should be used to transform our data.
-        :param sampler_name: Name of the sampler that should be used for over-/ undersampling
-        :param use_sampler: denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
-        :param sampler: what sampler should be used for over-/ under-sampling.
-        :return:
-        """
+    This function predicts and prints the prediction scores of a prediction
+    task dynamically defined by the input parameters.
+    ----------------------------------------------
+    :param df: the given pandas data frame containing data used for prediction.
+           prediction_type: Denotes whether used for regression or classification.
+           target: Dependent variable for prediction purposes.
+           model: Used model for prediction.
+           model_name: Name of used model for prediction.
+           scaler_type: scaler_type: What scaler should be used to transform our data.
+           sampler_name: Name of the sampler that should be used for over-/ undersampling
+           use_sampler: denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
+           sampler: what sampler should be used for over-/ under-sampling.
+    :return:
+    """
     df = _make_data_preparation(df, prediction_type, target=target)
     X_train, X_test, y_train, y_test = _make_train_test_split(df=df, target=target, sampler=sampler,
                                                               use_sampler=use_sampler)
@@ -188,11 +184,10 @@ def make_baseline_predictions(df):
     regression. Those can be used to evaluate fall other machine learning algorithms,
     as it provides the required point of comparison.
     ----------------------------------------------
-    :param df (pandas.DataFrame): the given pandas data frame containing data
+    :param df: the given pandas data frame containing data
                                   used for prediction.
     :return:
     """
-    # df = add_relevant_features(df, 'pickup_datetime')
     classification_model = LogisticRegression(multi_class="multinomial", class_weight="balanced",
                                               n_jobs=-1, random_state=_get_random_state(), max_iter=5000)
     regression_model = LinearRegression(n_jobs=-1)
@@ -200,22 +195,22 @@ def make_baseline_predictions(df):
     nr = NearMiss()
 
     # classification for "payment_type"
-    # make_predictions(
-    #    df=df, prediction_type="classification", target ="payment_type", model = classification_model,
-    #    scaler_type= "standard_scaler", model_name="base_clas_payment_type"
-    # )
+    make_predictions(
+        df=df, prediction_type="classification", target="payment_type", model=classification_model,
+        scaler_type="standard_scaler", model_name="base_clas_payment_type"
+    )
 
     # classification for "payment_type" using under-sampling (near-miss)
-    # make_predictions(
-    #    df=df, prediction_type="classification", target="payment_type", model=classification_model,
-    #   scaler_type="standard_scaler", model_name="base_clas_payment_type_nm", use_sampler=True, sampler= nr
-    # )
+    make_predictions(
+        df=df, prediction_type="classification", target="payment_type", model=classification_model,
+        scaler_type="standard_scaler", model_name="base_clas_payment_type_nm", use_sampler=True, sampler=nr
+    )
 
     # regression for "trip_distance"
-    # make_predictions(
-    #    df=df, prediction_type="regression", target ="trip_distance", model = regression_model,
-    #    scaler_type= None, model_name="base_reg_trip_distance"
-    # )
+    make_predictions(
+        df=df, prediction_type="regression", target="trip_distance", model=regression_model,
+        scaler_type=None, model_name="base_reg_trip_distance"
+    )
 
     # regression for "fare_amount"
     make_predictions(
