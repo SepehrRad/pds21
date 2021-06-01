@@ -168,15 +168,7 @@ def _generate_base_map(default_location="New York"):
     if default_location is not None and default_location not in locations:
         raise ValueError("Could not find the given location coordinates.")
 
-    if default_location == "Manhattan":
-        default_zoom_start = 12
-    elif default_location == "Brooklyn":
-        default_zoom_start = 12
-    elif default_location == "Bronx":
-        default_zoom_start = 12
-    elif default_location == "Queens":
-        default_zoom_start = 12
-    elif default_location == "Staten Island":
+    if default_location in ["Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]:
         default_zoom_start = 12
     else:
         default_zoom_start = 10
