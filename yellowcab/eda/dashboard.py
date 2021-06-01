@@ -13,6 +13,14 @@ from panel.interact import fixed, interact
 from yellowcab.io.input import read_geo_dataset
 
 
+def _add_tile_layers(base_map=None):
+    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
+    folium.LayerControl().add_to(base_map)
+
+
 def _create_monthly_choropleth(
         df,
         month="Jan",
@@ -88,11 +96,12 @@ def _create_monthly_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
-    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
-    folium.LayerControl().add_to(base_map)
+#    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+#    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+#   folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+#    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
+#    folium.LayerControl().add_to(base_map)
+    _add_tile_layers(base_map=base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
@@ -284,7 +293,7 @@ def _create_heat_map(
     folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
     folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
     folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
     folium.LayerControl().add_to(base_map)
     return base_map
 
@@ -468,11 +477,7 @@ def _create_event_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
-    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
-    folium.LayerControl().add_to(base_map)
+    _add_tile_layers(base_map=base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
@@ -562,11 +567,7 @@ def _create_zone_choropleth(
         fill_opacity=0.8,
         line_opacity=1.0,
     ).add_to(base_map)
-    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
-    folium.LayerControl().add_to(base_map)
+    _add_tile_layers(base_map=base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     highlighted_zone.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
