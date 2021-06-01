@@ -19,7 +19,6 @@ def _create_monthly_choropleth(
         aspect="pickup",
         log_count=False,
         cmap="YlGn",
-        map_style="cartodbpositron",
         location="New York",
 ):
     """
@@ -28,26 +27,23 @@ def _create_monthly_choropleth(
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-        log_count(bool): Shows data on log scale
-        cmap(String): The chosen colormap
-        zoom(int): Starting zoom of the choropleth
-        map_style(String): Tile layer style of the choropleth map
-        location(String): The focus area
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+        log_count(bool): Shows data on log scale.
+        cmap(String): The chosen colormap.
+        location(String): The focus area.
     :returns
         folium.Choropleth: The created choropleth
     :raises
         ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
     """
     month = strptime(month, "%b").tm_mon
-    data = _create_month_aggregator(
+    data = _create_aggregator(
         df, month=month, aspect=aspect, log_count=log_count, choropleth=True
     )
     nyc_zones = read_geo_dataset("taxi_zones.geojson")
     nyc_zones["LocationID"] = nyc_zones["LocationID"].astype("str")
     info = ["zone", "LocationID", "borough"]
     columns = []
-    legend_name = ""
     if log_count:
         legend_name = f"{aspect} Count (Log Scale)"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
@@ -79,7 +75,7 @@ def _create_monthly_choropleth(
         else:
             raise ValueError("Unknown aggregation aspect")
 
-    base_map = _generate_base_map(default_location=location, map_style=map_style)
+    base_map = _generate_base_map(default_location=location)
     choropleth = folium.Choropleth(
         geo_data=nyc_zones,
         name="choropleth",
@@ -92,6 +88,11 @@ def _create_monthly_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
+    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
+    folium.LayerControl().add_to(base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
@@ -107,12 +108,6 @@ def _create_choropleth_tab(df):
         pn.Column: the created choropleth panel element
 
     """
-    folium_tiles = [
-        "cartodbpositron",
-        "cartodbdark_matter",
-        "stamenterrain",
-        "openstreetmap",
-    ]
     cmap = [
         "BuGn",
         "BuPu",
@@ -129,7 +124,6 @@ def _create_choropleth_tab(df):
     ]
     months = [calendar.month_abbr[i] for i in range(1, 13)]
     month_options = pn.widgets.Select(name="Month", options=months)
-    map_options = pn.widgets.Select(name="Tiles", options=folium_tiles)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
@@ -139,7 +133,6 @@ def _create_choropleth_tab(df):
     dashboard = interact(
         _create_monthly_choropleth,
         location=focus_area_options,
-        map_style=map_options,
         log_count=log_checkbox,
         cmap=cmap_option,
         month=month_options,
@@ -154,14 +147,12 @@ def _create_choropleth_tab(df):
     return monthly_choropleth_tab
 
 
-def _generate_base_map(default_location="New York", map_style="cartodbpositron"):
+def _generate_base_map(default_location="New York"):
     """
     This function creates a base folium map.
     ----------------------------------------------
     :param
         default_location(String): The default location of the base map.
-        map_style(String): The default map style for the base map.
-        default_zoom_start(int): The starting zoom for the base map.
     :return:
         folium.Map: the created base map
     """
@@ -193,15 +184,15 @@ def _generate_base_map(default_location="New York", map_style="cartodbpositron")
 
     base_map = folium.Map(
         location=default_location,
-        tiles=map_style,
         control_scale=True,
         zoom_start=default_zoom_start,
+        tiles=None
     )
     return base_map
 
 
-def _create_month_aggregator(
-        df, month=None, aspect="pickup", choropleth=False, log_count=False
+def _create_aggregator(
+        df, month=None, event=None, aspect="pickup", choropleth=False, log_count=False
 ):
     """
     This function creates a base folium map.
@@ -209,11 +200,11 @@ def _create_month_aggregator(
     :param
         df(pd.DataFrame): Data that should be aggregated
         month(int): Shows the data for this month only
+        event(datetime tuple): The selected event as datetime tuple
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
         choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
                           in a choropleth.
         log_count(bool): Shows data on log scale
-
     :return:
         df(pd.DataFrame): Aggregated Data
     :raises:
@@ -223,6 +214,8 @@ def _create_month_aggregator(
     dropoff_cols_grp = ["centers_lat_dropoff", "centers_long_dropoff"]
     if month is not None:
         df = df.loc[df[f"{aspect}_month"] == month]
+    if event is not None:
+        df = df.loc[(df[f"{aspect}_datetime"] >= event[0]) & (df[f"{aspect}_datetime"] < event[1])]
     if choropleth:
         pickup_cols_grp.extend(["PULocationID"])
         dropoff_cols_grp.extend(["DOLocationID"])
@@ -249,8 +242,8 @@ def _create_inferno_cmap():
     This function creates an inferno cmap for folium.
     ----------------------------------------------
     :return:
-    branca.colormap: The inferno colormap.
-    defaultdict: The gradient map which can be added to the map.
+        branca.colormap: The inferno colormap.
+        defaultdict: The gradient map which can be added to the map.
     """
     steps = 20
     colormap = branca.colormap.linear.YlOrRd_09.scale(0, 1).to_step(steps)
@@ -265,7 +258,6 @@ def _create_heat_map(
         df,
         aspect="pickup",
         radius=15,
-        map_style="cartodbpositron",
         location="New York",
         log_count=False,
         inferno_colormap=False,
@@ -277,30 +269,31 @@ def _create_heat_map(
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
         radius(int): The observed radius for each location upon creating the heatmap.
+        location(String): The focus area.
         log_count(bool): Shows data on log scale.
-        inferno_colormap(bool): If True -> changes the default cmap to inferno cmap
-        zoom(int): Starting zoom of the heatmap
-        map_style(String): Tile layer style of the heatmap
-        location(String): The focus area
-    :returns
+        inferno_colormap(bool): If True -> changes the default cmap to inferno cmap.
+    :return:
         folium.Heatmap: The created Heatmap
     """
-    base_map = _generate_base_map(default_location=location, map_style=map_style)
-    map_data = df
+    base_map = _generate_base_map(default_location=location)
     if log_count:
-        map_data = _create_month_aggregator(df, aspect=aspect, log_count=True).values.tolist()
+        map_data = _create_aggregator(df, aspect=aspect, log_count=True).values.tolist()
     else:
-        map_data = _create_month_aggregator(df, aspect=aspect).values.tolist()
+        map_data = _create_aggregator(df, aspect=aspect).values.tolist()
 
     if inferno_colormap:
         inferno_colormap, inferno_gradient = _create_inferno_cmap()
-        HeatMap(data=map_data, radius=radius, gradient=inferno_gradient).add_to(
+        HeatMap(data=map_data, radius=radius, gradient=inferno_gradient, name="heatmap").add_to(
             base_map
         )
         inferno_colormap.add_to(base_map)
     else:
-        HeatMap(data=map_data, radius=radius).add_to(base_map)
-
+        HeatMap(data=map_data, radius=radius, name="heatmap").add_to(base_map)
+    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
+    folium.LayerControl().add_to(base_map)
     return base_map
 
 
@@ -312,15 +305,7 @@ def _create_general_heatmap_tab(df):
         df(pd.DataFrame): Data that is used to make the heatmap.
     :return:
         pn.Column: the created heatmap panel element
-
     """
-    folium_tiles = [
-        "cartodbpositron",
-        "cartodbdark_matter",
-        "stamenterrain",
-        "openstreetmap",
-    ]
-    map_options = pn.widgets.Select(name="Tiles", options=folium_tiles)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
@@ -334,7 +319,6 @@ def _create_general_heatmap_tab(df):
     dashboard = interact(
         _create_heat_map,
         location=focus_area_options,
-        map_style=map_options,
         radius=radius_option,
         log_count=log_checkbox,
         inferno_colormap=inferno_checkbox,
@@ -351,20 +335,13 @@ def _create_general_heatmap_tab(df):
 
 def _create_events_tab(df):
     """
-        This function creates a folium choropleth tab with interactive widgets.
-        ----------------------------------------------
-        :param
-            df(pd.DataFrame): Data that is used to make the choropleth.
-        :return:
-            pn.Column: the created choropleth panel element
-
-        """
-    folium_tiles = [
-        "cartodbpositron",
-        "cartodbdark_matter",
-        "stamenterrain",
-        "openstreetmap",
-    ]
+    This function creates a folium choropleth tab with interactive widgets.
+    ----------------------------------------------
+    :param
+        df(pd.DataFrame): Data that is used to make the choropleth.
+    :return:
+        pn.Column: the created choropleth panel element
+    """
     cmap = [
         "BuGn",
         "BuPu",
@@ -388,7 +365,7 @@ def _create_events_tab(df):
         "Black Friday": (datetime.datetime(2020, 11, 27, 0, 0, 0), datetime.datetime(2020, 11, 28, 0, 0, 0)),
         "Christmas": (datetime.datetime(2020, 12, 24, 0, 0, 0), datetime.datetime(2020, 12, 27, 0, 0, 0)),
         "New Years Eve": (datetime.datetime(2020, 12, 31, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        "Individual Event": (datetime.datetime(2020, 1, 1), datetime.datetime(2021, 1, 1))
+        "Individual Event": (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1))
     }
     timespan_options = pn.widgets.DatetimeRangeInput(
         name='Individual Event Timespan',
@@ -396,8 +373,7 @@ def _create_events_tab(df):
         value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
         # callback_throttle=3000
     )
-    event_options = pn.widgets.Select(name="Event", options=list(events.keys()))
-    map_options = pn.widgets.Select(name="Tiles", options=folium_tiles)
+    event_options = pn.widgets.Select(name="Event", options=events)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
@@ -407,7 +383,6 @@ def _create_events_tab(df):
     dashboard = interact(
         _create_event_choropleth,
         location=focus_area_options,
-        map_style=map_options,
         log_count=log_checkbox,
         cmap=cmap_option,
         event=event_options,
@@ -425,12 +400,11 @@ def _create_events_tab(df):
 
 def _create_event_choropleth(
         df,
-        event="New Year",
+        event=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
         timespan=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
         aspect="pickup",
         log_count=False,
         cmap="YlGn",
-        map_style="cartodbpositron",
         location="New York",
 ):
     """
@@ -438,44 +412,26 @@ def _create_event_choropleth(
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
-        event(String): The desired event which will be aggregated.
+        event(datetime tuple): The desired event which will be aggregated.
+        timespan(datetime tuple): Simulates an individual event.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
         log_count(bool): Shows data on log scale
         cmap(String): The chosen colormap
-        zoom(int): Starting zoom of the choropleth
-        map_style(String): Tile layer style of the choropleth map
         location(String): The focus area
     :returns
         folium.Choropleth: The created choropleth
     :raises
         ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
     """
-    events = {
-        "New Year": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
-        "Superbowl": (datetime.datetime(2020, 2, 2, 18, 30, 0), datetime.datetime(2020, 2, 2, 22, 30, 0)),
-        "Independence Day": (datetime.datetime(2020, 7, 4, 0, 0, 0), datetime.datetime(2020, 7, 5, 0, 0, 0)),
-        "Election": (datetime.datetime(2020, 11, 3, 6, 0, 0), datetime.datetime(2020, 11, 3, 21, 0, 0)),
-        "Thanksgiving Parade": (datetime.datetime(2020, 11, 26, 9, 0, 0), datetime.datetime(2020, 11, 26, 12, 0, 0)),
-        "Black Friday": (datetime.datetime(2020, 11, 27, 0, 0, 0), datetime.datetime(2020, 11, 28, 0, 0, 0)),
-        "Christmas": (datetime.datetime(2020, 12, 24, 0, 0, 0), datetime.datetime(2020, 12, 27, 0, 0, 0)),
-        "New Years Eve": (datetime.datetime(2020, 12, 31, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        "Individual Event": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0))
-    }
-
-    if event == "Individual Event":
-        start = timespan[0]
-        end = timespan[1]
-    else:
-        start = events[event][0]
-        end = events[event][1]
-    data = _create_event_aggregator(
-        df, start=start, end=end, aspect=aspect, log_count=log_count, choropleth=True
+    if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
+        event = timespan
+    data = _create_aggregator(
+        df, event=event, aspect=aspect, log_count=log_count, choropleth=True
     )
     nyc_zones = read_geo_dataset("taxi_zones.geojson")
     nyc_zones["LocationID"] = nyc_zones["LocationID"].astype("str")
     info = ["zone", "LocationID", "borough"]
     columns = []
-    legend_name = ""
     if log_count:
         legend_name = f"{aspect} Count (Log Scale)"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
@@ -507,7 +463,7 @@ def _create_event_choropleth(
         else:
             raise ValueError("Unknown aggregation aspect")
 
-    base_map = _generate_base_map(default_location=location, map_style=map_style)
+    base_map = _generate_base_map(default_location=location)
     choropleth = folium.Choropleth(
         geo_data=nyc_zones,
         name="choropleth",
@@ -520,54 +476,14 @@ def _create_event_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
+    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
+    folium.LayerControl().add_to(base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     return base_map
-
-
-def _create_event_aggregator(
-        df, start=None, end=None, aspect="pickup", choropleth=False, log_count=False
-):
-    """
-    This function creates a base folium map.
-    ----------------------------------------------
-    :param
-        df(pd.DataFrame): Data that should be aggregated
-        month(int): Shows the data for this month only
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-        choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
-                          in a choropleth.
-        log_count(bool): Shows data on log scale
-
-    :return:
-        df(pd.DataFrame): Aggregated Data
-    :raises:
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
-    """
-    pickup_cols_grp = ["centers_lat_pickup", "centers_long_pickup"]
-    dropoff_cols_grp = ["centers_lat_dropoff", "centers_long_dropoff"]
-    if start is not None and end is not None:
-        df = df.loc[(df[f"{aspect}_datetime"] >= start) & (df[f"{aspect}_datetime"] < end)]
-
-    if choropleth:
-        pickup_cols_grp.extend(["PULocationID"])
-        dropoff_cols_grp.extend(["DOLocationID"])
-
-    if aspect == "pickup":
-        df_agg = (
-            df.groupby(pickup_cols_grp).size().to_frame("pickup_count").reset_index()
-        )
-    elif aspect == "dropoff":
-        df_agg = (
-            df.groupby(dropoff_cols_grp).size().to_frame("dropoff_count").reset_index()
-        )
-    else:
-        raise ValueError("Unknown aggregation aspect")
-
-    if log_count:
-        df_agg[f"{aspect}_count_log"] = np.log(df_agg[f"{aspect}_count"])
-        df_agg.pop(f"{aspect}_count")
-    return df_agg
 
 
 def _create_zone_choropleth(
@@ -577,7 +493,6 @@ def _create_zone_choropleth(
         aspect="outbound",
         log_count=False,
         cmap="YlGn",
-        map_style="cartodbpositron",
         location="New York",
 ):
     """
@@ -586,13 +501,12 @@ def _create_zone_choropleth(
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
+        zone(String): The selected zone.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
         log_count(bool): Shows data on log scale
         cmap(String): The chosen colormap
-        zoom(int): Starting zoom of the choropleth
-        map_style(String): Tile layer style of the choropleth map
         location(String): The focus area
-    :returns
+    :return:
         folium.Choropleth: The created choropleth
     :raises
         ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
@@ -612,7 +526,6 @@ def _create_zone_choropleth(
     nyc_zones["LocationID"] = nyc_zones["LocationID"].astype("str")
     info = ["zone", "LocationID", "borough"]
     columns = []
-    legend_name = ""
     if log_count:
         legend_name = f"{aspect} Count (Log Scale)"
         columns.append(f"{aspect_abr}LocationID")
@@ -634,7 +547,7 @@ def _create_zone_choropleth(
 
     highlight_zone = nyc_zones.loc[nyc_zones["LocationID"] == zone]
 
-    base_map = _generate_base_map(default_location=location, map_style=map_style)
+    base_map = _generate_base_map(default_location=location)
     choropleth = folium.Choropleth(
         geo_data=nyc_zones,
         name="choropleth",
@@ -657,6 +570,11 @@ def _create_zone_choropleth(
         fill_opacity=0.8,
         line_opacity=1.0,
     ).add_to(base_map)
+    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
+    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
+    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
+    folium.TileLayer('openstreetmap', name="openstreetmap", control=True).add_to(base_map)
+    folium.LayerControl().add_to(base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
     highlighted_zone.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
@@ -671,14 +589,7 @@ def _create_zone_tab(df):
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
         pn.Column: the created choropleth panel element
-
     """
-    folium_tiles = [
-        "cartodbpositron",
-        "cartodbdark_matter",
-        "stamenterrain",
-        "openstreetmap",
-    ]
     cmap = [
         "BuGn",
         "BuPu",
@@ -699,7 +610,6 @@ def _create_zone_tab(df):
     zones = list(df["PULocationID"].unique())
     zones.sort(key=int)
     zone_options = pn.widgets.Select(name="Zone", options=zones)
-    map_options = pn.widgets.Select(name="Tiles", options=folium_tiles)
     direction_options = pn.widgets.Select(name="Direction", options={"Outbound": "outbound", "Inbound": "inbound"})
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
@@ -709,7 +619,6 @@ def _create_zone_tab(df):
     dashboard = interact(
         _create_zone_choropleth,
         location=focus_area_options,
-        map_style=map_options,
         log_count=log_checkbox,
         cmap=cmap_option,
         month=month_options,
@@ -733,11 +642,11 @@ def _create_zone_aggregator(
     :param
         df(pd.DataFrame): Data that should be aggregated
         month(int): Shows the data for this month only
+        zone(String): The selected zone.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
         choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
                           in a choropleth.
         log_count(bool): Shows data on log scale
-
     :return:
         df(pd.DataFrame): Aggregated Data
     :raises:
@@ -795,4 +704,3 @@ def create_dashboard(df):
     zones = ("Zone", _create_zone_tab(df))
     dashboard = pn.Tabs(heatmap_general, choropleth_monthly, events, zones)
     return dashboard
-
