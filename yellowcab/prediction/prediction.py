@@ -95,7 +95,7 @@ def _make_data_preparation(df, prediction_type, target):
         column_description = _get_column_description_for_prediction()
         # regex_zone = re.compile("Zone*")
         # As the target is in itself a categorical variable it should be removed from the column description
-        column_description_cat = column_description.get('categorical_features')
+        column_description_cat = column_description.get("categorical_features")
         column_description_cat.remove(target) if column_description_cat else None
         # column_description['categorical_features'] =
         #       list(filter(regex_zone.match, column_description.get('spatial_features')))
