@@ -95,7 +95,8 @@ def _make_data_preparation(df, prediction_type, target):
         column_description = _get_column_description_for_prediction()
         # regex_zone = re.compile("Zone*")
         # As the target is in itself a categorical variable it should be removed from the column description
-        column_description.get("categorical_features").remove(target)
+        column_description_cat = column_description.get('categorical_features')
+        column_description_cat.remove(target) if column_description_cat else None
         # column_description['categorical_features'] =
         #       list(filter(regex_zone.match, column_description.get('spatial_features')))
         df = transform_columns(df=df, col_dict=column_description)
@@ -185,7 +186,6 @@ def make_predictions(
     model,
     model_name,
     scaler_type,
-    sampler_name=None,
     use_sampler=False,
     sampler=None,
 ):
