@@ -6,6 +6,18 @@ from numpy import random
 
 
 def monthly_visualization(df):
+    """
+
+    This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
+    a normal distribution & returns monthly plots.
+
+    ----------------------------------------------
+
+    :param
+        df (pd.DataFrame): DataFrame with trip data.
+    :returns
+        pd.show(): Monthly distribution plots.
+    """
     monthsDict = {
         1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
         7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
