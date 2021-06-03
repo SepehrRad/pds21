@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import get_zone_information, flatten_list
+from yellowcab.io.utils import flatten_list, get_zone_information
 from yellowcab.preprocessing import transform_columns
 
 
@@ -118,15 +118,15 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
 
 
 def make_predictions(
-        df,
-        prediction_type,
-        target,
-        model,
-        model_name,
-        scaler_type,
-        relevant_features,
-        use_sampler=False,
-        sampler=None,
+    df,
+    prediction_type,
+    target,
+    model,
+    model_name,
+    scaler_type,
+    relevant_features,
+    use_sampler=False,
+    sampler=None,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -144,10 +144,10 @@ def make_predictions(
            sampler: what sampler should be used for over-/ under-sampling.
     :return:
     """
-    print(f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}")
-    df = _make_data_preparation(
-        df, relevant_features=relevant_features
+    print(
+        f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}"
     )
+    df = _make_data_preparation(df, relevant_features=relevant_features)
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
@@ -190,24 +190,25 @@ def make_baseline_predictions(df):
         model=classification_model,
         relevant_features={
             "target": "payment_type",
-             "cyclical_features": [
-                 "pickup_month",
-                 "pickup_day",
-                 "pickup_hour",
-                 "dropoff_hour",
-                 "dropoff_day",
-                 "dropoff_month",
-
-             ],
-             "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-             "numerical_features": ["passenger_count", "trip_distance",
-                                    "total_amount", "trip_duration_minutes"]
+            "cyclical_features": [
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "dropoff_hour",
+                "dropoff_day",
+                "dropoff_month",
+            ],
+            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+            "numerical_features": [
+                "passenger_count",
+                "trip_distance",
+                "total_amount",
+                "trip_duration_minutes",
+            ],
         },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type",
     )
-
-
 
     # classification for "payment_type" using under-sampling (near-miss)
     make_predictions(
@@ -224,11 +225,14 @@ def make_baseline_predictions(df):
                 "dropoff_hour",
                 "dropoff_day",
                 "dropoff_month",
-
             ],
             "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-            "numerical_features": ["passenger_count", "trip_distance",
-                                   "total_amount", "trip_duration_minutes"]
+            "numerical_features": [
+                "passenger_count",
+                "trip_distance",
+                "total_amount",
+                "trip_duration_minutes",
+            ],
         },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type_nm",
@@ -246,7 +250,7 @@ def make_baseline_predictions(df):
             "target": "trip_distance",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
             "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"]
+            "numerical_features": ["passenger_count"],
         },
         scaler_type=None,
         model_name="base_reg_trip_distance",
@@ -259,14 +263,12 @@ def make_baseline_predictions(df):
         target="fare_amount",
         model=regression_model,
         scaler_type=None,
-        relevant_features=
-        {
+        relevant_features={
             "target": "fare_amount",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
             "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"]
-        }
-        ,
+            "numerical_features": ["passenger_count"],
+        },
         model_name="base_reg_fare_amount",
         use_sampler=False,
         sampler=None,
