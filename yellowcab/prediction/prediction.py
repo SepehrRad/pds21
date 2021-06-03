@@ -70,7 +70,7 @@ def _make_pipeline(model, model_name, feature_selector=None, feature_selection=F
             scaler = ("standard_scaler", StandardScaler())
             steps.append(scaler)
     if feature_selection and feature_selector is not None:
-        feature_selector_step = ("feature selector", feature_selector)
+        feature_selector_step = ("feature_selector", feature_selector)
         steps.append(feature_selector_step)
     prediction_model = (model_name, model)
     steps.append(prediction_model)
