@@ -59,7 +59,7 @@ def _get_column_description_for_prediction():
 
 def _make_data_preparation(df, prediction_type, target):
     """
-    TODO: As soon as Simon has corrected weekend in cleaning, line can be removed.
+    
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
     ----------------------------------------------
