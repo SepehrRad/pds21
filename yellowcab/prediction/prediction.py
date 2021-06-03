@@ -30,7 +30,7 @@ def _get_column_description_for_prediction():
     This function defines the categories our features belong to.
     ----------------------------------------------
     :return:
-        dictionary: Dictionary containing our feature categories with the associated attributes.
+        dict: Dictionary containing our feature categories with the associated attributes.
     """
     column_description = {
         "cyclical_features": [
@@ -64,8 +64,8 @@ def _make_data_preparation(df, prediction_type, target, relevant_features):
     for prediction purposes.
     ----------------------------------------------
     :param df (pandas.DataFrame): The given pandas data frame with all initial features
-           prediction_type: Denotes whether used for regression or classification.
-           target: Dependent variable for prediction purposes.
+           prediction_type (String): Denotes whether used for regression or classification.
+           target (String): Dependent variable for prediction purposes.
            relevant_features (list):
     :return: pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
@@ -101,9 +101,9 @@ def _make_pipeline(model, model_name, scaler_type=None):
     This function assembles several steps that can be cross-validated together
     while setting different parameters.
     ----------------------------------------------
-    :param model: Used model for prediction.
-           scaler_type: What scaler should be used to transform our data.
-           model_name: Name of used model for prediction.
+    :param model (model): Used model for prediction.
+           scaler_type (boolean): What scaler should be used to transform our data.
+           model_name (String): Name of used model for prediction.
     :return: Pipeline: Sequentially applies the list of transforms
              and a final estimator.
     """
@@ -127,9 +127,9 @@ def _make_train_test_split(df, target, use_sampler, sampler):
     ----------------------------------------------
     :param df (pandas.DataFrame): The given pandas data frame containing data which
                                   need to be split into train and test data sets.
-           target: Dependent variable for prediction purposes.
-           use_sampler: Denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
-           sampler: What sampler should be used for over-/ under-sampling.
+           target (String): Dependent variable for prediction purposes.
+           use_sampler (boolean): Denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
+           sampler (sampler): What sampler should be used for over-/ under-sampling.
     :return:
         X_train (pandas.DataFrame): Regressors used for training a model
         X_test (pandas.DataFrame): Regressors used for testing a model
@@ -153,10 +153,10 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
     This function prints the prediction scores for either a regression or
     a classification.
     ----------------------------------------------
-    :param prediction_type: Denotes whether used for regression or classification.
+    :param prediction_type (String): Denotes whether used for regression or classification.
            y_test (pandas.Series): Target values for testing a model
            X_test (pandas.DataFrame): Regressors used for testing a model
-           pipeline: Sequentially applies a list of transforms and a final estimator.
+           pipeline (Pipeline): Sequentially applies a list of transforms and a final estimator.
     :return:
     """
     if prediction_type == "classification":
@@ -184,19 +184,21 @@ def make_predictions(
     This function predicts and prints the prediction scores of a prediction
     task dynamically defined by the input parameters.
     ----------------------------------------------
-    :param df: the given pandas data frame containing data used for prediction.
-           prediction_type: Denotes whether used for regression or classification.
-           target: Dependent variable for prediction purposes.
-           model: Used model for prediction.
-           model_name: Name of used model for prediction.
-           scaler_type: scaler_type: What scaler should be used to transform our data.
-           sampler_name: Name of the sampler that should be used for over-/ undersampling
-           relevant_features:
-           use_sampler: denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
-           sampler: what sampler should be used for over-/ under-sampling.
+    :param df (pandas.DataFrame): the given pandas data frame containing data used for prediction.
+           prediction_type (String: Denotes whether used for regression or classification.
+           target (String): Dependent variable for prediction purposes.
+           model (model): Used model for prediction.
+           model_name (String): Name of used model for prediction.
+           scaler_type (String): scaler_type: What scaler should be used to transform our data.
+           sampler_name (String): Name of the sampler that should be used for over-/ undersampling
+           relevant_features (list):
+           use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
+           sampler (sampler): what sampler should be used for over-/ under-sampling.
     :return:
     """
-    df = _make_data_preparation(df, prediction_type, target=target,  relevant_features = relevant_features)
+    df = _make_data_preparation(
+        df, prediction_type, target=target,  relevant_features=relevant_features
+    )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
@@ -216,7 +218,7 @@ def make_baseline_predictions(df):
     regression. Those can be used to evaluate fall other machine learning algorithms,
     as it provides the required point of comparison.
     ----------------------------------------------
-    :param df: the given pandas data frame containing data
+    :param df (pandas.DataFrame): the given pandas data frame containing data
                                   used for prediction.
     :return:
     """
