@@ -102,7 +102,7 @@ def _make_data_preparation(df, prediction_type, target):
         df = transform_columns(df=df, col_dict=column_description)
         df.drop(column_description.get("spatial_features"), inplace=True, axis=1)
         df.drop(column_description.get("temporal_features"), inplace=True, axis=1)
-        
+
     return df
 
 
