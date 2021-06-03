@@ -13,6 +13,7 @@ requirements = [
     "plotly",
     "branca",
     "tqdm",
+    "imblearn"
 ]
 
 setup(
