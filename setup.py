@@ -9,6 +9,10 @@ requirements = [
     "scipy",
     "pyod",
     "geopandas",
+    "folium",
+    "plotly",
+    "branca",
+    "tqdm",
 ]
 
 setup(
