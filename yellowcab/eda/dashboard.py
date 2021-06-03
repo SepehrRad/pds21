@@ -7,6 +7,7 @@ import branca.colormap
 import folium
 import numpy as np
 import panel as pn
+from folium.plugins import HeatMapWithTime
 from folium.plugins import HeatMap
 from panel.interact import fixed, interact
 
@@ -96,11 +97,6 @@ def _create_monthly_choropleth(
         fill_opacity=0.4,
         line_opacity=0.5,
     ).add_to(base_map)
-#    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-#    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-#   folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-#    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
-#    folium.LayerControl().add_to(base_map)
     _add_tile_layers(base_map=base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
@@ -193,7 +189,7 @@ def _generate_base_map(default_location="New York"):
 
 
 def _create_aggregator(
-        df, month=None, event=None, aspect="pickup", choropleth=False, log_count=False
+        df, month=None, event=None, aspect="pickup", choropleth=False, log_count=False, event_heatmap=False
 ):
     """
     This function creates a base folium map.
@@ -211,26 +207,32 @@ def _create_aggregator(
     :raises:
         ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
     """
-    pickup_cols_grp = ["centers_lat_pickup", "centers_long_pickup"]
-    dropoff_cols_grp = ["centers_lat_dropoff", "centers_long_dropoff"]
+    cols_grp = [f"centers_lat_{aspect}", f"centers_long_{aspect}"]
     if month is not None:
         df = df.loc[df[f"{aspect}_month"] == month]
     if event is not None:
         df = df.loc[(df[f"{aspect}_datetime"] >= event[0]) & (df[f"{aspect}_datetime"] < event[1])]
     if choropleth:
-        pickup_cols_grp.extend(["PULocationID"])
-        dropoff_cols_grp.extend(["DOLocationID"])
+        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(["DOLocationID"])
 
-    if aspect == "pickup":
-        df_agg = (
-            df.groupby(pickup_cols_grp).size().to_frame("pickup_count").reset_index()
-        )
-    elif aspect == "dropoff":
-        df_agg = (
-            df.groupby(dropoff_cols_grp).size().to_frame("dropoff_count").reset_index()
-        )
-    else:
-        raise ValueError("Unknown aggregation aspect")
+    if event_heatmap:
+        df["count"] = 1
+        df_hour_list = []
+        if aspect == "pickup":
+            for hour in df.pickup_hour.sort_values().unique():
+                df_hour_list.append(
+                    df.loc[
+                        df.pickup_hour == hour, [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
+                        cols_grp).sum().reset_index().values.tolist())
+        else:
+            for hour in df.dropoff_hour.sort_values().unique():
+                df_hour_list.append(
+                    df.loc[
+                        df.dropoff_hour == hour, [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
+                        cols_grp).sum().reset_index().values.tolist())
+        return df_hour_list
+
+    df_agg = df.groupby(cols_grp).size().to_frame(f"{aspect}_count").reset_index()
 
     if log_count:
         df_agg[f"{aspect}_count_log"] = np.log(df_agg[f"{aspect}_count"])
@@ -277,10 +279,7 @@ def _create_heat_map(
         folium.Heatmap: The created Heatmap
     """
     base_map = _generate_base_map(default_location=location)
-    if log_count:
-        map_data = _create_aggregator(df, aspect=aspect, log_count=True).values.tolist()
-    else:
-        map_data = _create_aggregator(df, aspect=aspect).values.tolist()
+    map_data = _create_aggregator(df, aspect=aspect, log_count=log_count).values.tolist()
 
     if inferno_colormap:
         inferno_colormap, inferno_gradient = _create_inferno_cmap()
@@ -290,11 +289,7 @@ def _create_heat_map(
         inferno_colormap.add_to(base_map)
     else:
         HeatMap(data=map_data, radius=radius, name="heatmap").add_to(base_map)
-    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
-    folium.LayerControl().add_to(base_map)
+    _add_tile_layers(base_map=base_map)
     return base_map
 
 
@@ -681,6 +676,89 @@ def _create_zone_aggregator(
     return df_agg
 
 
+def _create_event_heat_map(
+        df,
+        aspect="pickup",
+        radius=15,
+        location="New York",
+        event=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
+        timespan=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+):
+    """
+    This function creates a folium heatmap based on different aspects of the given data.
+    ----------------------------------------------
+    :param
+        df(pd.DataFrame): Data that is used to make the heatmap.
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+        radius(int): The observed radius for each location upon creating the heatmap.
+        location(String): The focus area.
+        log_count(bool): Shows data on log scale.
+        inferno_colormap(bool): If True -> changes the default cmap to inferno cmap.
+    :return:
+        folium.Heatmap: The created Heatmap
+    """
+    if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
+        event = timespan
+    base_map = _generate_base_map(default_location=location)
+    map_data = _create_aggregator(df, aspect=aspect, event=event, event_heatmap=True)
+
+    HeatMapWithTime(data=map_data, radius=radius, gradient={0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 1: 'red'},
+                    min_opacity=0.5, max_opacity=0.8, use_local_extrema=True, name="heatmap").add_to(base_map)
+    _add_tile_layers(base_map=base_map)
+    return base_map
+
+
+def _create_event_heatmap_tab(df):
+    """
+    This function creates a folium heatmap with time tab with interactive widgets.
+    ----------------------------------------------
+    :param
+        df(pd.DataFrame): Data that is used to make the heatmap.
+    :return:
+        pn.Column: the created heatmap panel element
+    """
+    events = {
+        "New Year": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
+        "Superbowl": (datetime.datetime(2020, 2, 2, 0, 0, 0), datetime.datetime(2020, 2, 3, 0, 0, 0)),
+        "Independence Day": (datetime.datetime(2020, 7, 4, 0, 0, 0), datetime.datetime(2020, 7, 5, 0, 0, 0)),
+        "Election": (datetime.datetime(2020, 11, 3, 0, 0, 0), datetime.datetime(2020, 11, 4, 0, 0, 0)),
+        "Thanksgiving Parade": (datetime.datetime(2020, 11, 26, 0, 0, 0), datetime.datetime(2020, 11, 27, 0, 0, 0)),
+        "Black Friday": (datetime.datetime(2020, 11, 27, 0, 0, 0), datetime.datetime(2020, 11, 28, 0, 0, 0)),
+        "Christmas": (datetime.datetime(2020, 12, 24, 0, 0, 0), datetime.datetime(2020, 12, 27, 0, 0, 0)),
+        "New Years Eve": (datetime.datetime(2020, 12, 31, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+        "Individual Event": (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1))
+    }
+    timespan_options = pn.widgets.DatetimeRangeInput(
+        name='Individual Event Timespan',
+        start=datetime.datetime(2020, 1, 1, 0, 0, 0), end=datetime.datetime(2021, 1, 1, 0, 0, 0),
+        value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+        # callback_throttle=3000
+    )
+    event_options = pn.widgets.Select(name="Event", options=events)
+    location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
+    focus_area_options = pn.widgets.Select(
+        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+    )
+    radius_option = pn.widgets.IntSlider(
+        name="Heatmap Radius", start=5, end=20, step=1, value=15
+    )
+    dashboard = interact(
+        _create_event_heat_map,
+        location=focus_area_options,
+        radius=radius_option,
+        aspect=location_options,
+        event=event_options,
+        timespan=timespan_options,
+        df=fixed(df),
+    )
+    title = pn.pane.Markdown("""# New York Trip Heatmap with Time""")
+
+    general_heatmap_tab = pn.Column(
+        title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
+    )
+    return general_heatmap_tab
+
+
 def create_dashboard(df):
     """
     This function creates an interactive panel dashboard.
@@ -695,5 +773,6 @@ def create_dashboard(df):
     choropleth_monthly = ("Choropleth Monthly", _create_choropleth_tab(df))
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
-    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, events, zones)
+    event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
+    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, events, zones, event_heatmap)
     return dashboard
