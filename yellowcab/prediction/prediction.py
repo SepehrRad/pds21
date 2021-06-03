@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import get_zone_information
+from yellowcab.io.utils import get_zone_information, flatten_list
 from yellowcab.preprocessing import transform_columns
 
 
@@ -25,73 +25,21 @@ def _get_random_state():
     return RANDOM_STATE
 
 
-def _get_column_description_for_prediction():
-    """
-    This function defines the categories our features belong to.
-    ----------------------------------------------
-    :return:
-        dict: Dictionary containing our feature categories with the associated attributes.
-    """
-    column_description = {
-        "cyclical_features": [
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "dropoff_hour",
-            "dropoff_day",
-            "dropoff_month",
-        ],
-        "categorical_features": ["RatecodeID", "payment_type"],
-        "temporal_features": ["pickup_datetime", "dropoff_datetime"],
-        "spatial_features": [
-            "LocationID_pickup",
-            "Borough_pickup",
-            "Zone_pickup",
-            "service_zone_pickup",
-            "LocationID_dropoff",
-            "Borough_dropoff",
-            "Zone_dropoff",
-            "service_zone_dropoff",
-        ],
-    }
-    return column_description
-
-
-def _make_data_preparation(df, prediction_type, target, relevant_features):
+def _make_data_preparation(df, relevant_features):
     """
 
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
     ----------------------------------------------
     :param df (pandas.DataFrame): The given pandas data frame with all initial features
-           prediction_type (String): Denotes whether used for regression or classification.
-           target (String): Dependent variable for prediction purposes.
            relevant_features (list):
     :return: pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
-    if prediction_type == "regression":
-        print(f"\n{target} regression")
-
-        column_description = {
-            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-        }
-
-        df = df[relevant_features]
-        df = transform_columns(df=df, col_dict=column_description, drop_first=True)
-
-    else:
-        print("\nclassification")
-        column_description = _get_column_description_for_prediction()
-        # As the target is in itself a categorical variable it should be removed from the column description
-        column_description_cat = column_description.get("categorical_features")
-        column_description_cat.remove(target) if column_description_cat else None
-
-        df = transform_columns(df=df, col_dict=column_description)
-        df.drop(column_description.get("spatial_features"), inplace=True, axis=1)
-        df.drop(column_description.get("temporal_features"), inplace=True, axis=1)
+    mask = flatten_list(list(relevant_features.values()))
+    df = df[mask]
+    df = transform_columns(df=df, col_dict=relevant_features, drop_first=True)
 
     return df
 
@@ -101,7 +49,7 @@ def _make_pipeline(model, model_name, scaler_type=None):
     This function assembles several steps that can be cross-validated together
     while setting different parameters.
     ----------------------------------------------
-    :param model (model): Used model for prediction.
+    :param model: Used model for prediction.
            scaler_type (boolean): What scaler should be used to transform our data.
            model_name (String): Name of used model for prediction.
     :return: Pipeline: Sequentially applies the list of transforms
@@ -129,7 +77,7 @@ def _make_train_test_split(df, target, use_sampler, sampler):
                                   need to be split into train and test data sets.
            target (String): Dependent variable for prediction purposes.
            use_sampler (boolean): Denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
-           sampler (sampler): What sampler should be used for over-/ under-sampling.
+           sampler: What sampler should be used for over-/ under-sampling.
     :return:
         X_train (pandas.DataFrame): Regressors used for training a model
         X_test (pandas.DataFrame): Regressors used for testing a model
@@ -156,7 +104,7 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
     :param prediction_type (String): Denotes whether used for regression or classification.
            y_test (pandas.Series): Target values for testing a model
            X_test (pandas.DataFrame): Regressors used for testing a model
-           pipeline (Pipeline): Sequentially applies a list of transforms and a final estimator.
+           pipeline (sklearn.pipeline): Sequentially applies a list of transforms and a final estimator.
     :return:
     """
     if prediction_type == "classification":
@@ -170,15 +118,15 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
 
 
 def make_predictions(
-    df,
-    prediction_type,
-    target,
-    model,
-    model_name,
-    scaler_type,
-    relevant_features,
-    use_sampler=False,
-    sampler=None,
+        df,
+        prediction_type,
+        target,
+        model,
+        model_name,
+        scaler_type,
+        relevant_features,
+        use_sampler=False,
+        sampler=None,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -187,17 +135,18 @@ def make_predictions(
     :param df (pandas.DataFrame): the given pandas data frame containing data used for prediction.
            prediction_type (String: Denotes whether used for regression or classification.
            target (String): Dependent variable for prediction purposes.
-           model (model): Used model for prediction.
+           model: Used model for prediction.
            model_name (String): Name of used model for prediction.
            scaler_type (String): scaler_type: What scaler should be used to transform our data.
            sampler_name (String): Name of the sampler that should be used for over-/ undersampling
            relevant_features (list):
            use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
-           sampler (sampler): what sampler should be used for over-/ under-sampling.
+           sampler: what sampler should be used for over-/ under-sampling.
     :return:
     """
+    print(f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}")
     df = _make_data_preparation(
-        df, prediction_type, target=target,  relevant_features=relevant_features
+        df, relevant_features=relevant_features
     )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
@@ -239,9 +188,26 @@ def make_baseline_predictions(df):
         prediction_type="classification",
         target="payment_type",
         model=classification_model,
+        relevant_features={
+            "target": "payment_type",
+             "cyclical_features": [
+                 "pickup_month",
+                 "pickup_day",
+                 "pickup_hour",
+                 "dropoff_hour",
+                 "dropoff_day",
+                 "dropoff_month",
+
+             ],
+             "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+             "numerical_features": ["passenger_count", "trip_distance",
+                                    "total_amount", "trip_duration_minutes"]
+        },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type",
     )
+
+
 
     # classification for "payment_type" using under-sampling (near-miss)
     make_predictions(
@@ -249,6 +215,21 @@ def make_baseline_predictions(df):
         prediction_type="classification",
         target="payment_type",
         model=classification_model,
+        relevant_features={
+            "target": "payment_type",
+            "cyclical_features": [
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "dropoff_hour",
+                "dropoff_day",
+                "dropoff_month",
+
+            ],
+            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+            "numerical_features": ["passenger_count", "trip_distance",
+                                   "total_amount", "trip_duration_minutes"]
+        },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type_nm",
         use_sampler=True,
@@ -261,15 +242,12 @@ def make_baseline_predictions(df):
         prediction_type="regression",
         target="trip_distance",
         model=regression_model,
-        relevant_features=[
-            "trip_distance",
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "Zone_dropoff",
-            "Zone_pickup",
-            "passenger_count",
-        ],
+        relevant_features={
+            "target": "trip_distance",
+            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+            "numerical_features": ["passenger_count"]
+        },
         scaler_type=None,
         model_name="base_reg_trip_distance",
     )
@@ -281,15 +259,14 @@ def make_baseline_predictions(df):
         target="fare_amount",
         model=regression_model,
         scaler_type=None,
-        relevant_features=[
-            "fare_amount",
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "Zone_dropoff",
-            "Zone_pickup",
-            "passenger_count",
-        ],
+        relevant_features=
+        {
+            "target": "fare_amount",
+            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+            "numerical_features": ["passenger_count"]
+        }
+        ,
         model_name="base_reg_fare_amount",
         use_sampler=False,
         sampler=None,

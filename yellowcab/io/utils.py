@@ -13,11 +13,11 @@ def get_data_path():
 
 
 def get_zone_information(
-    df,
-    zone_file,
-    aspect=None,
-    base_path=get_data_path(),
-    relative_path="input/taxi_zones",
+        df,
+        zone_file,
+        aspect=None,
+        base_path=get_data_path(),
+        relative_path="input/taxi_zones",
 ):
     """
     This function adds zone information to the given data.
@@ -76,3 +76,18 @@ def get_zone_information(
                 validate="m:1",
             )
     return df
+
+
+def flatten_list(not_flattened_list):
+    """
+        This function flattens an passed list.
+        :param not_flattened_list (list): List, which is not flattened yet.
+        :returns list: Flattened list.
+    """
+    list_flattened = []
+    for element in not_flattened_list:
+        if isinstance(element, list):
+            list_flattened.extend(element)
+        else:
+            list_flattened.append(element)
+    return list_flattened
