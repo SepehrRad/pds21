@@ -57,7 +57,7 @@ def _get_column_description_for_prediction():
     return column_description
 
 
-def _make_data_preparation(df, prediction_type, target):
+def _make_data_preparation(df, prediction_type, target, relevant_features):
     """
 
     This function reduces the dataframe to one containing only relevant features
@@ -66,21 +66,13 @@ def _make_data_preparation(df, prediction_type, target):
     :param df (pandas.DataFrame): The given pandas data frame with all initial features
            prediction_type: Denotes whether used for regression or classification.
            target: Dependent variable for prediction purposes.
+           relevant_features (list):
     :return: pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     if prediction_type == "regression":
         print(f"\n{target} regression")
-        relevant_features = [
-            target,
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "Zone_dropoff",
-            "Zone_pickup",
-            "passenger_count",
-        ]
 
         column_description = {
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
@@ -184,6 +176,7 @@ def make_predictions(
     model,
     model_name,
     scaler_type,
+    relevant_features,
     use_sampler=False,
     sampler=None,
 ):
@@ -198,11 +191,12 @@ def make_predictions(
            model_name: Name of used model for prediction.
            scaler_type: scaler_type: What scaler should be used to transform our data.
            sampler_name: Name of the sampler that should be used for over-/ undersampling
+           relevant_features:
            use_sampler: denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: what sampler should be used for over-/ under-sampling.
     :return:
     """
-    df = _make_data_preparation(df, prediction_type, target=target)
+    df = _make_data_preparation(df, prediction_type, target=target,  relevant_features = relevant_features)
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
@@ -265,6 +259,15 @@ def make_baseline_predictions(df):
         prediction_type="regression",
         target="trip_distance",
         model=regression_model,
+        relevant_features=[
+            "trip_distance",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "Zone_dropoff",
+            "Zone_pickup",
+            "passenger_count",
+        ],
         scaler_type=None,
         model_name="base_reg_trip_distance",
     )
@@ -276,6 +279,15 @@ def make_baseline_predictions(df):
         target="fare_amount",
         model=regression_model,
         scaler_type=None,
+        relevant_features=[
+            "fare_amount",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "Zone_dropoff",
+            "Zone_pickup",
+            "passenger_count",
+        ],
         model_name="base_reg_fare_amount",
         use_sampler=False,
         sampler=None,
