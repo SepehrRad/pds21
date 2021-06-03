@@ -7,7 +7,11 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
+import xgboost as xgb
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import Lasso
 
+from yellowcab.feature_engineering import add_relevant_features
 from yellowcab.io.output import save_model
 from yellowcab.io.utils import flatten_list, get_zone_information
 from yellowcab.preprocessing import transform_columns
@@ -44,7 +48,7 @@ def _make_data_preparation(df, relevant_features):
     return df
 
 
-def _make_pipeline(model, model_name, scaler_type=None):
+def _make_pipeline(model, model_name, feature_selector=None, feature_selection=False, scaler_type=None):
     """
     This function assembles several steps that can be cross-validated together
     while setting different parameters.
@@ -52,6 +56,8 @@ def _make_pipeline(model, model_name, scaler_type=None):
     :param model: Used model for prediction.
            scaler_type (boolean): What scaler should be used to transform our data.
            model_name (String): Name of used model for prediction.
+           feature_selection !!!!!!
+           scaler_type !!!!!!
     :return: Pipeline: Sequentially applies the list of transforms
              and a final estimator.
     """
@@ -63,6 +69,9 @@ def _make_pipeline(model, model_name, scaler_type=None):
         else:
             scaler = ("standard_scaler", StandardScaler())
             steps.append(scaler)
+    if feature_selection and feature_selector is not None:
+        feature_selector_step = ("feature selector", feature_selector)
+        steps.append(feature_selector_step)
     prediction_model = (model_name, model)
     steps.append(prediction_model)
     return Pipeline(steps=steps)
@@ -117,16 +126,32 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
         print(f"R2: {100 * metrics.r2_score(y_test, y_pred): .3f} %")
 
 
+def _get_information_for_feature_selection(pipeline, X_train):
+    """
+
+    :param pipeline:
+           X_train:
+    :return:
+    """
+    selected_feature_mask = pipeline.named_steps['feature_selector'].get_support()
+    original_features = len(X_train.columns)
+    selected_features = len(X_train.columns[selected_feature_mask])
+    print(
+        f'{selected_features} features were selected for prediction from the original {original_features} features.')
+
+
 def make_predictions(
-    df,
-    prediction_type,
-    target,
-    model,
-    model_name,
-    scaler_type,
-    relevant_features,
-    use_sampler=False,
-    sampler=None,
+        df,
+        prediction_type,
+        target,
+        model,
+        model_name,
+        scaler_type,
+        relevant_features,
+        feature_selector=None,
+        feature_selection=False,
+        use_sampler=False,
+        sampler=None,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -151,10 +176,18 @@ def make_predictions(
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
-    pipeline = _make_pipeline(
-        model=model, model_name=model_name, scaler_type=scaler_type
-    )
+    if feature_selection:
+        pipeline = _make_pipeline(
+            model=model, model_name=model_name, scaler_type=scaler_type, feature_selection=feature_selection,
+            feature_selector=feature_selector
+        )
+    else:
+        pipeline = _make_pipeline(
+            model=model, model_name=model_name, scaler_type=scaler_type
+        )
     pipeline = pipeline.fit(X_train, y_train)
+    if feature_selection:
+        _get_information_for_feature_selection(pipeline=pipeline, X_train=X_train)
     save_model(pipeline.named_steps[model_name], model_name)
     _print_prediction_scores(
         prediction_type=prediction_type, y_test=y_test, X_test=X_test, pipeline=pipeline
@@ -273,3 +306,20 @@ def make_baseline_predictions(df):
         use_sampler=False,
         sampler=None,
     )
+
+
+def regression(df):
+    """
+
+    :param df:
+    :return:
+    """
+    feature_selector = SelectFromModel(Lasso(alpha=0.1))
+    df = add_relevant_features(df, "pickup_datetime")
+    make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
+            "target": "trip_distance",
+            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+            "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions", "covid_new_cases"],
+        }, feature_selector=feature_selector, feature_selection=True, model=xgb.XGBRegressor(n_estimators=100), model_name="xg_boost",
+                     scaler_type=None, use_sampler=False, sampler=None)
