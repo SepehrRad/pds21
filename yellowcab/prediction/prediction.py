@@ -196,7 +196,9 @@ def make_predictions(
            sampler: what sampler should be used for over-/ under-sampling.
     :return:
     """
-    df = _make_data_preparation(df, prediction_type, target=target,  relevant_features = relevant_features)
+    df = _make_data_preparation(
+        df, prediction_type, target=target, relevant_features=relevant_features
+    )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
