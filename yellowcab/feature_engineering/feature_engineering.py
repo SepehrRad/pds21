@@ -30,7 +30,7 @@ def add_relevant_features(data_set, date_colummn):
 
 def _haversine(lon1, lat1, lon2, lat2):
     """
-    Returns the distance between the coordinates in km. 
+    Returns the distance between the coordinates in km.
     :param lon1: pickup location longitude
            lat1: pickup location latitude
            lon2: dropoff location londitude
