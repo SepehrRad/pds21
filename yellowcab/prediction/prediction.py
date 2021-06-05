@@ -1,15 +1,14 @@
 import math
 
+import xgboost as xgb
 from imblearn.metrics import classification_report_imbalanced
 from imblearn.under_sampling import NearMiss
 from sklearn import metrics
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
-import xgboost as xgb
-from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import Lasso
 
 from yellowcab.feature_engineering import add_relevant_features
 from yellowcab.io.output import save_model
@@ -47,7 +46,9 @@ def _make_data_preparation(df, relevant_features):
     return df
 
 
-def _make_pipeline(model, model_name, feature_selector=None, feature_selection=False, scaler_type=None):
+def _make_pipeline(
+    model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
+):
     """
     This function assembles several steps that can be cross-validated together
     while setting different parameters.
@@ -133,25 +134,26 @@ def _get_information_for_feature_selection(pipeline, X_train):
            X_train:
     :return:
     """
-    selected_feature_mask = pipeline.named_steps['feature_selector'].get_support()
+    selected_feature_mask = pipeline.named_steps["feature_selector"].get_support()
     original_features = len(X_train.columns)
     selected_features = len(X_train.columns[selected_feature_mask])
     print(
-        f'{selected_features} features were selected for prediction from the original {original_features} features.')
+        f"{selected_features} features were selected for prediction from the original {original_features} features."
+    )
 
 
 def make_predictions(
-        df,
-        prediction_type,
-        target,
-        model,
-        model_name,
-        scaler_type,
-        relevant_features,
-        feature_selector=None,
-        feature_selection=False,
-        use_sampler=False,
-        sampler=None,
+    df,
+    prediction_type,
+    target,
+    model,
+    model_name,
+    scaler_type,
+    relevant_features,
+    feature_selector=None,
+    feature_selection=False,
+    use_sampler=False,
+    sampler=None,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -179,8 +181,11 @@ def make_predictions(
     )
     if feature_selection:
         pipeline = _make_pipeline(
-            model=model, model_name=model_name, scaler_type=scaler_type, feature_selection=feature_selection,
-            feature_selector=feature_selector
+            model=model,
+            model_name=model_name,
+            scaler_type=scaler_type,
+            feature_selection=feature_selection,
+            feature_selector=feature_selector,
         )
     else:
         pipeline = _make_pipeline(
@@ -322,20 +327,50 @@ def trip_distance_regression(df, feature_selection=False):
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     df = add_relevant_features(df, "pickup_datetime")
     if feature_selection:
-        make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
+        make_predictions(
+            df=df,
+            prediction_type="regression",
+            target="trip_distance",
+            relevant_features={
                 "target": "trip_distance",
                 "categorical_features": ["Zone_dropoff", "Zone_pickup"],
                 "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-                "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions", "covid_new_cases"],
-            }, feature_selector=feature_selector, feature_selection=True, model=xgb.XGBRegressor(n_estimators=100), model_name="xg_boost",
-                         scaler_type=None, use_sampler=False, sampler=None)
+                "numerical_features": [
+                    "passenger_count",
+                    "Holiday",
+                    "covid_lockdown",
+                    "covid_school_restrictions",
+                    "covid_new_cases",
+                ],
+            },
+            feature_selector=feature_selector,
+            feature_selection=True,
+            model=xgb.XGBRegressor(n_estimators=100),
+            model_name="xg_boost",
+            scaler_type=None,
+            use_sampler=False,
+            sampler=None,
+        )
     else:
-        make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
-            "target": "trip_distance",
-            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions",
-                                   "covid_new_cases"],
-        }, model=xgb.XGBRegressor(n_estimators=100),
-                         model_name="xg_boost",
-                         scaler_type=None, use_sampler=False, sampler=None)
+        make_predictions(
+            df=df,
+            prediction_type="regression",
+            target="trip_distance",
+            relevant_features={
+                "target": "trip_distance",
+                "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+                "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+                "numerical_features": [
+                    "passenger_count",
+                    "Holiday",
+                    "covid_lockdown",
+                    "covid_school_restrictions",
+                    "covid_new_cases",
+                ],
+            },
+            model=xgb.XGBRegressor(n_estimators=100),
+            model_name="xg_boost",
+            scaler_type=None,
+            use_sampler=False,
+            sampler=None,
+        )
