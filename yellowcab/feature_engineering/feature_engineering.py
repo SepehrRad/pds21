@@ -25,12 +25,11 @@ def add_relevant_features(data_set, date_colummn):
 
 def _haversine(lon1, lat1, lon2, lat2):
     """
-    Returns the distance between the points in km. Vectorized and will work with arrays and return an array of
-    distances, but will also work with scalars and return a scalar.
-    :param lon1:
-    :param lat1:
-    :param lon2:
-    :param lat2:
+    Returns the distance between the coordinates in km. 
+    :param lon1: pickup location longitude
+           lat1: pickup location latitude
+           lon2: dropoff location londitude
+           lat2: dropoff location latitute
     :return:
     """
     ''' '''
