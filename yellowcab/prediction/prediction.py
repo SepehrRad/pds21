@@ -343,7 +343,7 @@ def trip_distance_regression(df, feature_selection=False):
                     "covid_new_cases",
                     "pickup_month",
                     "pickup_day",
-                    "pickup_hour"
+                    "pickup_hour",
                 ],
             },
             feature_selector=feature_selector,
@@ -371,7 +371,7 @@ def trip_distance_regression(df, feature_selection=False):
                     "covid_new_cases",
                     "pickup_month",
                     "pickup_day",
-                    "pickup_hour"
+                    "pickup_hour",
                 ],
             },
             model=xgb.XGBRegressor(n_estimators=100),
