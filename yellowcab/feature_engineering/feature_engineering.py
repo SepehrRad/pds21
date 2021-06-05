@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
-from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 import numpy as np
+from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 
 def add_relevant_features(data_set, date_colummn):
@@ -18,10 +18,15 @@ def add_relevant_features(data_set, date_colummn):
     data_set = create_holiday_column(data_set, date_colummn)
     data_set = create_season_column(data_set, date_colummn)
     data_set = create_covid_relevant_features(data_set, date_colummn)
-    data_set['haversine_distance'] = _haversine(data_set['centers_lat_pickup'], data_set['centers_long_pickup'],
-                                   data_set['centers_lat_dropoff'], data_set['centers_long_dropoff'])
+    data_set["haversine_distance"] = _haversine(
+        data_set["centers_lat_pickup"],
+        data_set["centers_long_pickup"],
+        data_set["centers_lat_dropoff"],
+        data_set["centers_long_dropoff"],
+    )
 
     return data_set
+
 
 def _haversine(lon1, lat1, lon2, lat2):
     """
@@ -32,9 +37,11 @@ def _haversine(lon1, lat1, lon2, lat2):
            lat2: dropoff location latitute
     :return:
     """
-    ''' '''
+    """ """
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
-    a = np.sin((lat2 - lat1) / 2.0)**2 + (np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0)**2)
+    a = np.sin((lat2 - lat1) / 2.0) ** 2 + (
+        np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0) ** 2
+    )
     distance = 6371 * 2 * np.arcsin(np.sqrt(a))
     return distance
 
@@ -164,5 +171,3 @@ def create_covid_relevant_features(data_set, date_column):
     data_set["covid_school_restrictions"].fillna(0, inplace=True)
 
     return data_set
-
-

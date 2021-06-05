@@ -7,7 +7,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import flatten_list, get_zone_information, get_random_state
+from yellowcab.io.utils import (flatten_list, get_random_state,
+                                get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 
@@ -30,7 +31,7 @@ def _make_data_preparation(df, relevant_features):
 
 
 def _make_pipeline(
-        model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
+    model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
 ):
     """
     This function assembles several steps that can be cross-validated together
@@ -126,17 +127,17 @@ def _get_information_for_feature_selection(pipeline, X_train):
 
 
 def make_predictions(
-        df,
-        prediction_type,
-        target,
-        model,
-        model_name,
-        scaler_type,
-        relevant_features,
-        feature_selector=None,
-        feature_selection=False,
-        use_sampler=False,
-        sampler=None,
+    df,
+    prediction_type,
+    target,
+    model,
+    model_name,
+    scaler_type,
+    relevant_features,
+    feature_selector=None,
+    feature_selection=False,
+    use_sampler=False,
+    sampler=None,
 ):
     """
     This function predicts and prints the prediction scores of a prediction

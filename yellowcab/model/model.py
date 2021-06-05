@@ -162,7 +162,7 @@ def trip_distance_regression(df, feature_selection=False):
                     "pickup_day",
                     "pickup_hour",
                     "haversine_distance",
-                    "weekend"
+                    "weekend",
                 ],
             },
             feature_selector=feature_selector,
@@ -192,7 +192,7 @@ def trip_distance_regression(df, feature_selection=False):
                     "pickup_day",
                     "pickup_hour",
                     "haversine_distance",
-                    "weekend"
+                    "weekend",
                 ],
             },
             model=xgb.XGBRegressor(n_estimators=100),
