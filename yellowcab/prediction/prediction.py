@@ -334,13 +334,16 @@ def trip_distance_regression(df, feature_selection=False):
             relevant_features={
                 "target": "trip_distance",
                 "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-                "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+                "cyclical_features": [],
                 "numerical_features": [
                     "passenger_count",
                     "Holiday",
                     "covid_lockdown",
                     "covid_school_restrictions",
                     "covid_new_cases",
+                    "pickup_month",
+                    "pickup_day",
+                    "pickup_hour"
                 ],
             },
             feature_selector=feature_selector,
@@ -359,13 +362,16 @@ def trip_distance_regression(df, feature_selection=False):
             relevant_features={
                 "target": "trip_distance",
                 "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-                "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+                "cyclical_features": [],
                 "numerical_features": [
                     "passenger_count",
                     "Holiday",
                     "covid_lockdown",
                     "covid_school_restrictions",
                     "covid_new_cases",
+                    "pickup_month",
+                    "pickup_day",
+                    "pickup_hour"
                 ],
             },
             model=xgb.XGBRegressor(n_estimators=100),
