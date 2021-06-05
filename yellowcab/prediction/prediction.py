@@ -31,7 +31,6 @@ def _get_random_state():
 
 def _make_data_preparation(df, relevant_features):
     """
-
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
     ----------------------------------------------
@@ -56,9 +55,10 @@ def _make_pipeline(model, model_name, feature_selector=None, feature_selection=F
     :param model: Used model for prediction.
            scaler_type (boolean): What scaler should be used to transform our data.
            model_name (String): Name of used model for prediction.
-           feature_selection !!!!!!
-           scaler_type !!!!!!
-    :return: Pipeline: Sequentially applies the list of transforms
+           feature_selection (boolean): If features should be selected to improve estimators’
+                                        accuracy scores or to boost their performance.
+           feature_selector: What feature selector should be applied.
+    :return: sklearn.pipeline: Sequentially applies the list of transforms
              and a final estimator.
     """
     steps = []
@@ -163,8 +163,9 @@ def make_predictions(
            model: Used model for prediction.
            model_name (String): Name of used model for prediction.
            scaler_type (String): scaler_type: What scaler should be used to transform our data.
-           sampler_name (String): Name of the sampler that should be used for over-/ undersampling
-           relevant_features (list):
+           relevant_features (list): Those features that should be used for prediction.
+           feature_selection (boolean): If features should be selected to improve estimators’
+                                        accuracy scores or to boost their performance.
            use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: what sampler should be used for over-/ under-sampling.
     :return:
@@ -308,18 +309,33 @@ def make_baseline_predictions(df):
     )
 
 
-def regression(df):
+def trip_distance_regression(df, feature_selection=False):
     """
-
-    :param df:
+    This function predicts the trip distance with using xgboost. Information is used that was available at
+    the start of the trip (including additional created features).
+    :param df (pandas.DataFrame): the given pandas data frame containing data
+                                  used for prediction.
+           feature_selection (boolean): If features should be selected to improve estimators’
+                                        accuracy scores or to boost their performance.
     :return:
     """
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     df = add_relevant_features(df, "pickup_datetime")
-    make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
+    if feature_selection:
+        make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
+                "target": "trip_distance",
+                "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+                "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
+                "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions", "covid_new_cases"],
+            }, feature_selector=feature_selector, feature_selection=True, model=xgb.XGBRegressor(n_estimators=100), model_name="xg_boost",
+                         scaler_type=None, use_sampler=False, sampler=None)
+    else:
+        make_predictions(df=df, prediction_type="regression", target="trip_distance", relevant_features={
             "target": "trip_distance",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
             "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions", "covid_new_cases"],
-        }, feature_selector=feature_selector, feature_selection=True, model=xgb.XGBRegressor(n_estimators=100), model_name="xg_boost",
-                     scaler_type=None, use_sampler=False, sampler=None)
+            "numerical_features": ["passenger_count", "Holiday", "covid_lockdown", "covid_school_restrictions",
+                                   "covid_new_cases"],
+        }, model=xgb.XGBRegressor(n_estimators=100),
+                         model_name="xg_boost",
+                         scaler_type=None, use_sampler=False, sampler=None)
