@@ -2,7 +2,7 @@ import calendar
 import datetime
 from collections import defaultdict
 from time import strptime
-
+import pandas as pd
 import branca.colormap
 import folium
 import numpy as np
@@ -701,9 +701,10 @@ def _create_event_heat_map(
         event = timespan
     base_map = _generate_base_map(default_location=location)
     map_data = _create_aggregator(df, aspect=aspect, event=event, event_heatmap=True)
-
-    HeatMapWithTime(data=map_data, radius=radius, gradient={0.2: 'blue', 0.4: 'lime', 0.6: 'orange', 1: 'red'},
-                    min_opacity=0.5, max_opacity=0.8, use_local_extrema=True, name="heatmap").add_to(base_map)
+    index = pd.date_range(event[0], event[1], freq='H').strftime("%Y-%m-%d %H:%M:%S").tolist()
+    del index[-1]
+    HeatMapWithTime(data=map_data, radius=radius, min_opacity=0.5, max_opacity=0.8, name="heatmap", index=index,
+                    ).add_to(base_map)
     _add_tile_layers(base_map=base_map)
     return base_map
 
