@@ -1,57 +1,62 @@
 import math
-
+import xgboost as xgb
+from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import Lasso
+from sklearn.model_selection import GridSearchCV
 from imblearn.metrics import classification_report_imbalanced
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
-
+from matplotlib import pyplot as plt
 from yellowcab.io.output import save_model
 from yellowcab.io.utils import (flatten_list, get_random_state,
                                 get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features):
+def _make_data_preparation(df, relevant_features, drop_first=False):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
     ----------------------------------------------
-    :param df (pandas.DataFrame): The given pandas data frame with all initial features
-           relevant_features (list):
-    :return: pandas.DataFrame: Data frame containing only those features which
+    :param 
+        df (pandas.DataFrame): The given pandas data frame with all initial features.
+        relevant_features (list): The given features upon which the model should be created.
+    :return: 
+        pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     df = df[mask]
-    df = transform_columns(
-        df=df, col_dict=relevant_features, drop_first=True
-    )  # als Parameter
+    df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
 
     return df
 
 
 def _make_pipeline(
-    model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
+        model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
 ):
     """
     This function assembles several steps that can be cross-validated together
     while setting different parameters.
     ----------------------------------------------
-    :param model: Used model for prediction.
-           scaler_type (boolean): What scaler should be used to transform our data.
-           model_name (String): Name of used model for prediction.
-           feature_selection (boolean): If features should be selected to improve estimators’
+    :param 
+        model: Used model for prediction.
+        scaler_type (boolean): What scaler should be used to transform our data.
+        model_name (String): Name of used model for prediction.
+        feature_selection (boolean): If features should be selected to improve estimators’
                                         accuracy scores or to boost their performance.
-           feature_selector: What feature selector should be applied.
-    :return: sklearn.pipeline: Sequentially applies the list of transforms
-             and a final estimator.
+        feature_selector: What feature selector should be applied.
+    :return: 
+        sklearn.pipeline: Sequentially applies the list of transformers
+        and a final estimator
     """
     steps = []
     if scaler_type is not None:
         if scaler_type == "Robust":
-            scaler = ("robust_scaler", RobustScaler())  # with outlier detection on top
+            scaler = ("robust_scaler", RobustScaler())  # with outlier detection
             steps.append(scaler)
         else:
             scaler = ("standard_scaler", StandardScaler())
@@ -97,10 +102,11 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
     This function prints the prediction scores for either a regression or
     a classification.
     ----------------------------------------------
-    :param prediction_type (String): Denotes whether used for regression or classification.
-           y_test (pandas.Series): Target values for testing a model
-           X_test (pandas.DataFrame): Regressors used for testing a model
-           pipeline (sklearn.pipeline): Sequentially applies a list of transforms and a final estimator.
+    :param
+        prediction_type (String): Denotes whether used for regression or classification.
+        y_test (pandas.Series): Target values for testing a model
+        X_test (pandas.DataFrame): Regressors used for testing a model
+        pipeline (sklearn.pipeline): Sequentially applies a list of transforms and a final estimator.
     """
     if prediction_type == "classification":
         print("-------MODEL SCORES-------")
@@ -117,8 +123,9 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
 def _get_information_for_feature_selection(pipeline, X_train):
     """
     This function returns the result of the performed feature selection process.
-    :param pipeline (sklearn.pipeline):
-           X_train (pandas.DataFrame):
+    :param 
+        pipeline (sklearn.pipeline): Sequentially applies a list of transforms and a final estimator.
+        X_train (pandas.DataFrame):  Regressors used for training a model
     """
     selected_feature_mask = pipeline.named_steps["feature_selector"].get_support()
     original_features = len(X_train.columns)
@@ -129,17 +136,23 @@ def _get_information_for_feature_selection(pipeline, X_train):
 
 
 def make_predictions(
-    df,
-    prediction_type,
-    target,
-    model,
-    model_name,
-    scaler_type,
-    relevant_features,
-    feature_selector=None,
-    feature_selection=False,
-    use_sampler=False,
-    sampler=None,
+        df,
+        prediction_type,
+        target,
+        model,
+        model_name,
+        scaler_type,
+        relevant_features,
+        feature_selector=None,
+        feature_selection=False,
+        use_sampler=False,
+        sampler=None,
+        show_feature_importance=False,
+        drop_first_category=True,
+        is_grid_search=False,
+        grid_search_params=None,
+        scoring=None
+
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -157,11 +170,17 @@ def make_predictions(
                                         accuracy scores or to boost their performance.
            use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: what sampler should be used for over-/ under-sampling.
+           is_grid_search (boolean): It denotes if the function should be used for hyper parameter search instead of prediction. Defaults to True.
+           grid_search_params (dict): The grid search parameter space that should be used.
+           scoring(String): the scoring methode which will be used in the grid search cv.
     """
-    print(
-        f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}"
-    )
-    df = _make_data_preparation(df, relevant_features=relevant_features)
+    if not is_grid_search:
+        print(
+            f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}"
+        )
+    else:
+        print("-------GRID SEARCH-------")
+    df = _make_data_preparation(df, relevant_features=relevant_features, drop_first=drop_first_category)
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
@@ -177,10 +196,33 @@ def make_predictions(
         pipeline = _make_pipeline(
             model=model, model_name=model_name, scaler_type=scaler_type
         )
-    pipeline = pipeline.fit(X_train, y_train)
-    if feature_selection:
-        _get_information_for_feature_selection(pipeline=pipeline, X_train=X_train)
-    save_model(pipeline.named_steps[model_name], model_name)
-    _print_prediction_scores(
-        prediction_type=prediction_type, y_test=y_test, X_test=X_test, pipeline=pipeline
-    )
+
+    if not is_grid_search:
+        pipeline = pipeline.fit(X_train, y_train)
+        if feature_selection:
+            _get_information_for_feature_selection(pipeline=pipeline, X_train=X_train)
+        if show_feature_importance and feature_selection:
+            selected_feature_mask = pipeline.named_steps['feature_selector'].get_support()
+            plt.barh(X_train.columns[selected_feature_mask], pipeline.named_steps[model_name].feature_importances_)
+            plt.show()
+        save_model(pipeline.named_steps[model_name], model_name)
+        _print_prediction_scores(
+            prediction_type=prediction_type, y_test=y_test, X_test=X_test, pipeline=pipeline
+        )
+    else:
+        return find_best_parameters_for_model(pipeline=pipeline, X_train=X_train, y_train=y_train,
+                                              model_name=model_name, model_params=grid_search_params, scoring=scoring)
+
+
+def find_best_parameters_for_model(pipeline, X_train, y_train, model_params, model_name, scoring):
+    """
+    """
+    print(f"Running grid search for {model_name} based on {scoring}")
+    grid_pipeline = GridSearchCV(estimator=pipeline, param_grid=model_params, n_jobs=-1, cv=3, scoring=scoring,
+                                 verbose=True)
+    grid_pipeline.fit(X_train, y_train)
+    print(f'Best {scoring} Score was: {grid_pipeline.best_score_}')
+    print(f"The best hyper parameters for {model_name} are:")
+    print(grid_pipeline.best_params_)
+
+
