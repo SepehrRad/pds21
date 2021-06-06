@@ -1,8 +1,7 @@
 import xgboost as xgb
 from imblearn.under_sampling import NearMiss
-from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression
 
 from ..feature_engineering import add_relevant_features
 from ..io import get_random_state
@@ -169,7 +168,8 @@ def trip_distance_regression_base(df):
         scaler_type=None,
         use_sampler=False,
         show_feature_importance=True,
-        sampler=None)
+        sampler=None,
+    )
 
 
 def build_fare_amount_model_base(df):
@@ -184,18 +184,28 @@ def build_fare_amount_model_base(df):
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
-    relevant_features = {'target': 'fare_amount',
-                         'categorical_features': ['Zone_dropoff', 'Zone_pickup'],
-                         'numerical_features': ['trip_distance', 'trip_duration_minutes', 'pickup_month', 'pickup_day',
-                                                'pickup_hour', 'dropoff_month', 'dropoff_day', 'dropoff_hour'],
-                         'cyclical_features': []}
+    relevant_features = {
+        "target": "fare_amount",
+        "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "dropoff_month",
+            "dropoff_day",
+            "dropoff_hour",
+        ],
+        "cyclical_features": [],
+    }
 
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     model = xgb.XGBRegressor(n_jobs=-1, n_estimators=100)
     make_predictions(
         df=df,
         relevant_features=relevant_features,
-        target='fare_amount',
+        target="fare_amount",
         scaler_type=None,
         prediction_type="regression",
         model_name="xgb_model_fare_amount_base",
@@ -203,7 +213,7 @@ def build_fare_amount_model_base(df):
         feature_selection=True,
         feature_selector=feature_selector,
         show_feature_importance=True,
-        drop_first_category=False
+        drop_first_category=False,
     )
 
 
@@ -218,25 +228,32 @@ def fare_amount_hyper_parameter_optimization(df):
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
-    relevant_features = {'target': 'fare_amount',
-                         'categorical_features': [],
-                         'numerical_features': ['trip_distance', 'trip_duration_minutes', 'pickup_month',
-                                                'pickup_hour'],
-                         'cyclical_features': []}
+    relevant_features = {
+        "target": "fare_amount",
+        "categorical_features": [],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_hour",
+        ],
+        "cyclical_features": [],
+    }
 
     model = xgb.XGBRegressor(n_jobs=-1, subsample=0.7, colsample_bytree=0.8)
     model_params = {
-        'xgb_fare_amount_model__learning_rate': [0.1, 0.05, 1],
-        'xgb_fare_amount_model__max_depth': [3, 5, 7, 10, 20],
-        'xgb_fare_amount_model__min_child_weight': [1, 4, 7],
-        'xgb_fare_amount_model__reg_lambda': [5, 10, 50],
-        'xgb_fare_amount_model__subsample': [0.5, 0.7, 1],
-        'xgb_fare_amount_model__colsample_bytree': [0.5, 0.7, 0.9],
-        'xgb_fare_amount_model__n_estimators': [60, 80, 100]}
+        "xgb_fare_amount_model__learning_rate": [0.1, 0.05, 1],
+        "xgb_fare_amount_model__max_depth": [3, 5, 7, 10, 20],
+        "xgb_fare_amount_model__min_child_weight": [1, 4, 7],
+        "xgb_fare_amount_model__reg_lambda": [5, 10, 50],
+        "xgb_fare_amount_model__subsample": [0.5, 0.7, 1],
+        "xgb_fare_amount_model__colsample_bytree": [0.5, 0.7, 0.9],
+        "xgb_fare_amount_model__n_estimators": [60, 80, 100],
+    }
     make_predictions(
         df=df,
         relevant_features=relevant_features,
-        target='fare_amount',
+        target="fare_amount",
         scaler_type=None,
         prediction_type="regression",
         model_name="xgb_fare_amount_model",
@@ -246,7 +263,7 @@ def fare_amount_hyper_parameter_optimization(df):
         drop_first_category=False,
         is_grid_search=True,
         grid_search_params=model_params,
-        scoring="neg_mean_absolute_error"
+        scoring="neg_mean_absolute_error",
     )
 
 
@@ -261,30 +278,37 @@ def build_fare_amount_model_optimized(df):
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
-    relevant_features = {'target': 'fare_amount',
-                         'categorical_features': [],
-                         'numerical_features': ['trip_distance', 'trip_duration_minutes', 'pickup_month',
-                                                'pickup_hour'],
-                         'cyclical_features': []}
+    relevant_features = {
+        "target": "fare_amount",
+        "categorical_features": [],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_hour",
+        ],
+        "cyclical_features": [],
+    }
 
-    model = xgb.XGBRegressor(n_jobs=-1,
-                             n_estimators=80,
-                             learning_rate=0.1,
-                             max_depth=10,
-                             min_child_weight=1,
-                             reg_lambda=10,
-                             subsample=0.7,
-                             colsample_bytree=0.9
-                             )
+    model = xgb.XGBRegressor(
+        n_jobs=-1,
+        n_estimators=80,
+        learning_rate=0.1,
+        max_depth=10,
+        min_child_weight=1,
+        reg_lambda=10,
+        subsample=0.7,
+        colsample_bytree=0.9,
+    )
     make_predictions(
         df=df,
         relevant_features=relevant_features,
-        target='fare_amount',
+        target="fare_amount",
         scaler_type=None,
         prediction_type="regression",
         model_name="xgb_model_fare_amount_optimized",
         model=model,
         feature_selection=False,
         show_feature_importance=True,
-        drop_first_category=False
+        drop_first_category=False,
     )
