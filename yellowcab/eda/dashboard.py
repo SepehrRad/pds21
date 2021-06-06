@@ -379,7 +379,6 @@ def _create_events_tab(df):
         name='Individual Event Timespan',
         start=datetime.datetime(2020, 1, 1, 0, 0, 0), end=datetime.datetime(2021, 1, 1, 0, 0, 0),
         value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        # callback_throttle=3000
     )
     event_options = pn.widgets.Select(name="Event", options=events)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
@@ -567,12 +566,10 @@ def _create_zone_choropleth(
     highlighted_zone = folium.Choropleth(
         geo_data=highlight_zone,
         name="selected zone",
-        data=data,
         columns=columns,
         smooth_factor=0,
-        key_on="feature.properties.LocationID",
-        fill_opacity=0.8,
-        line_opacity=1.0,
+        fill_opacity=1,
+        line_color="red",
     ).add_to(base_map)
     _add_tile_layers(base_map=base_map)
     # Display Region Label
@@ -746,7 +743,6 @@ def _create_event_heatmap_tab(df):
         name='Individual Event Timespan',
         start=datetime.datetime(2020, 1, 1, 0, 0, 0), end=datetime.datetime(2021, 1, 1, 0, 0, 0),
         value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        # callback_throttle=3000
     )
     event_options = pn.widgets.Select(name="Event", options=events)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
