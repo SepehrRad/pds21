@@ -9,21 +9,14 @@ from ..io import get_random_state
 from ..prediction import make_predictions
 
 
-def train():
-    lin = LinearRegression()
-    print("Linear model created")
-    print("Training...")
-
-    io.save_model(lin)
-
-
 def make_baseline_predictions(df):
     """
     This function performs baseline predictions for both classification and
     regression. Those can be used to evaluate fall other machine learning algorithms,
     as it provides the required point of comparison.
     ----------------------------------------------
-    :param df (pandas.DataFrame): the given pandas data frame containing data
+    :param
+            df (pandas.DataFrame): the given pandas data frame containing data
                                   used for prediction.
     :return:
     """
@@ -130,74 +123,54 @@ def make_baseline_predictions(df):
         sampler=None,
     )
 
+# hyperparameter search
+#finale version nur mit lasso ausgewählt
+# distazen
 
-def trip_distance_regression(df, feature_selection=False):
+def trip_distance_regression_base(df):
     """
     This function predicts the trip distance with using xgboost. Information is used that was available at
     the start of the trip (including additional created features).
-    :param df (pandas.DataFrame): the given pandas data frame containing data
+    :param
+            df (pandas.DataFrame): the given pandas data frame containing data
                                   used for prediction.
            feature_selection (boolean): If features should be selected to improve estimators’
                                         accuracy scores or to boost their performance.
-    :return:
     """
-    feature_selector = SelectFromModel(Lasso(alpha=0.1))
+
+    feature_selector = SelectFromModel(Lasso(alpha=0.01))
     df = add_relevant_features(df, "pickup_datetime")
-    if feature_selection:
-        make_predictions(
-            df=df,
-            prediction_type="regression",
-            target="trip_distance",
-            relevant_features={
-                "target": "trip_distance",
-                "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-                "cyclical_features": [],
-                "numerical_features": [
-                    "passenger_count",
-                    "Holiday",
-                    "covid_lockdown",
-                    "covid_school_restrictions",
-                    "covid_new_cases",
-                    "pickup_month",
-                    "pickup_day",
-                    "pickup_hour",
-                    "haversine_distance",
-                    "weekend",
-                ],
-            },
-            feature_selector=feature_selector,
-            feature_selection=True,
-            model=xgb.XGBRegressor(n_estimators=100),
-            model_name="xg_boost",
-            scaler_type=None,
-            use_sampler=False,
-            sampler=None,
-        )
-    else:
-        make_predictions(
-            df=df,
-            prediction_type="regression",
-            target="trip_distance",
-            relevant_features={
-                "target": "trip_distance",
-                "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-                "cyclical_features": [],
-                "numerical_features": [
-                    "passenger_count",
-                    "Holiday",
-                    "covid_lockdown",
-                    "covid_school_restrictions",
-                    "covid_new_cases",
-                    "pickup_month",
-                    "pickup_day",
-                    "pickup_hour",
-                    "haversine_distance",
-                    "weekend",
-                ],
-            },
-            model=xgb.XGBRegressor(n_estimators=100),
-            model_name="xg_boost",
-            scaler_type=None,
-            use_sampler=False,
-            sampler=None,
-        )
+
+    make_predictions(
+        df=df,
+        prediction_type="regression",
+        target="trip_distance",
+        relevant_features={
+            "target": "trip_distance",
+            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+            "cyclical_features": [],
+            "numerical_features": [
+                "passenger_count",
+                "Holiday",
+                "covid_lockdown",
+                "covid_school_restrictions",
+                "covid_new_cases",
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "haversine_distance",
+                "bearing_distance",
+                "manhattan_distance",
+                "weekend",
+                "weekday"
+            ],
+        },
+        feature_selector=feature_selector,
+        feature_selection=True,
+        model=xgb.XGBRegressor(n_estimators=100),
+        model_name="xg_boost",
+        scaler_type=None,
+        use_sampler=False,
+        sampler=None,
+    )
+

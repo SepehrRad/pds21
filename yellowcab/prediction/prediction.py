@@ -25,7 +25,7 @@ def _make_data_preparation(df, relevant_features):
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     df = df[mask]
-    df = transform_columns(df=df, col_dict=relevant_features, drop_first=True)
+    df = transform_columns(df=df, col_dict=relevant_features, drop_first=True) #als Parameter
 
     return df
 
@@ -99,12 +99,13 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
            y_test (pandas.Series): Target values for testing a model
            X_test (pandas.DataFrame): Regressors used for testing a model
            pipeline (sklearn.pipeline): Sequentially applies a list of transforms and a final estimator.
-    :return:
     """
     if prediction_type == "classification":
+        print("-------MODEL SCORES-------")
         print(classification_report_imbalanced(y_test, pipeline.predict(X_test)))
     else:
         y_pred = pipeline.predict(X_test)
+        print("-------MODEL SCORES-------")
         print(f"MAE: {metrics.mean_absolute_error(y_test, y_pred): .3f}")
         print(f"MSE: {metrics.mean_squared_error(y_test, y_pred): .3f}")
         print(f"RMSE: {math.sqrt(metrics.mean_squared_error(y_test, y_pred)): .3f}")
@@ -113,10 +114,9 @@ def _print_prediction_scores(prediction_type, y_test, X_test, pipeline):
 
 def _get_information_for_feature_selection(pipeline, X_train):
     """
-
-    :param pipeline:
-           X_train:
-    :return:
+    This function returns the result of the performed feature selection process.
+    :param pipeline (sklearn.pipeline):
+           X_train (pandas.DataFrame):
     """
     selected_feature_mask = pipeline.named_steps["feature_selector"].get_support()
     original_features = len(X_train.columns)
@@ -143,7 +143,8 @@ def make_predictions(
     This function predicts and prints the prediction scores of a prediction
     task dynamically defined by the input parameters.
     ----------------------------------------------
-    :param df (pandas.DataFrame): the given pandas data frame containing data used for prediction.
+    :param
+           df (pandas.DataFrame): the given pandas data frame containing data used for prediction.
            prediction_type (String: Denotes whether used for regression or classification.
            target (String): Dependent variable for prediction purposes.
            model: Used model for prediction.
@@ -154,7 +155,6 @@ def make_predictions(
                                         accuracy scores or to boost their performance.
            use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: what sampler should be used for over-/ under-sampling.
-    :return:
     """
     print(
         f"\nPredicted target: {target}, model name: {model_name}, prediction type: {prediction_type}"

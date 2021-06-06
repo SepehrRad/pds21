@@ -18,32 +18,93 @@ def add_relevant_features(data_set, date_colummn):
     data_set = create_holiday_column(data_set, date_colummn)
     data_set = create_season_column(data_set, date_colummn)
     data_set = create_covid_relevant_features(data_set, date_colummn)
-    data_set["haversine_distance"] = _haversine(
+    data_set = _manhattan_dist_vectorized(data_set)
+
+    data_set["bearing_distance"] = _bearing_dist_vectorized(
         data_set["centers_lat_pickup"],
         data_set["centers_long_pickup"],
         data_set["centers_lat_dropoff"],
         data_set["centers_long_dropoff"],
     )
 
+    data_set["haversine_distance"] = _haversine_dist_vectorized(
+        data_set["centers_lat_pickup"],
+        data_set["centers_long_pickup"],
+        data_set["centers_lat_dropoff"],
+        data_set["centers_long_dropoff"],
+    )
+    
+    data_set = _get_weekday(data_set)
+
     return data_set
 
 
-def _haversine(lon1, lat1, lon2, lat2):
+def _get_weekday(df):
     """
-    Returns the distance between the coordinates in km.
-    :param lon1: pickup location longitude
-           lat1: pickup location latitude
-           lon2: dropoff location londitude
-           lat2: dropoff location latitute
+    This function adds a column containing the weekday of each entry to the passed dataframe.
+    :param
+            df (pandas.DataFrame): Dataframe, where a column for the weekday should be added to.
     :return:
     """
-    """ """
+    df["weekday"] = df["pickup_datetime"].dt.dayofweek
+    return df
+
+
+def _haversine_dist_vectorized(lon1, lat1, lon2, lat2):
+    """
+    This function calculates the haversine distance of two passed vectors of points.
+    :param
+           lon1 (float): The longitude of the first point.
+           lat1 (float): The latitude of the first point.
+           lon2 (float): The longitude of the second point.
+           lat2 (float): The latitude of the second point.
+    """
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
     a = np.sin((lat2 - lat1) / 2.0) ** 2 + (
-        np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0) ** 2
+            np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0) ** 2
     )
     distance = 6371 * 2 * np.arcsin(np.sqrt(a))
     return distance
+
+
+def _bearing_dist_vectorized(lon1, lat1, lon2, lat2):
+    """
+    This function calculates the bearing distance of two passed vectors of points.
+    :param
+           lon1 (float): The longitude of the first point.
+           lat1 (float): The latitude of the first point.
+           lon2 (float): The longitude of the second point.
+           lat2 (float): The latitude of the second point.
+    """
+    lon_diff = lon2 - lon1
+    y = np.sin(lon_diff) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(lon_diff)
+    theta = np.arctan2(y, x)
+    bearing = (theta * 180 / np.pi + 360) % 360  # in degrees
+    return bearing
+
+
+def _manhattan_dist_vectorized(df):
+    """
+    This function calculates the manhattan distance of two passed vectors of points.
+    :param
+           df (pandas.DataFrame): Dataframe, where a column for the manhattan distance should be added to.
+    :return: pandas.DataFrame including a column for manhattan distance.
+    """
+    distance_a = _haversine_dist_vectorized(
+        lat1=df["centers_lat_pickup"],
+        lon1=df["centers_long_pickup"],
+        lat2=df["centers_lat_pickup"],
+        lon2=df["centers_long_dropoff"],
+    )
+    distance_b = _haversine_dist_vectorized(
+        lat1=df["centers_lat_pickup"],
+        lon1=df["centers_long_pickup"],
+        lat2=df["centers_lat_dropoff"],
+        lon2=df["centers_long_pickup"],
+    )
+    df["manhattan_distance"] = distance_a + distance_b
+    return df
 
 
 def _get_season_in_ny(date_time):
