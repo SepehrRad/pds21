@@ -607,8 +607,9 @@ def _create_zone_tab(df):
     months = [calendar.month_abbr[i] for i in range(1, 13)]
     months.append("All")
     month_options = pn.widgets.Select(name="Month", options=months)
-    zones = list(df["PULocationID"].unique())
-    zones.sort(key=int)
+    nyc_zones = read_geo_dataset("taxi_zones.geojson")
+    nyc_zones["LocationID"] = nyc_zones["LocationID"].astype("str")
+    zones = dict(zip(nyc_zones.zone, nyc_zones.LocationID))
     zone_options = pn.widgets.Select(name="Zone", options=zones)
     direction_options = pn.widgets.Select(name="Direction", options={"Outbound": "outbound", "Inbound": "inbound"})
     focus_area_options = pn.widgets.Select(
