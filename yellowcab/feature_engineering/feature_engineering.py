@@ -33,7 +33,7 @@ def add_relevant_features(data_set, date_colummn):
         data_set["centers_lat_dropoff"],
         data_set["centers_long_dropoff"],
     )
-    
+
     data_set = _get_weekday(data_set)
 
     return data_set
@@ -61,7 +61,7 @@ def _haversine_dist_vectorized(lon1, lat1, lon2, lat2):
     """
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
     a = np.sin((lat2 - lat1) / 2.0) ** 2 + (
-            np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0) ** 2
+        np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2.0) ** 2
     )
     distance = 6371 * 2 * np.arcsin(np.sqrt(a))
     return distance

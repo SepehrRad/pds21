@@ -123,9 +123,11 @@ def make_baseline_predictions(df):
         sampler=None,
     )
 
+
 # hyperparameter search
-#finale version nur mit lasso ausgewählt
+# finale version nur mit lasso ausgewählt
 # distazen
+
 
 def trip_distance_regression_base(df):
     """
@@ -162,7 +164,7 @@ def trip_distance_regression_base(df):
                 "bearing_distance",
                 "manhattan_distance",
                 "weekend",
-                "weekday"
+                "weekday",
             ],
         },
         feature_selector=feature_selector,
@@ -173,4 +175,3 @@ def trip_distance_regression_base(df):
         use_sampler=False,
         sampler=None,
     )
-

@@ -25,7 +25,9 @@ def _make_data_preparation(df, relevant_features):
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     df = df[mask]
-    df = transform_columns(df=df, col_dict=relevant_features, drop_first=True) #als Parameter
+    df = transform_columns(
+        df=df, col_dict=relevant_features, drop_first=True
+    )  # als Parameter
 
     return df
 
