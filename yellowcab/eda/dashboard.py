@@ -218,17 +218,22 @@ def _create_aggregator(
     if event_heatmap:
         df["count"] = 1
         df_hour_list = []
-        if aspect == "pickup":
-            for hour in df.pickup_hour.sort_values().unique():
+        event_range = pd.date_range(event[0], event[1], freq='H')
+        for stamp in event_range.delete(-1):
+            month = stamp.month
+            day = stamp.day
+            hour = stamp.hour
+            if aspect == "pickup":
                 df_hour_list.append(
                     df.loc[
-                        df.pickup_hour == hour, [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
+                        (df.pickup_hour == hour) & (df.pickup_month == month) & (df.pickup_day == day), [
+                            f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
                         cols_grp).sum().reset_index().values.tolist())
-        else:
-            for hour in df.dropoff_hour.sort_values().unique():
+            else:
                 df_hour_list.append(
                     df.loc[
-                        df.dropoff_hour == hour, [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
+                        (df.dropoff_hour == hour) & (df.dropoff_month == month) & (df.dropoff_day == day), [
+                            f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
                         cols_grp).sum().reset_index().values.tolist())
         return df_hour_list
 
@@ -704,7 +709,7 @@ def _create_event_heat_map(
     index = pd.date_range(event[0], event[1], freq='H').strftime("%Y-%m-%d %H:%M:%S").tolist()
     del index[-1]
     HeatMapWithTime(data=map_data, radius=radius, min_opacity=0.5, max_opacity=0.8, name="heatmap", index=index,
-                    ).add_to(base_map)
+                    use_local_extrema=True).add_to(base_map)
     _add_tile_layers(base_map=base_map)
     return base_map
 
