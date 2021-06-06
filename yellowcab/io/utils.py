@@ -78,6 +78,18 @@ def get_zone_information(
     return df
 
 
+def get_random_state():
+    """
+    This function defines our random state, so that it's the same in
+    every application
+    ----------------------------------------------
+    :return:
+        int: the integer used for random state parameter
+    """
+    RANDOM_STATE = 7
+    return RANDOM_STATE
+
+
 def flatten_list(not_flattened_list):
     """
     This function flattens an passed list.
