@@ -16,7 +16,7 @@ def monthly_visualization(df):
     :param
         df (pd.DataFrame): DataFrame with trip data.
     :returns
-        pd.show(): Monthly distribution plots.
+        plt.show(): Monthly distribution plots.
     """
     monthsDict = {
         1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
