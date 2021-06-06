@@ -15,6 +15,13 @@ from yellowcab.io.input import read_geo_dataset
 
 
 def _add_tile_layers(base_map=None):
+    """
+    This function adds four tile layers (cartodbpositron, cartodbdark_matter, stamenterrain, openstreetmap) to a given
+    base map.
+    ----------------------------------------------
+    :param
+        base_map(folium.Map): The given base map.
+    """
     folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
     folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
     folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
@@ -40,10 +47,10 @@ def _create_monthly_choropleth(
         log_count(bool): Shows data on log scale.
         cmap(String): The chosen colormap.
         location(String): The focus area.
-    :returns
+    :return:
         folium.Choropleth: The created choropleth
     :raises
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     month = strptime(month, "%b").tm_mon
     data = _create_aggregator(
@@ -110,8 +117,7 @@ def _create_choropleth_tab(df):
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
-        pn.Column: the created choropleth panel element
-
+        pn.Column: The created choropleth panel element
     """
     cmap = [
         "BuGn",
@@ -159,7 +165,7 @@ def _generate_base_map(default_location="New York"):
     :param
         default_location(String): The default location of the base map.
     :return:
-        folium.Map: the created base map
+        folium.Map: The created base map
     """
     locations = {
         "New York": [40.693943, -73.985880],
@@ -192,20 +198,21 @@ def _create_aggregator(
         df, month=None, event=None, aspect="pickup", choropleth=False, log_count=False, event_heatmap=False
 ):
     """
-    This function creates a base folium map.
+    This function aggregates the given data based on the other parameters set.
     ----------------------------------------------
     :param
-        df(pd.DataFrame): Data that should be aggregated
-        month(int): Shows the data for this month only
-        event(datetime tuple): The selected event as datetime tuple
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
+        df(pd.DataFrame): Data that should be aggregated.
+        month(int): Shows the data for this month only.
+        event(datetime tuple): The selected event as datetime tuple.
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
         choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
                           in a choropleth.
-        log_count(bool): Shows data on log scale
+        log_count(bool): Shows data on log scale.
+        event_heatmap(bool): If True -> the data will be grouped on a hourly level for a given Event.
     :return:
-        df(pd.DataFrame): Aggregated Data
+        df(pd.DataFrame): Aggregated data
     :raises:
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     cols_grp = [f"centers_lat_{aspect}", f"centers_long_{aspect}"]
     if month is not None:
@@ -305,7 +312,7 @@ def _create_general_heatmap_tab(df):
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
     :return:
-        pn.Column: the created heatmap panel element
+        pn.Column: The created heatmap panel element
     """
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
@@ -336,12 +343,12 @@ def _create_general_heatmap_tab(df):
 
 def _create_events_tab(df):
     """
-    This function creates a folium choropleth tab with interactive widgets.
+    This function creates a folium choropleth tab for events with interactive widgets.
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
-        pn.Column: the created choropleth panel element
+        pn.Column: The created choropleth panel element
     """
     cmap = [
         "BuGn",
@@ -415,14 +422,14 @@ def _create_event_choropleth(
         df(pd.DataFrame): Data that is used to make the choropleth.
         event(datetime tuple): The desired event which will be aggregated.
         timespan(datetime tuple): Simulates an individual event.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-        log_count(bool): Shows data on log scale
-        cmap(String): The chosen colormap
-        location(String): The focus area
-    :returns
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+        log_count(bool): Shows data on log scale.
+        cmap(String): The chosen colormap.
+        location(String): The focus area.
+    :return:
         folium.Choropleth: The created choropleth
     :raises
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
         event = timespan
@@ -499,14 +506,14 @@ def _create_zone_choropleth(
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
         zone(String): The selected zone.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-        log_count(bool): Shows data on log scale
-        cmap(String): The chosen colormap
-        location(String): The focus area
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+        log_count(bool): Shows data on log scale.
+        cmap(String): The chosen colormap.
+        location(String): The focus area.
     :return:
         folium.Choropleth: The created choropleth
     :raises
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     if month == "All":
         month = None
@@ -576,7 +583,7 @@ def _create_zone_choropleth(
 
 def _create_zone_tab(df):
     """
-    This function creates a folium choropleth tab with interactive widgets.
+    This function creates a folium choropleth tab to pick a certain zone with interactive widgets.
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
@@ -630,20 +637,20 @@ def _create_zone_tab(df):
 def _create_zone_aggregator(
         df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False):
     """
-    This function creates a base folium map.
+    This function aggregates the given data based on the other parameters set.
     ----------------------------------------------
     :param
-        df(pd.DataFrame): Data that should be aggregated
-        month(int): Shows the data for this month only
+        df(pd.DataFrame): Data that should be aggregated.
+        month(int): Shows the data for this month only.
         zone(String): The selected zone.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
         choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
                           in a choropleth.
-        log_count(bool): Shows data on log scale
+        log_count(bool): Shows data on log scale.
     :return:
-        df(pd.DataFrame): Aggregated Data
+        df(pd.DataFrame): Aggregated data
     :raises:
-        ValueError: if the aggregation aspect is not 'pickup'/'dropoff'
+        ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     pickup_cols_grp = ["centers_lat_pickup", "centers_long_pickup"]
     dropoff_cols_grp = ["centers_lat_dropoff", "centers_long_dropoff"]
@@ -690,17 +697,17 @@ def _create_event_heat_map(
         timespan=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
 ):
     """
-    This function creates a folium heatmap based on different aspects of the given data.
+    This function creates a folium heatmap with time based on different aspects of the given data.
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
         radius(int): The observed radius for each location upon creating the heatmap.
         location(String): The focus area.
-        log_count(bool): Shows data on log scale.
-        inferno_colormap(bool): If True -> changes the default cmap to inferno cmap.
+        event(datetime tuple): The desired event which will be aggregated.
+        timespan(datetime tuple): Simulates an individual event.
     :return:
-        folium.Heatmap: The created Heatmap
+        folium.HeatmapWithTime: The created HeatmapWithTime
     """
     if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
         event = timespan
@@ -719,9 +726,9 @@ def _create_event_heatmap_tab(df):
     This function creates a folium heatmap with time tab with interactive widgets.
     ----------------------------------------------
     :param
-        df(pd.DataFrame): Data that is used to make the heatmap.
+        df(pd.DataFrame): Data that is used to make the heatmap with time.
     :return:
-        pn.Column: the created heatmap panel element
+        pn.Column: The created heatmap with time panel element
     """
     events = {
         "New Year": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
@@ -772,7 +779,7 @@ def create_dashboard(df):
     :param
         df(pd.DataFrame): Data that is used to make the interactive.
     :return:
-        pn.Tabs: The interactive panel dashboard.
+        pn.Tabs: The interactive panel dashboard
     """
 
     heatmap_general = ("Heatmap General", _create_general_heatmap_tab(df))
