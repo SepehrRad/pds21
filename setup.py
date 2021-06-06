@@ -3,6 +3,7 @@ from setuptools import find_packages, setup
 requirements = [
     "pandas",
     "numpy",
+    "matplotlib",
     "click",
     "scikit-learn",
     "pyarrow",
@@ -12,6 +13,7 @@ requirements = [
     "folium",
     "plotly",
     "branca",
+    "xgboost",
     "tqdm",
     "imblearn",
 ]
