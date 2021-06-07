@@ -61,14 +61,14 @@ def _create_monthly_choropleth(
     info = ["zone", "LocationID", "borough"]
     columns = []
     if log_count:
-        legend_name = f"{aspect} Count (Log Scale)"
+        legend_name = f"{aspect} count (Log Scale)"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
             "DOLocationID"
         )
         columns.append(f"{aspect}_count_log")
 
     else:
-        legend_name = f"{aspect} Count"
+        legend_name = f"{aspect} count"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
             "DOLocationID"
         )
@@ -139,7 +139,7 @@ def _create_choropleth_tab(df):
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
     )
-    log_checkbox = pn.widgets.Checkbox(name="Log scale")
+    log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_monthly_choropleth,
@@ -322,7 +322,7 @@ def _create_general_heatmap_tab(df):
     radius_option = pn.widgets.IntSlider(
         name="Heatmap Radius", start=5, end=20, step=1, value=15
     )
-    log_checkbox = pn.widgets.Checkbox(name="Log scale")
+    log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     inferno_checkbox = pn.widgets.Checkbox(name="Inferno colormap")
     dashboard = interact(
         _create_heat_map,
@@ -385,7 +385,7 @@ def _create_events_tab(df):
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
     )
-    log_checkbox = pn.widgets.Checkbox(name="Log scale")
+    log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_event_choropleth,
@@ -440,14 +440,14 @@ def _create_event_choropleth(
     info = ["zone", "LocationID", "borough"]
     columns = []
     if log_count:
-        legend_name = f"{aspect} Count (Log Scale)"
+        legend_name = f"{aspect} count (Log Scale)"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
             "DOLocationID"
         )
         columns.append(f"{aspect}_count_log")
 
     else:
-        legend_name = f"{aspect} Count"
+        legend_name = f"{aspect} count"
         columns.append("PULocationID") if aspect == "pickup" else columns.append(
             "DOLocationID"
         )
@@ -530,11 +530,12 @@ def _create_zone_choropleth(
     info = ["zone", "LocationID", "borough"]
     columns = []
     if log_count:
-        legend_name = f"{aspect} Count (Log Scale)"
+        legend_name = f"{aspect} count (Log Scale)"
         columns.append(f"{aspect_abr}LocationID")
+        columns.append(f"{aspect}_count_log")
 
     else:
-        legend_name = f"{aspect} Count"
+        legend_name = f"{aspect} count"
         columns.append(f"{aspect_abr}LocationID")
         columns.append(f"{aspect}_count")
         info.append(f"{aspect}_count")
@@ -612,7 +613,7 @@ def _create_zone_tab(df):
     focus_area_options = pn.widgets.Select(
         name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
     )
-    log_checkbox = pn.widgets.Checkbox(name="Log scale")
+    log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_zone_choropleth,
