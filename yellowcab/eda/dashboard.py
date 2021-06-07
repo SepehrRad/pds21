@@ -22,8 +22,8 @@ def create_animated_monthly_plot(df, aspect="pickup"):
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-    :returns
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+    :return:
         plotly.scatter_mapbox: The animated scatter_mapbox
     """
     data = _create_aggregator(df, aspect=aspect, animated=True)
@@ -49,18 +49,18 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
+    df, month=1, aspect="pickup", map_style="carto-positron", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
-        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff
-        cmap(String): The chosen colormap
-        month(int): Used to show the data for this month only
-        map_style(String): Tile layer style of the choropleth map
-    :returns
+        month(int): Used to show the data for this month only.
+        aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
+        map_style(String): Tile layer style of the choropleth map.
+        cmap(String): The chosen colormap.
+    :return:
         plotly.scatter_mapbox: The created scatter_mapbox
     """
     data = _create_aggregator(df, aspect=aspect, animated=True)
@@ -93,7 +93,6 @@ def _create_monthly_animated_tab(df):
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
         pn.Column: the created plotly express animated panel element
-
     """
     mapbox_tiles = [
         "carto-positron",
@@ -116,22 +115,23 @@ def _create_monthly_animated_tab(df):
         "cividis",
         "teal",
     ]
-    map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
-    month_options = pn.widgets.IntSlider(name="Month", start=1, end=12, step=1, value=1)
+    months = [calendar.month_abbr[i] for i in range(1, 13)]
+    month_options = pn.widgets.Select(name="Month", options=dict(zip(months, range(1, 13))))
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
+    map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_plotly_monthly_plot,
-        map_style=map_options,
-        cmap=cmap_option,
         month=month_options,
         aspect=location_options,
+        map_style=map_options,
+        cmap=cmap_option,
         df=fixed(df),
     )
     title = pn.pane.Markdown("""# New York Monthly Map""")
 
     monthly_animated_tab = pn.Column(
-        title, pn.Row(dashboard[1], dashboard[0], height=1000, width=1200)
+        title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
     )
     return monthly_animated_tab
 
@@ -321,7 +321,8 @@ def _generate_base_map(default_location="New York"):
 
 
 def _create_aggregator(
-        df, month=None, event=None, aspect="pickup", animated=False, choropleth=False, log_count=False, event_heatmap=False
+        df, month=None, event=None, aspect="pickup", animated=False, choropleth=False, log_count=False,
+        event_heatmap=False
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -331,8 +332,8 @@ def _create_aggregator(
         month(int): Shows the data for this month only.
         event(datetime tuple): The selected event as datetime tuple.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
-        animated(bool): If True -> the Pickup Location IDs / Drop off Location IDs and pickup/dropoff month will also be added for later use
-                          in a plotly express plot.
+        animated(bool): If True -> the Pickup Location IDs / Drop off Location IDs and pickup/dropoff month will also be
+                        added for later use in a plotly express plot.
         choropleth(bool): If True -> the Pickup Location IDs / Drop off Location IDs will also be added for later use
                           in a choropleth.
         log_count(bool): Shows data on log scale.
@@ -345,7 +346,10 @@ def _create_aggregator(
         df = df.loc[df[f"{aspect}_month"] == month]
     if event is not None:
         df = df.loc[(df[f"{aspect}_datetime"] >= event[0]) & (df[f"{aspect}_datetime"] < event[1])]
-    if choropleth or animated:
+    if choropleth:
+        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(["DOLocationID"])
+    if animated:
+        cols_grp.extend([f"{aspect}_month"])
         cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(["DOLocationID"])
 
     if event_heatmap:
@@ -915,5 +919,6 @@ def create_dashboard(df):
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
     event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
-    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, plotly_express_animated_monthly, events, zones, event_heatmap)
+    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, plotly_express_animated_monthly, events, zones,
+                        event_heatmap)
     return dashboard
