@@ -49,16 +49,16 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-    df, month=1, aspect="pickup", map_style="carto-positron", cmap="inferno"
+    df, map_style="carto-positron",  month=1, aspect="pickup", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
     ----------------------------------------------
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
+        map_style(String): Tile layer style of the choropleth map.
         month(int): Used to show the data for this month only.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
-        map_style(String): Tile layer style of the choropleth map.
         cmap(String): The chosen colormap.
     :return:
         plotly.scatter_mapbox: The created scatter_mapbox
@@ -115,17 +115,18 @@ def _create_monthly_animated_tab(df):
         "cividis",
         "teal",
     ]
+    # Adding Dropdowns
+    map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
     months = [calendar.month_abbr[i] for i in range(1, 13)]
     month_options = pn.widgets.Select(name="Month", options=dict(zip(months, range(1, 13))))
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
-    map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
         _create_plotly_monthly_plot,
-        month=month_options,
         aspect=location_options,
         map_style=map_options,
         cmap=cmap_option,
+        month=month_options,
         df=fixed(df),
     )
     title = pn.pane.Markdown("""# New York Monthly Map""")
