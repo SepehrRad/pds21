@@ -131,8 +131,13 @@ def read_geo_dataset(
     return nyc_zones
 
 
-def read_model(name="model.pkl"):
-    path = os.path.join(get_data_path(), "output", name)
+def read_model(model):
+    """
+    This function reads a model that has previously been saved as a pickle file in our output folder.
+    :param model: The name of the model that we want to read.
+    :return: The pretrained model.
+    """
+    path = os.path.join(get_data_path(), "output", "{}".format(model))
     with open(path, "rb") as f:
         model = pickle.load(f)
     return model
