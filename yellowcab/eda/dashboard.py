@@ -2,13 +2,13 @@ import calendar
 import datetime
 from collections import defaultdict
 from time import strptime
-import pandas as pd
+
 import branca.colormap
 import folium
 import numpy as np
+import pandas as pd
 import panel as pn
-from folium.plugins import HeatMapWithTime
-from folium.plugins import HeatMap
+from folium.plugins import HeatMap, HeatMapWithTime
 from panel.interact import fixed, interact
 from plotly import express as px
 
@@ -49,7 +49,7 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-    df, map_style="carto-positron",  month=1, aspect="pickup", cmap="inferno"
+    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
@@ -118,7 +118,9 @@ def _create_monthly_animated_tab(df):
     # Adding Dropdowns
     map_options = pn.widgets.Select(name="Tiles", options=mapbox_tiles)
     months = [calendar.month_abbr[i] for i in range(1, 13)]
-    month_options = pn.widgets.Select(name="Month", options=dict(zip(months, range(1, 13))))
+    month_options = pn.widgets.Select(
+        name="Month", options=dict(zip(months, range(1, 13)))
+    )
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
     dashboard = interact(
@@ -145,20 +147,28 @@ def _add_tile_layers(base_map=None):
     :param
         base_map(folium.Map): The given base map.
     """
-    folium.TileLayer('cartodbpositron', name="light mode", control=True).add_to(base_map)
-    folium.TileLayer('cartodbdark_matter', name="dark mode", control=True).add_to(base_map)
-    folium.TileLayer('stamenterrain', name="stamenterrain", control=True).add_to(base_map)
-    folium.TileLayer('openstreetmap', name="open street map", control=True).add_to(base_map)
+    folium.TileLayer("cartodbpositron", name="light mode", control=True).add_to(
+        base_map
+    )
+    folium.TileLayer("cartodbdark_matter", name="dark mode", control=True).add_to(
+        base_map
+    )
+    folium.TileLayer("stamenterrain", name="stamenterrain", control=True).add_to(
+        base_map
+    )
+    folium.TileLayer("openstreetmap", name="open street map", control=True).add_to(
+        base_map
+    )
     folium.LayerControl().add_to(base_map)
 
 
 def _create_monthly_choropleth(
-        df,
-        month="Jan",
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    month="Jan",
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -264,7 +274,15 @@ def _create_choropleth_tab(df):
     month_options = pn.widgets.Select(name="Month", options=months)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
-        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+        name="Focus Area",
+        options=[
+            "New York",
+            "Manhattan",
+            "Brooklyn",
+            "Bronx",
+            "Queens",
+            "Staten Island",
+        ],
     )
     log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
@@ -300,13 +318,19 @@ def _generate_base_map(default_location="New York"):
         "Brooklyn": [40.650002, -73.949997],
         "Bronx": [40.837048, -73.865433],
         "Queens": [40.706501, -73.823964],
-        "Staten Island": [40.579021, -74.151535]
+        "Staten Island": [40.579021, -74.151535],
     }
 
     if default_location is not None and default_location not in locations:
         raise ValueError("Could not find the given location coordinates.")
 
-    if default_location in ["Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]:
+    if default_location in [
+        "Manhattan",
+        "Brooklyn",
+        "Bronx",
+        "Queens",
+        "Staten Island",
+    ]:
         default_zoom_start = 12
     else:
         default_zoom_start = 10
@@ -316,14 +340,20 @@ def _generate_base_map(default_location="New York"):
         location=default_location,
         control_scale=True,
         zoom_start=default_zoom_start,
-        tiles=None
+        tiles=None,
     )
     return base_map
 
 
 def _create_aggregator(
-        df, month=None, event=None, aspect="pickup", animated=False, choropleth=False, log_count=False,
-        event_heatmap=False
+    df,
+    month=None,
+    event=None,
+    aspect="pickup",
+    animated=False,
+    choropleth=False,
+    log_count=False,
+    event_heatmap=False,
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -346,17 +376,24 @@ def _create_aggregator(
     if month is not None:
         df = df.loc[df[f"{aspect}_month"] == month]
     if event is not None:
-        df = df.loc[(df[f"{aspect}_datetime"] >= event[0]) & (df[f"{aspect}_datetime"] < event[1])]
+        df = df.loc[
+            (df[f"{aspect}_datetime"] >= event[0])
+            & (df[f"{aspect}_datetime"] < event[1])
+        ]
     if choropleth:
-        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(["DOLocationID"])
+        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(
+            ["DOLocationID"]
+        )
     if animated:
         cols_grp.extend([f"{aspect}_month"])
-        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(["DOLocationID"])
+        cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(
+            ["DOLocationID"]
+        )
 
     if event_heatmap:
         df["count"] = 1
         df_hour_list = []
-        event_range = pd.date_range(event[0], event[1], freq='H')
+        event_range = pd.date_range(event[0], event[1], freq="H")
         for stamp in event_range.delete(-1):
             month = stamp.month
             day = stamp.day
@@ -364,15 +401,29 @@ def _create_aggregator(
             if aspect == "pickup":
                 df_hour_list.append(
                     df.loc[
-                        (df.pickup_hour == hour) & (df.pickup_month == month) & (df.pickup_day == day), [
-                            f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
-                        cols_grp).sum().reset_index().values.tolist())
+                        (df.pickup_hour == hour)
+                        & (df.pickup_month == month)
+                        & (df.pickup_day == day),
+                        [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
+                    ]
+                    .groupby(cols_grp)
+                    .sum()
+                    .reset_index()
+                    .values.tolist()
+                )
             else:
                 df_hour_list.append(
                     df.loc[
-                        (df.dropoff_hour == hour) & (df.dropoff_month == month) & (df.dropoff_day == day), [
-                            f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"]].groupby(
-                        cols_grp).sum().reset_index().values.tolist())
+                        (df.dropoff_hour == hour)
+                        & (df.dropoff_month == month)
+                        & (df.dropoff_day == day),
+                        [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
+                    ]
+                    .groupby(cols_grp)
+                    .sum()
+                    .reset_index()
+                    .values.tolist()
+                )
         return df_hour_list
 
     df_agg = df.groupby(cols_grp).size().to_frame(f"{aspect}_count").reset_index()
@@ -401,12 +452,12 @@ def _create_inferno_cmap():
 
 
 def _create_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        location="New York",
-        log_count=False,
-        inferno_colormap=False,
+    df,
+    aspect="pickup",
+    radius=15,
+    location="New York",
+    log_count=False,
+    inferno_colormap=False,
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
@@ -422,13 +473,15 @@ def _create_heat_map(
         folium.Heatmap: The created Heatmap
     """
     base_map = _generate_base_map(default_location=location)
-    map_data = _create_aggregator(df, aspect=aspect, log_count=log_count).values.tolist()
+    map_data = _create_aggregator(
+        df, aspect=aspect, log_count=log_count
+    ).values.tolist()
 
     if inferno_colormap:
         inferno_colormap, inferno_gradient = _create_inferno_cmap()
-        HeatMap(data=map_data, radius=radius, gradient=inferno_gradient, name="heatmap").add_to(
-            base_map
-        )
+        HeatMap(
+            data=map_data, radius=radius, gradient=inferno_gradient, name="heatmap"
+        ).add_to(base_map)
         inferno_colormap.add_to(base_map)
     else:
         HeatMap(data=map_data, radius=radius, name="heatmap").add_to(base_map)
@@ -447,7 +500,15 @@ def _create_general_heatmap_tab(df):
     """
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
-        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+        name="Focus Area",
+        options=[
+            "New York",
+            "Manhattan",
+            "Brooklyn",
+            "Bronx",
+            "Queens",
+            "Staten Island",
+        ],
     )
 
     radius_option = pn.widgets.IntSlider(
@@ -496,25 +557,64 @@ def _create_events_tab(df):
         "YlOrRd",
     ]
     events = {
-        "New Year": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
-        "Superbowl": (datetime.datetime(2020, 2, 2, 18, 30, 0), datetime.datetime(2020, 2, 2, 22, 30, 0)),
-        "Independence Day": (datetime.datetime(2020, 7, 4, 0, 0, 0), datetime.datetime(2020, 7, 5, 0, 0, 0)),
-        "Election": (datetime.datetime(2020, 11, 3, 6, 0, 0), datetime.datetime(2020, 11, 3, 21, 0, 0)),
-        "Thanksgiving Parade": (datetime.datetime(2020, 11, 26, 9, 0, 0), datetime.datetime(2020, 11, 26, 12, 0, 0)),
-        "Black Friday": (datetime.datetime(2020, 11, 27, 0, 0, 0), datetime.datetime(2020, 11, 28, 0, 0, 0)),
-        "Christmas": (datetime.datetime(2020, 12, 24, 0, 0, 0), datetime.datetime(2020, 12, 27, 0, 0, 0)),
-        "New Years Eve": (datetime.datetime(2020, 12, 31, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        "Individual Event": (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1))
+        "New Year": (
+            datetime.datetime(2020, 1, 1, 0, 0, 0),
+            datetime.datetime(2020, 1, 2, 0, 0, 0),
+        ),
+        "Superbowl": (
+            datetime.datetime(2020, 2, 2, 18, 30, 0),
+            datetime.datetime(2020, 2, 2, 22, 30, 0),
+        ),
+        "Independence Day": (
+            datetime.datetime(2020, 7, 4, 0, 0, 0),
+            datetime.datetime(2020, 7, 5, 0, 0, 0),
+        ),
+        "Election": (
+            datetime.datetime(2020, 11, 3, 6, 0, 0),
+            datetime.datetime(2020, 11, 3, 21, 0, 0),
+        ),
+        "Thanksgiving Parade": (
+            datetime.datetime(2020, 11, 26, 9, 0, 0),
+            datetime.datetime(2020, 11, 26, 12, 0, 0),
+        ),
+        "Black Friday": (
+            datetime.datetime(2020, 11, 27, 0, 0, 0),
+            datetime.datetime(2020, 11, 28, 0, 0, 0),
+        ),
+        "Christmas": (
+            datetime.datetime(2020, 12, 24, 0, 0, 0),
+            datetime.datetime(2020, 12, 27, 0, 0, 0),
+        ),
+        "New Years Eve": (
+            datetime.datetime(2020, 12, 31, 0, 0, 0),
+            datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
+        "Individual Event": (
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+        ),
     }
     timespan_options = pn.widgets.DatetimeRangeInput(
-        name='Individual Event Timespan',
-        start=datetime.datetime(2020, 1, 1, 0, 0, 0), end=datetime.datetime(2021, 1, 1, 0, 0, 0),
-        value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+        name="Individual Event Timespan",
+        start=datetime.datetime(2020, 1, 1, 0, 0, 0),
+        end=datetime.datetime(2021, 1, 1, 0, 0, 0),
+        value=(
+            datetime.datetime(2020, 1, 1, 0, 0, 0),
+            datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
     )
     event_options = pn.widgets.Select(name="Event", options=events)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
-        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+        name="Focus Area",
+        options=[
+            "New York",
+            "Manhattan",
+            "Brooklyn",
+            "Bronx",
+            "Queens",
+            "Staten Island",
+        ],
     )
     log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
@@ -537,13 +637,19 @@ def _create_events_tab(df):
 
 
 def _create_event_choropleth(
-        df,
-        event=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
-        timespan=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    event=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2020, 1, 2, 0, 0, 0),
+    ),
+    timespan=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2021, 1, 1, 0, 0, 0),
+    ),
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -561,7 +667,10 @@ def _create_event_choropleth(
     :raises
         ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
-    if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
+    if event == (
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+    ):
         event = timespan
     data = _create_aggregator(
         df, event=event, aspect=aspect, log_count=log_count, choropleth=True
@@ -621,13 +730,13 @@ def _create_event_choropleth(
 
 
 def _create_zone_choropleth(
-        df,
-        month="all",
-        zone="1",
-        aspect="outbound",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    month="all",
+    zone="1",
+    aspect="outbound",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -706,7 +815,9 @@ def _create_zone_choropleth(
     _add_tile_layers(base_map=base_map)
     # Display Region Label
     choropleth.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
-    highlighted_zone.geojson.add_child(folium.features.GeoJsonTooltip(info, labels=True))
+    highlighted_zone.geojson.add_child(
+        folium.features.GeoJsonTooltip(info, labels=True)
+    )
     return base_map
 
 
@@ -740,9 +851,19 @@ def _create_zone_tab(df):
     nyc_zones["LocationID"] = nyc_zones["LocationID"].astype("str")
     zones = dict(zip(nyc_zones.zone, nyc_zones.LocationID))
     zone_options = pn.widgets.Select(name="Zone", options=zones)
-    direction_options = pn.widgets.Select(name="Direction", options={"Outbound": "outbound", "Inbound": "inbound"})
+    direction_options = pn.widgets.Select(
+        name="Direction", options={"Outbound": "outbound", "Inbound": "inbound"}
+    )
     focus_area_options = pn.widgets.Select(
-        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+        name="Focus Area",
+        options=[
+            "New York",
+            "Manhattan",
+            "Brooklyn",
+            "Bronx",
+            "Queens",
+            "Staten Island",
+        ],
     )
     log_checkbox = pn.widgets.Checkbox(name="Log Scale")
     cmap_option = pn.widgets.Select(name="Color Map", options=cmap)
@@ -754,7 +875,7 @@ def _create_zone_tab(df):
         month=month_options,
         zone=zone_options,
         aspect=direction_options,
-        df=fixed(df)
+        df=fixed(df),
     )
     title = pn.pane.Markdown("""# New York Inbound and Outbound""")
 
@@ -765,7 +886,8 @@ def _create_zone_tab(df):
 
 
 def _create_zone_aggregator(
-        df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False):
+    df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False
+):
     """
     This function aggregates the given data based on the other parameters set.
     ----------------------------------------------
@@ -794,7 +916,10 @@ def _create_zone_aggregator(
 
     if zone is not None:
         if month is not None:
-            df = df.loc[(df[f"{location}_month"] == month) & (df[f"{location_abr}LocationID"] == zone)]
+            df = df.loc[
+                (df[f"{location}_month"] == month)
+                & (df[f"{location_abr}LocationID"] == zone)
+            ]
         else:
             df = df.loc[df[f"{location_abr}LocationID"] == zone]
     if choropleth:
@@ -803,7 +928,10 @@ def _create_zone_aggregator(
 
     if location == "pickup":
         df_agg = (
-            df.groupby(dropoff_cols_grp).size().to_frame(f"{aspect}_count").reset_index()
+            df.groupby(dropoff_cols_grp)
+            .size()
+            .to_frame(f"{aspect}_count")
+            .reset_index()
         )
     elif location == "dropoff":
         df_agg = (
@@ -819,12 +947,18 @@ def _create_zone_aggregator(
 
 
 def _create_event_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        location="New York",
-        event=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
-        timespan=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+    df,
+    aspect="pickup",
+    radius=15,
+    location="New York",
+    event=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2020, 1, 2, 0, 0, 0),
+    ),
+    timespan=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2021, 1, 1, 0, 0, 0),
+    ),
 ):
     """
     This function creates a folium heatmap with time based on different aspects of the given data.
@@ -839,14 +973,28 @@ def _create_event_heat_map(
     :return:
         folium.HeatmapWithTime: The created HeatmapWithTime
     """
-    if event == (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1)):
+    if event == (
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+    ):
         event = timespan
     base_map = _generate_base_map(default_location=location)
     map_data = _create_aggregator(df, aspect=aspect, event=event, event_heatmap=True)
-    index = pd.date_range(event[0], event[1], freq='H').strftime("%Y-%m-%d %H:%M:%S").tolist()
+    index = (
+        pd.date_range(event[0], event[1], freq="H")
+        .strftime("%Y-%m-%d %H:%M:%S")
+        .tolist()
+    )
     del index[-1]
-    HeatMapWithTime(data=map_data, radius=radius, min_opacity=0.5, max_opacity=0.8, name="heatmap", index=index,
-                    use_local_extrema=True).add_to(base_map)
+    HeatMapWithTime(
+        data=map_data,
+        radius=radius,
+        min_opacity=0.5,
+        max_opacity=0.8,
+        name="heatmap",
+        index=index,
+        use_local_extrema=True,
+    ).add_to(base_map)
     _add_tile_layers(base_map=base_map)
     return base_map
 
@@ -861,25 +1009,64 @@ def _create_event_heatmap_tab(df):
         pn.Column: The created heatmap with time panel element
     """
     events = {
-        "New Year": (datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2020, 1, 2, 0, 0, 0)),
-        "Superbowl": (datetime.datetime(2020, 2, 2, 0, 0, 0), datetime.datetime(2020, 2, 3, 0, 0, 0)),
-        "Independence Day": (datetime.datetime(2020, 7, 4, 0, 0, 0), datetime.datetime(2020, 7, 5, 0, 0, 0)),
-        "Election": (datetime.datetime(2020, 11, 3, 0, 0, 0), datetime.datetime(2020, 11, 4, 0, 0, 0)),
-        "Thanksgiving Parade": (datetime.datetime(2020, 11, 26, 0, 0, 0), datetime.datetime(2020, 11, 27, 0, 0, 0)),
-        "Black Friday": (datetime.datetime(2020, 11, 27, 0, 0, 0), datetime.datetime(2020, 11, 28, 0, 0, 0)),
-        "Christmas": (datetime.datetime(2020, 12, 24, 0, 0, 0), datetime.datetime(2020, 12, 27, 0, 0, 0)),
-        "New Years Eve": (datetime.datetime(2020, 12, 31, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
-        "Individual Event": (datetime.datetime(1, 1, 1, 1, 1, 1), datetime.datetime(1, 1, 1, 1, 1, 1))
+        "New Year": (
+            datetime.datetime(2020, 1, 1, 0, 0, 0),
+            datetime.datetime(2020, 1, 2, 0, 0, 0),
+        ),
+        "Superbowl": (
+            datetime.datetime(2020, 2, 2, 0, 0, 0),
+            datetime.datetime(2020, 2, 3, 0, 0, 0),
+        ),
+        "Independence Day": (
+            datetime.datetime(2020, 7, 4, 0, 0, 0),
+            datetime.datetime(2020, 7, 5, 0, 0, 0),
+        ),
+        "Election": (
+            datetime.datetime(2020, 11, 3, 0, 0, 0),
+            datetime.datetime(2020, 11, 4, 0, 0, 0),
+        ),
+        "Thanksgiving Parade": (
+            datetime.datetime(2020, 11, 26, 0, 0, 0),
+            datetime.datetime(2020, 11, 27, 0, 0, 0),
+        ),
+        "Black Friday": (
+            datetime.datetime(2020, 11, 27, 0, 0, 0),
+            datetime.datetime(2020, 11, 28, 0, 0, 0),
+        ),
+        "Christmas": (
+            datetime.datetime(2020, 12, 24, 0, 0, 0),
+            datetime.datetime(2020, 12, 27, 0, 0, 0),
+        ),
+        "New Years Eve": (
+            datetime.datetime(2020, 12, 31, 0, 0, 0),
+            datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
+        "Individual Event": (
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+        ),
     }
     timespan_options = pn.widgets.DatetimeRangeInput(
-        name='Individual Event Timespan',
-        start=datetime.datetime(2020, 1, 1, 0, 0, 0), end=datetime.datetime(2021, 1, 1, 0, 0, 0),
-        value=(datetime.datetime(2020, 1, 1, 0, 0, 0), datetime.datetime(2021, 1, 1, 0, 0, 0)),
+        name="Individual Event Timespan",
+        start=datetime.datetime(2020, 1, 1, 0, 0, 0),
+        end=datetime.datetime(2021, 1, 1, 0, 0, 0),
+        value=(
+            datetime.datetime(2020, 1, 1, 0, 0, 0),
+            datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
     )
     event_options = pn.widgets.Select(name="Event", options=events)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
-        name="Focus Area", options=["New York", "Manhattan", "Brooklyn", "Bronx", "Queens", "Staten Island"]
+        name="Focus Area",
+        options=[
+            "New York",
+            "Manhattan",
+            "Brooklyn",
+            "Bronx",
+            "Queens",
+            "Staten Island",
+        ],
     )
     radius_option = pn.widgets.IntSlider(
         name="Heatmap Radius", start=5, end=20, step=1, value=15
@@ -920,6 +1107,12 @@ def create_dashboard(df):
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
     event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
-    dashboard = pn.Tabs(heatmap_general, choropleth_monthly, plotly_express_animated_monthly, events, zones,
-                        event_heatmap)
+    dashboard = pn.Tabs(
+        heatmap_general,
+        choropleth_monthly,
+        plotly_express_animated_monthly,
+        events,
+        zones,
+        event_heatmap,
+    )
     return dashboard
