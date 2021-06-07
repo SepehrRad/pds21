@@ -52,7 +52,10 @@ def _create_monthly_choropleth(
     :raises
         ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
-    month = strptime(month, "%b").tm_mon
+    if month == "All":
+        month = None
+    else:
+        month = strptime(month, "%b").tm_mon
     data = _create_aggregator(
         df, month=month, aspect=aspect, log_count=log_count, choropleth=True
     )
@@ -134,6 +137,7 @@ def _create_choropleth_tab(df):
         "YlOrRd",
     ]
     months = [calendar.month_abbr[i] for i in range(1, 13)]
+    months.append("All")
     month_options = pn.widgets.Select(name="Month", options=months)
     location_options = pn.widgets.Select(name="Location", options=["pickup", "dropoff"])
     focus_area_options = pn.widgets.Select(
