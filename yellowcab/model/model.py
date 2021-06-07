@@ -198,15 +198,26 @@ def trip_distance_hyper_parameter_optimization(df):
     }
 
     model = xgb.XGBRegressor(n_jobs=-1, subsample=0.7, colsample_bytree=0.8)
+    """
+    First Round:
+    Fitting 3 folds for each of 128 candidates, totalling 384 fits
+    Best neg_mean_absolute_error Score was: -0.4039193813773141
+    {'xgb_trip_distance_model__colsample_bytree': 0.9, 'xgb_trip_distance_model__learning_rate': 0.1,
+     'xgb_trip_distance_model__max_depth': 20, 'xgb_trip_distance_model__min_child_weight': 7,
+     'xgb_trip_distance_model__n_estimators': 80, 'xgb_trip_distance_model__reg_lambda': 50,
+     'xgb_trip_distance_model__subsample': 1}
+    """
+
     model_params = {
-        "xgb_fare_amount_model__learning_rate": [0.1, 0.05, 1],
-        "xgb_fare_amount_model__max_depth": [3, 5, 7, 10, 20],
-        "xgb_fare_amount_model__min_child_weight": [1, 4, 7],
-        "xgb_fare_amount_model__reg_lambda": [5, 10, 50],
-        "xgb_fare_amount_model__subsample": [0.5, 0.7, 1],
-        "xgb_fare_amount_model__colsample_bytree": [0.5, 0.7, 0.9],
-        "xgb_fare_amount_model__n_estimators": [60, 80, 100],
+        "xgb_trip_distance_model__learning_rate": [0.1, 0.05],
+        "xgb_trip_distance_model__max_depth": [5, 8, 10],
+        "xgb_trip_distance_model__min_child_weight": [5, 7],
+        "xgb_trip_distance_model__reg_lambda": [5, 7, 10],
+        "xgb_trip_distance_model__subsample": [0.7, 0.9],
+        "xgb_trip_distance_model__colsample_bytree": [0.7, 0.9],
+        "xgb_trip_distance_model__n_estimators": [80],
     }
+
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -270,7 +281,6 @@ def build_trip_distance_model_optimized(df):
         show_feature_importance=True,
         drop_first_category=False,
     )
-
 
 
 def build_fare_amount_model_base(df):
