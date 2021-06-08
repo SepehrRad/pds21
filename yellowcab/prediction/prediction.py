@@ -3,7 +3,6 @@ import math
 from imblearn.metrics import classification_report_imbalanced
 from matplotlib import pyplot as plt
 from sklearn import metrics
-
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
@@ -13,7 +12,7 @@ from yellowcab.io.utils import flatten_list, get_random_state, get_zone_informat
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features, is_manhattan=False ,drop_first=False):
+def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first=False):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
@@ -29,7 +28,9 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False ,drop_first
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     if is_manhattan:
-        df = df.loc[(df.Borough_pickup == 'Manhattan') | (df.Borough_dropoff == 'Manhattan'), :]
+        df = df.loc[
+            (df.Borough_pickup == "Manhattan") | (df.Borough_dropoff == "Manhattan"), :
+        ]
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
 
@@ -153,7 +154,7 @@ def make_predictions(
     is_grid_search=False,
     grid_search_params=None,
     scoring=None,
-    is_manhattan=False
+    is_manhattan=False,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -184,10 +185,13 @@ def make_predictions(
         print("-------GRID SEARCH-------")
 
     if is_manhattan:
-        model_name = model_name+"_manhattan"
+        model_name = model_name + "_manhattan"
 
     df = _make_data_preparation(
-        df, relevant_features=relevant_features, drop_first=drop_first_category,is_manhattan=is_manhattan
+        df,
+        relevant_features=relevant_features,
+        drop_first=drop_first_category,
+        is_manhattan=is_manhattan,
     )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler

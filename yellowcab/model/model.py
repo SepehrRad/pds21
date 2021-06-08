@@ -313,5 +313,5 @@ def build_fare_amount_model_optimized(df, manhattan=False):
         feature_selection=False,
         show_feature_importance=True,
         drop_first_category=False,
-        is_manhattan=manhattan
+        is_manhattan=manhattan,
     )
