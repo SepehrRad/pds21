@@ -5,16 +5,15 @@ import yellowcab
 from numpy import random
 
 
-def monthly_visualization(df):
+def monthly_visualization_full(df):
     """
-
-    This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
-    a normal distribution & returns monthly plots.
+    This function visualizes the monthly distribution of trip duration of the given DataFrame with annual trip data,
+    including comparison to a normal distribution & returns monthly plots.
 
     ----------------------------------------------
 
     :param
-        df (pd.DataFrame): DataFrame with trip data.
+        df(pd.DataFrame): DataFrame with trip data.
     :returns
         plt.show(): Monthly distribution plots.
     """
