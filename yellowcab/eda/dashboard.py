@@ -10,9 +10,9 @@ import panel as pn
 import seaborn as sns
 from folium.plugins import HeatMap
 from matplotlib.figure import Figure
+from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
-from numpy import random
 
 from yellowcab.io.input import read_geo_dataset
 from yellowcab.io.utils import get_zone_information
@@ -51,7 +51,7 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-        df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
+    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
@@ -139,13 +139,13 @@ def _create_monthly_animated_tab(df):
 
 
 def _create_monthly_choropleth(
-        df,
-        month="Jan",
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        map_style="cartodbpositron",
-        location="New York",
+    df,
+    month="Jan",
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    map_style="cartodbpositron",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -311,7 +311,7 @@ def _generate_base_map(default_location="New York", map_style="cartodbpositron")
 
 
 def _create_aggregator(
-        df, month=None, aspect="pickup", animated=False, choropleth=False, log_count=False
+    df, month=None, aspect="pickup", animated=False, choropleth=False, log_count=False
 ):
     """
     This function creates a base folium map.
@@ -381,13 +381,13 @@ def _create_inferno_cmap():
 
 
 def _create_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        map_style="cartodbpositron",
-        location="New York",
-        log_count=False,
-        inferno_colormap=False,
+    df,
+    aspect="pickup",
+    radius=15,
+    map_style="cartodbpositron",
+    location="New York",
+    log_count=False,
+    inferno_colormap=False,
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
@@ -483,20 +483,26 @@ def monthly_visualization(df, month=None, hist=None, xlim=None):
         pn.pane.Matplotlib(): Monthly distribution plot.
     """
     month = strptime(month, "%b").tm_mon
-    df_m = df.loc[df['pickup_month'] == month]
+    df_m = df.loc[df["pickup_month"] == month]
 
     fig = Figure(figsize=(8, 6))
     ax = fig.subplots()
-    l1 = sns.distplot(df_m['trip_duration_minutes'], ax=ax, hist=hist)
-    l2 = sns.distplot(random.normal(size=5000, loc=df_m['trip_duration_minutes'].mean()), hist=hist, ax=ax)
-    l3 = ax.axvline(df_m['trip_duration_minutes'].mean(), linestyle='dashed')
-    ax.legend([l1, l2, l3],
-              labels=['Original distribution', 'Normal distribution', 'Mean'],
-              loc='upper right',
-              borderaxespad=0.3)
+    l1 = sns.distplot(df_m["trip_duration_minutes"], ax=ax, hist=hist)
+    l2 = sns.distplot(
+        random.normal(size=5000, loc=df_m["trip_duration_minutes"].mean()),
+        hist=hist,
+        ax=ax,
+    )
+    l3 = ax.axvline(df_m["trip_duration_minutes"].mean(), linestyle="dashed")
+    ax.legend(
+        [l1, l2, l3],
+        labels=["Original distribution", "Normal distribution", "Mean"],
+        loc="upper right",
+        borderaxespad=0.3,
+    )
     plt.setp(ax, xlim=(0, xlim))
-    ax.set_xlabel('Trip duration (minutes)')
-    ax.set_ylabel('Density')
+    ax.set_xlabel("Trip duration (minutes)")
+    ax.set_ylabel("Density")
     mpl_pane = pn.pane.Matplotlib(fig, tight=True)
     return mpl_pane
 
@@ -516,7 +522,9 @@ def _create_duration_distribution_tab(df):
     months = [calendar.month_abbr[i] for i in range(1, 13)]
     month_options = pn.widgets.Select(name="Month", options=months)
     hist_options = pn.widgets.Checkbox(name="Histogram")
-    xlim_options = pn.widgets.IntSlider(name="Range x-axis (minutes)", start=20, end=80, step=10, value=40)
+    xlim_options = pn.widgets.IntSlider(
+        name="Range x-axis (minutes)", start=20, end=80, step=10, value=40
+    )
 
     dashboard = interact(
         monthly_visualization,
@@ -549,8 +557,14 @@ def create_dashboard(df):
         "Monthly Scatter Plot",
         _create_monthly_animated_tab(df),
     )
-    duration_distribution_monthly = ("Duration distribution", _create_duration_distribution_tab(df))
+    duration_distribution_monthly = (
+        "Duration distribution",
+        _create_duration_distribution_tab(df),
+    )
     dashboard = pn.Tabs(
-        heatmap_general, choropleth_monthly, plotly_express_animated_monthly, duration_distribution_monthly
+        heatmap_general,
+        choropleth_monthly,
+        plotly_express_animated_monthly,
+        duration_distribution_monthly,
     )
     return dashboard
