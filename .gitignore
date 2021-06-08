@@ -121,3 +121,4 @@ dmypy.json
 
 # OS
 .DS_Store
+/data/input/cleaned_feature/

@@ -1,6 +1,6 @@
 import xgboost as xgb
 from imblearn.under_sampling import NearMiss
-from sklearn.feature_selection import SelectFromModel
+from sklearn.feature_selection import SelectFromModel, SelectKBest, f_classif
 from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression
 
 from ..feature_engineering import add_relevant_features
@@ -185,20 +185,23 @@ def build_fare_amount_model_base(df):
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
-        "target": "fare_amount",
-        "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-        "numerical_features": [
-            "trip_distance",
-            "trip_duration_minutes",
+        "target": "payment_type",
+        "cyclical_features": [
             "pickup_month",
             "pickup_day",
             "pickup_hour",
-            "dropoff_month",
-            "dropoff_day",
             "dropoff_hour",
+            "dropoff_day",
+            "dropoff_month",
         ],
-        "cyclical_features": [],
-    }
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "passenger_count",
+            "trip_distance",
+            "total_amount",
+            "trip_duration_minutes",
+        ],
+    },
 
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     model = xgb.XGBRegressor(n_jobs=-1, n_estimators=100)
@@ -307,6 +310,170 @@ def build_fare_amount_model_optimized(df):
         scaler_type=None,
         prediction_type="regression",
         model_name="xgb_model_fare_amount_optimized",
+        model=model,
+        feature_selection=False,
+        show_feature_importance=True,
+        drop_first_category=False,
+    )
+
+
+def build_payment_type_model_base(df):
+    """
+    This Function predicts a fare amount based on training data, using XGBoost Regressor.
+    This Function should be called only with a sub sample of the available data.
+    This is a basic model with no hyper parameter being tuned.
+    -------------------------------------------------------------------------------
+    :param
+        df(pandas.DataFrame): the given pandas data frame containing data
+                                  used for prediction.
+    """
+    # The pickup month/day/hour will not be transformed as
+    # there is no need for cyclical transformation when using a decision tree
+    relevant_features = {
+        "target": "payment_type",
+        "cyclical_features": [],
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "passenger_count",
+            "trip_distance",
+            "total_amount",
+            "trip_duration_minutes",
+            "passenger_count",
+            "Holiday",
+            "covid_lockdown",
+            "covid_school_restrictions",
+            "covid_new_cases",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "haversine_distance",
+            "bearing_distance",
+            "manhattan_distance",
+            "weekend",
+            "weekday",
+        ],
+    }
+
+    feature_selector = SelectKBest(score_func=f_classif, k=10)
+    model = xgb.XGBClassifier(n_jobs=-1, n_estimators=100, objective="multi:softmax", num_classes=4)
+    make_predictions(
+        df=df,
+        relevant_features=relevant_features,
+        target="payment_type",
+        scaler_type=None,
+        prediction_type="classification",
+        model_name="xgb_model_payment_type_base",
+        model=model,
+        feature_selection=True,
+        feature_selector=feature_selector,
+        show_feature_importance=True,
+        drop_first_category=False,
+    )
+
+
+def payment_type_hyper_parameter_optimization(df):
+    """
+    This Function run a grid search on the data and print out the best hyper parameters for the payment type model
+    This Function should be called only with a sub sample of the available data.
+    -------------------------------------------------------------------------------
+    :param
+        df(pandas.DataFrame): the given pandas data frame containing data
+                                  used for grid search.
+    """
+    # The pickup month/day/hour will not be transformed as
+    # there is no need for cyclical transformation when using a decision tree
+    relevant_features = {
+        "target": "payment_type",
+        "cyclical_features": [],
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "passenger_count",
+            "trip_distance",
+            "total_amount",
+            "trip_duration_minutes",
+            "passenger_count",
+            "Holiday",
+            "covid_lockdown",
+            "covid_school_restrictions",
+            "covid_new_cases",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "haversine_distance",
+            "bearing_distance",
+            "manhattan_distance",
+            "weekend",
+            "weekday",
+        ],
+    }
+    model = xgb.XGBClassifier(n_jobs=-1, subsample=0.7, colsample_bytree=0.8, objective="multi:softmax", num_classes=4)
+    model_params = {
+        "xgb_payment_type_model__learning_rate": [0.1, 0.05, 1],
+        "xgb_payment_type_model__max_depth": [3, 5, 7, 10, 20],
+        "xgb_payment_type_model__min_child_weight": [1, 4, 7],
+        "xgb_payment_type_model__reg_lambda": [0, 1, 10],
+        "xgb_payment_type_model__subsample": [0.5, 0.7, 1],
+        "xgb_payment_type_model__colsample_bytree": [0.5, 0.7, 0.9],
+        "xgb_payment_type_model__n_estimators": [60, 80, 100],
+        "xgb_payment_type_model__max_delta_step": [0, 0.1, 0.4]
+    }
+    make_predictions(
+        df=df,
+        relevant_features=relevant_features,
+        target="payment_type",
+        scaler_type=None,
+        prediction_type="classification",
+        model_name="xgb_payment_type_model",
+        model=model,
+        feature_selection=False,
+        show_feature_importance=True,
+        drop_first_category=False,
+        is_grid_search=True,
+        grid_search_params=model_params,
+        scoring="neg_mean_absolute_error",
+    )
+
+
+def build_payment_type_model_optimized(df):
+    """
+    This Function predicts a payment type based training data, using XGBoost Classifier.
+    This model uses the optimized hyper parameters and the selected features in the base model
+    -------------------------------------------------------------------------------
+    :param
+        df(pandas.DataFrame): the given pandas data frame containing data
+                                  used for prediction.
+    """
+    # The pickup month/day/hour will not be transformed as
+    # there is no need for cyclical transformation when using a decision tree
+    relevant_features = {
+        "target": "payment_type",
+        "categorical_features": [],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_hour",
+        ],
+        "cyclical_features": [],
+    }
+
+    model = xgb.XGBClassifier(
+        n_jobs=-1,
+        n_estimators=80,
+        learning_rate=0.1,
+        max_depth=10,
+        min_child_weight=1,
+        reg_lambda=10,
+        subsample=0.7,
+        colsample_bytree=0.9,
+    )
+    make_predictions(
+        df=df,
+        relevant_features=relevant_features,
+        target="payment_type",
+        scaler_type=None,
+        prediction_type="classification",
+        model_name="xgb_model_payment_type_optimized",
         model=model,
         feature_selection=False,
         show_feature_importance=True,
