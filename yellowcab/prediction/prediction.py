@@ -1,6 +1,6 @@
 import math
 
-import xgboost as xgb
+
 from imblearn.metrics import classification_report_imbalanced
 from matplotlib import pyplot as plt
 from sklearn import metrics
@@ -27,11 +27,19 @@ def _make_data_preparation(df, relevant_features, drop_first=False):
         pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
+    created_features = None #Refactor
+    final_feature_list = None
+    if "created_features" in relevant_features:
+        created_features = relevant_features.copy()
+        created_features.pop("categorical_features")
+        final_feature_list = flatten_list(list(created_features.values()))
+        relevant_features.pop("created_features")
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
-
+    if created_features is not None:
+        df = df[final_feature_list]
     return df
 
 

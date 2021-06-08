@@ -352,6 +352,7 @@ def build_payment_type_model_base(df):
             "weekend",
             "weekday",
         ],
+        "created_features": [],
     }
 
     feature_selector = SelectKBest(score_func=f_classif, k=10)
@@ -455,6 +456,7 @@ def build_payment_type_model_optimized(df):
             "pickup_hour",
         ],
         "cyclical_features": [],
+
     }
 
     model = xgb.XGBClassifier(
