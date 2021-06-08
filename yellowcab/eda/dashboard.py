@@ -8,7 +8,7 @@ import numpy as np
 import panel as pn
 import seaborn as sns
 from folium.plugins import HeatMap
-from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from panel.interact import fixed, interact
 from plotly import express as px
 from numpy import random
@@ -421,47 +421,6 @@ def _create_heat_map(
     return base_map
 
 
-def monthly_visualization(df):
-    """
-
-    This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
-    a normal distribution & returns monthly plots.
-
-    ----------------------------------------------
-
-    :param
-        df (pd.DataFrame): DataFrame with trip data.
-    :returns
-        pd.show(): Monthly distribution plots.
-    """
-    monthsDict = {
-        1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
-        7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
-    }
-
-    fig, ax = plt.subplots(3, 4, sharex=True, sharey=True, figsize=(16, 12))
-    fig.tight_layout(pad=3.0)
-    fig.suptitle('Trip duration distribution', fontsize=18)
-    plt.subplots_adjust(left=0.1, top=0.9)
-    for i, ax in enumerate(ax.flat):
-        i = i + 1
-        df_m = df.loc[df['pickup_month'] == i]
-
-        l1 = sns.distplot(df_m['trip_duration_minutes'], ax=ax)
-        l2 = sns.distplot(random.normal(size=5000, loc=df_m['trip_duration_minutes'].mean()), hist=False, ax=ax)
-        l3 = ax.axvline(df_m['trip_duration_minutes'].mean(), linestyle='dashed')
-
-        ax.set_title(monthsDict.get(i), fontsize=12)
-        ax.legend([l1, l2, l3],
-                  labels=['Original distribution', 'Normal distribution', 'Mean'],
-                  loc='upper right',
-                  borderaxespad=0.3)
-        plt.setp(ax, xlim=(0, 40))
-    plt.xlabel('Trip duration (minutes)')
-    plt.ylabel('Density')
-    plt.show()
-
-
 def _create_general_heatmap_tab(df):
     """
     This function creates a folium heatmap tab with interactive widgets.
@@ -507,6 +466,56 @@ def _create_general_heatmap_tab(df):
     return general_heatmap_tab
 
 
+def monthly_visualization(df, month=None):
+    """
+    This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
+    a normal distribution & returns monthly plots.
+
+    ----------------------------------------------
+
+    :param
+        df (pd.DataFrame): DataFrame with trip data.
+    :returns
+        pd.show(): Monthly distribution plots.
+    """
+    month = strptime(month, "%b").tm_mon
+    df_m = df.loc[df['pickup_month'] == month]
+
+    fig = Figure(figsize=(8, 6))
+    ax = fig.subplots()
+    l1 = sns.distplot(df_m['trip_duration_minutes'], ax=ax)
+    l2 = sns.distplot(random.normal(size=5000, loc=df_m['trip_duration_minutes'].mean()), hist=False, ax=ax)
+    l3 = ax.axvline(df_m['trip_duration_minutes'].mean(), linestyle='dashed')
+    ax.legend([l1, l2, l3],
+              labels=['Original distribution', 'Normal distribution', 'Mean'],
+              loc='upper right',
+              borderaxespad=0.3)
+    mpl_pane = pn.pane.Matplotlib(fig, tight=True)
+    return mpl_pane
+
+
+"""    fig.tight_layout(pad=3.0)
+    fig.suptitle('Trip duration distribution', fontsize=18)
+    # plt.subplots_adjust(left=0.1, top=0.9)
+    for i, ax in enumerate(ax.flat):
+        i = i + 1
+        df_m = df.loc[df['pickup_month'] == i]
+
+        l1 = sns.distplot(df_m['trip_duration_minutes'], ax=ax)
+        l2 = sns.distplot(random.normal(size=5000, loc=df_m['trip_duration_minutes'].mean()), hist=False, ax=ax)
+        l3 = ax.axvline(df_m['trip_duration_minutes'].mean(), linestyle='dashed')
+
+        # ax.set_title(monthsDict.get(i), fontsize=12)
+        ax.legend([l1, l2, l3],
+                  labels=['Original distribution', 'Normal distribution', 'Mean'],
+                  loc='upper right',
+                  borderaxespad=0.3)
+        plt.setp(ax, xlim=(0, 40))
+    plt.xlabel('Trip duration (minutes)')
+    plt.ylabel('Density')
+    plt.show()"""
+
+
 def _create_duration_distribution_tab(df):
     """
     This function creates plots for monthly trip duration distributions.
@@ -517,9 +526,12 @@ def _create_duration_distribution_tab(df):
         pn.Column: the created panel element
 
     """
-
+    months = [calendar.month_abbr[i] for i in range(1, 13)]
+    month_options = pn.widgets.Select(name="Month", options=months)
     dashboard = interact(
-        monthly_visualization(df)
+        monthly_visualization,
+        month=month_options,
+        df=fixed(df),
     )
     title = pn.pane.Markdown("""# Monthly trip duration distribution""")
 
