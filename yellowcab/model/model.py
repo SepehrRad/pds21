@@ -267,7 +267,7 @@ def fare_amount_hyper_parameter_optimization(df):
     )
 
 
-def build_fare_amount_model_optimized(df):
+def build_fare_amount_model_optimized(df, manhattan=False):
     """
     This Function predicts a fare amount based training data, using XGBoost Regressor.
     This model uses the optimized hyper parameters and the selected features in the base model
@@ -275,6 +275,7 @@ def build_fare_amount_model_optimized(df):
     :param
         df(pandas.DataFrame): the given pandas data frame containing data
                                   used for prediction.
+        manhattan(bool): If set to true the model will only considers the pickup/dropoff from/to manhattan. Default: False
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
@@ -300,6 +301,7 @@ def build_fare_amount_model_optimized(df):
         subsample=0.7,
         colsample_bytree=0.9,
     )
+
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -311,4 +313,5 @@ def build_fare_amount_model_optimized(df):
         feature_selection=False,
         show_feature_importance=True,
         drop_first_category=False,
+        is_manhattan=manhattan
     )
