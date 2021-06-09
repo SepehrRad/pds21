@@ -4,20 +4,20 @@ import numpy as np
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 
-def add_relevant_features(data_set, date_colummn):
+def add_relevant_features(data_set, date_column):
     """
     This function adds all in the sub-package "feature_engineering" created columns
     to the input dataset, based on the input date_column in case it is based on time.
     ----------------------------------------------
     :param
-        data_set: Dataframe to what the columns should be added.
-        date_colummn: The column we use for comparing the dates.
+        data_set (pd.DataFrame): Dataframe to what the columns should be added.
+        date_column: The column we use for comparing the dates.
     :return:
-        dataframe: The input dataframe with the new columns added.
+        pd.DataFrame: The input dataframe with the new columns added.
     """
-    data_set = create_holiday_column(data_set, date_colummn)
-    data_set = create_season_column(data_set, date_colummn)
-    data_set = create_covid_relevant_features(data_set, date_colummn)
+    data_set = create_holiday_column(data_set, date_column)
+    data_set = create_season_column(data_set, date_column)
+    data_set = create_covid_relevant_features(data_set, date_column)
     data_set = _manhattan_dist_vectorized(data_set)
 
     data_set["bearing_distance"] = _bearing_dist_vectorized(
