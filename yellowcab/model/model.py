@@ -27,9 +27,10 @@ def make_baseline_predictions(df):
         max_iter=5000,
     )
     regression_model = LinearRegression(n_jobs=-1)
+    df = add_relevant_features(df, "pickup_datetime")
 
     nr = NearMiss()
-
+    """
     # base_line classification for "payment_type"
     make_predictions(
         df=df,
@@ -87,19 +88,35 @@ def make_baseline_predictions(df):
         use_sampler=True,
         sampler=nr,
     )
-
+    """
     # base_line regression for "trip_distance"
     make_predictions(
         df=df,
         prediction_type="regression",
         target="trip_distance",
-        model=regression_model,
         relevant_features={
             "target": "trip_distance",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"],
+            "cyclical_features": [],
+            "numerical_features": [
+                "passenger_count",
+                "Holiday",
+                "covid_lockdown",
+                "covid_school_restrictions",
+                "covid_new_cases",
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "haversine_distance",
+                "bearing_distance",
+                "manhattan_distance",
+                "weekend",
+                "weekday",
+            ],
         },
+        feature_selector=SelectFromModel(Lasso(alpha=0.05)),
+        feature_selection=True,
+        model=regression_model,
         scaler_type=None,
         model_name="base_reg_trip_distance",
     )
@@ -112,14 +129,23 @@ def make_baseline_predictions(df):
         model=regression_model,
         scaler_type=None,
         relevant_features={
-            "target": "fare_amount",
-            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"],
+        "target": "fare_amount",
+        "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "dropoff_month",
+            "dropoff_day",
+            "dropoff_hour",
+        ],
+        "cyclical_features": [],
         },
-        model_name="base_reg_fare_amount",
-        use_sampler=False,
-        sampler=None,
+        feature_selector=SelectFromModel(Lasso(alpha=0.05)),
+        feature_selection=True,
+        model_name="base_reg_fare_amount"
     )
 
 
@@ -269,7 +295,7 @@ def build_trip_distance_model_optimized(df, manhattan=False):
         target="trip_distance",
         scaler_type=None,
         prediction_type="regression",
-        model_name="xgb_model_trip_distance_optimized_manhattan",
+        model_name="xgb_model_trip_distance_optimized",
         model=model,
         feature_selection=False,
         show_feature_importance=True,
