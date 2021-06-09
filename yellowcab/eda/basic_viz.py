@@ -9,6 +9,19 @@ from yellowcab.io import get_data_path
 
 
 def basic_plots(df, borough=None):
+    """
+    This function creates a set of six bar (sub)plots (3x monthly, 3x weekly), inspecting number of trips,
+    mean trip duration and mean passenger count. The parameter borough can be a assigned to a borough name of NYC to
+    inspect trip data for this specific borough or it can be left blank to inspect the whole data frame.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        borough(String): Name of a borough to inspect, can be left blank to observe NYC completely.
+    :returns
+
+    """
     if borough is not None:
         nyc_zones_df = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
         borough_zones = nyc_zones_df.loc[nyc_zones_df['borough'] == borough]
@@ -64,6 +77,17 @@ def basic_plots(df, borough=None):
 
 
 def airport_plots(df):
+    """
+    This function creates a set of three bar (sub)plots, inspecting number of trips, mean trip duration and
+    mean passenger count of trips beginning or terminating at one of the NYC airports.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+    :returns
+
+    """
     df_airport_trips = df.loc[(df['PULocationID'].isin(['1', '132', '138'])) | (df['DOLocationID'].isin
                                                                                 (['1', '132', '138']))]
 
