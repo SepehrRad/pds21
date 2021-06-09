@@ -8,7 +8,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import flatten_list, get_random_state, get_zone_information
+from yellowcab.io.utils import (flatten_list, get_random_state,
+                                get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 
