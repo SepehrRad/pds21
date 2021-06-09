@@ -1,11 +1,8 @@
 import math
 
-import xgboost as xgb
 from imblearn.metrics import classification_report_imbalanced
 from matplotlib import pyplot as plt
 from sklearn import metrics
-from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import Lasso
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
@@ -15,7 +12,7 @@ from yellowcab.io.utils import flatten_list, get_random_state, get_zone_informat
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features, drop_first=False):
+def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first=False):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
@@ -23,12 +20,17 @@ def _make_data_preparation(df, relevant_features, drop_first=False):
     :param
         df (pandas.DataFrame): The given pandas data frame with all initial features.
         relevant_features (list): The given features upon which the model should be created.
+        is_manhattan(bool): If True only the manhattan data gets selected.
     :return:
         pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
+    if is_manhattan:
+        df = df.loc[
+            (df.Borough_pickup == "Manhattan") | (df.Borough_dropoff == "Manhattan"), :
+        ]
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
 
@@ -152,6 +154,7 @@ def make_predictions(
     is_grid_search=False,
     grid_search_params=None,
     scoring=None,
+    is_manhattan=False,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -169,9 +172,10 @@ def make_predictions(
                                         accuracy scores or to boost their performance.
            use_sampler (boolean): denotes, whether a sampler is used to handle imbalanced data with over-/ under-sampling.
            sampler: what sampler should be used for over-/ under-sampling.
-           is_grid_search (boolean): It denotes if the function should be used for hyper parameter search instead of prediction. Defaults to True.
+           is_grid_search (boolean): It denotes if the function should be used for hyperparameter search instead of prediction. Defaults to True.
            grid_search_params (dict): The grid search parameter space that should be used.
            scoring(String): the scoring methode which will be used in the grid search cv.
+           is_manhattan(bool): Builds a prediction model only for manhattan data
     """
     if not is_grid_search:
         print(
@@ -179,8 +183,15 @@ def make_predictions(
         )
     else:
         print("-------GRID SEARCH-------")
+
+    if is_manhattan:
+        model_name = model_name + "_manhattan"
+
     df = _make_data_preparation(
-        df, relevant_features=relevant_features, drop_first=drop_first_category
+        df,
+        relevant_features=relevant_features,
+        drop_first=drop_first_category,
+        is_manhattan=is_manhattan,
     )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
@@ -232,7 +243,19 @@ def make_predictions(
 def find_best_parameters_for_model(
     pipeline, X_train, y_train, model_params, model_name, scoring
 ):
-    """ """
+    """
+    This function performs a grid search with three cv on the training set.
+    ----------------------------------------------
+    :param
+           df (pandas.DataFrame): The given pandas data frame containing data which
+                                  need to be split into train and test data sets.
+           scoring(String): The scoring metric used for grid search
+           model: Used model for prediction.
+           model_name (String): Name of used model for prediction.
+           X_train (pandas.DataFrame): Training features
+           y_train (pandas.DataFrame): Target
+           pipeline (sklearn.pipeline): The pipeline with the model and transformers which will be used for grid search.
+    """
     print(f"Running grid search for {model_name} based on {scoring}")
     grid_pipeline = GridSearchCV(
         estimator=pipeline,
