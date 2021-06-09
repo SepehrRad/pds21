@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import panel as pn
 import seaborn as sns
-
 from folium.plugins import HeatMap, HeatMapWithTime
 from matplotlib.figure import Figure
 from numpy import random
@@ -1092,6 +1091,7 @@ def _create_event_heatmap_tab(df):
     )
     return general_heatmap_tab
 
+
 def monthly_visualization(df, month=None, hist=None, xlim=None):
     """
     This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
@@ -1130,6 +1130,7 @@ def monthly_visualization(df, month=None, hist=None, xlim=None):
     ax.set_ylabel("Density")
     mpl_pane = pn.pane.Matplotlib(fig, tight=True)
     return mpl_pane
+
 
 def _create_duration_distribution_tab(df):
     """
