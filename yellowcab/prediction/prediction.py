@@ -15,7 +15,7 @@ from yellowcab.io.utils import flatten_list, get_random_state, get_zone_informat
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features, drop_first=False):
+def _make_data_preparation(df, relevant_features, drop_first=False, use_created_features=False):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
@@ -27,18 +27,16 @@ def _make_data_preparation(df, relevant_features, drop_first=False):
         pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
-    created_features = None #Refactor
-    final_feature_list = None
-    if "created_features" in relevant_features:
+    if use_created_features:
         created_features = relevant_features.copy()
         created_features.pop("categorical_features")
-        final_feature_list = flatten_list(list(created_features.values()))
         relevant_features.pop("created_features")
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
-    if created_features is not None:
+    if use_created_features:
+        final_feature_list = flatten_list(list(created_features.values()))
         df = df[final_feature_list]
     return df
 
@@ -160,6 +158,7 @@ def make_predictions(
     is_grid_search=False,
     grid_search_params=None,
     scoring=None,
+    use_created_features=False,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -188,7 +187,7 @@ def make_predictions(
     else:
         print("-------GRID SEARCH-------")
     df = _make_data_preparation(
-        df, relevant_features=relevant_features, drop_first=drop_first_category
+        df, relevant_features=relevant_features, drop_first=drop_first_category, use_created_features=use_created_features
     )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler

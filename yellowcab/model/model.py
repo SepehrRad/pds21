@@ -185,23 +185,23 @@ def build_fare_amount_model_base(df):
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
-        "target": "payment_type",
-        "cyclical_features": [
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "dropoff_hour",
-            "dropoff_day",
-            "dropoff_month",
-        ],
-        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-        "numerical_features": [
-            "passenger_count",
-            "trip_distance",
-            "total_amount",
-            "trip_duration_minutes",
-        ],
-    },
+                            "target": "payment_type",
+                            "cyclical_features": [
+                                "pickup_month",
+                                "pickup_day",
+                                "pickup_hour",
+                                "dropoff_hour",
+                                "dropoff_day",
+                                "dropoff_month",
+                            ],
+                            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+                            "numerical_features": [
+                                "passenger_count",
+                                "trip_distance",
+                                "total_amount",
+                                "trip_duration_minutes",
+                            ],
+                        },
 
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     model = xgb.XGBRegressor(n_jobs=-1, n_estimators=100)
@@ -352,11 +352,10 @@ def build_payment_type_model_base(df):
             "weekend",
             "weekday",
         ],
-        "created_features": [],
     }
 
     feature_selector = SelectKBest(score_func=f_classif, k=10)
-    model = xgb.XGBClassifier(n_jobs=-1, n_estimators=100, objective="multi:softmax", num_classes=4)
+    model = xgb.XGBClassifier(n_jobs=-1, n_estimators=100, objective="multi:softmax", num_class=4)
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -388,35 +387,24 @@ def payment_type_hyper_parameter_optimization(df):
         "cyclical_features": [],
         "categorical_features": ["Zone_pickup", "Zone_dropoff"],
         "numerical_features": [
-            "passenger_count",
-            "trip_distance",
-            "total_amount",
-            "trip_duration_minutes",
-            "passenger_count",
-            "Holiday",
             "covid_lockdown",
-            "covid_school_restrictions",
-            "covid_new_cases",
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "haversine_distance",
-            "bearing_distance",
-            "manhattan_distance",
-            "weekend",
-            "weekday",
+            "total_amount",
         ],
+        "created_features": [
+            "Zone_dropoff_JFK Airport",
+            "Zone_dropoff_Flushing Meadows-Corona Park",
+            "Zone_dropoff_East Harlem North",
+            "Zone_pickup_Central Harlem North",
+            "Zone_pickup_JFK Airport",
+            "Zone_pickup_East Harlem South",
+        ]
     }
-    model = xgb.XGBClassifier(n_jobs=-1, subsample=0.7, colsample_bytree=0.8, objective="multi:softmax", num_classes=4)
+    model = xgb.XGBClassifier(n_jobs=-1, subsample=0.7, colsample_bytree=0.8, objective="multi:softmax", num_class=4)
     model_params = {
-        "xgb_payment_type_model__learning_rate": [0.1, 0.05, 1],
-        "xgb_payment_type_model__max_depth": [3, 5, 7, 10, 20],
+        "xgb_payment_type_model__max_depth": [3, 5,6],
         "xgb_payment_type_model__min_child_weight": [1, 4, 7],
-        "xgb_payment_type_model__reg_lambda": [0, 1, 10],
-        "xgb_payment_type_model__subsample": [0.5, 0.7, 1],
-        "xgb_payment_type_model__colsample_bytree": [0.5, 0.7, 0.9],
-        "xgb_payment_type_model__n_estimators": [60, 80, 100],
-        "xgb_payment_type_model__max_delta_step": [0, 0.1, 0.4]
+        "xgb_payment_type_model__max_delta_step": [0, 1, 3],
+        "xgb_payment_type_model__reg_lambda": [0, 1, 7],
     }
     make_predictions(
         df=df,
@@ -431,7 +419,8 @@ def payment_type_hyper_parameter_optimization(df):
         drop_first_category=False,
         is_grid_search=True,
         grid_search_params=model_params,
-        scoring="neg_mean_absolute_error",
+        scoring="f1",
+        use_created_features=True,
     )
 
 
