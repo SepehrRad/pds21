@@ -180,6 +180,8 @@ def trip_distance_hyper_parameter_optimization(df):
     :param
         df(pandas.DataFrame): the given pandas data frame containing data
                                   used for grid search.
+        manhattan(bool): If set to true the model will only considers the
+                             pickup/dropoff from/to manhattan. Default: False
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
@@ -198,15 +200,6 @@ def trip_distance_hyper_parameter_optimization(df):
     }
 
     model = xgb.XGBRegressor(n_jobs=-1, subsample=0.7, colsample_bytree=0.8)
-    """
-    First Round:
-    Fitting 3 folds for each of 128 candidates, totalling 384 fits
-    Best neg_mean_absolute_error Score was: -0.4039193813773141
-    {'xgb_trip_distance_model__colsample_bytree': 0.9, 'xgb_trip_distance_model__learning_rate': 0.1,
-     'xgb_trip_distance_model__max_depth': 20, 'xgb_trip_distance_model__min_child_weight': 7,
-     'xgb_trip_distance_model__n_estimators': 80, 'xgb_trip_distance_model__reg_lambda': 50,
-     'xgb_trip_distance_model__subsample': 1}
-    """
 
     model_params = {
         "xgb_trip_distance_model__learning_rate": [0.1, 0.05],
@@ -235,7 +228,7 @@ def trip_distance_hyper_parameter_optimization(df):
     )
 
 
-def build_trip_distance_model_optimized(df):
+def build_trip_distance_model_optimized(df, manhattan=False):
     """
     This Function predicts a trip distance based training data, using XGBoost Regressor.
     This model uses the optimized hyper parameters and the selected features in the base model
@@ -246,6 +239,7 @@ def build_trip_distance_model_optimized(df):
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
+    df = add_relevant_features(df, "pickup_datetime")
     relevant_features = {
         "target": "trip_distance",
         "categorical_features": [],
@@ -263,11 +257,11 @@ def build_trip_distance_model_optimized(df):
         n_jobs=-1,
         n_estimators=80,
         learning_rate=0.1,
-        max_depth=10,
+        max_depth=12,
         min_child_weight=1,
-        reg_lambda=10,
-        subsample=0.7,
-        colsample_bytree=0.9,
+        reg_lambda=7,
+        subsample=0.9,
+        colsample_bytree=0.7,
     )
     make_predictions(
         df=df,
@@ -275,11 +269,12 @@ def build_trip_distance_model_optimized(df):
         target="trip_distance",
         scaler_type=None,
         prediction_type="regression",
-        model_name="xgb_model_fare_amount_optimized",
+        model_name="xgb_model_trip_distance_optimized_manhattan",
         model=model,
         feature_selection=False,
         show_feature_importance=True,
         drop_first_category=False,
+        is_manhattan=manhattan,
     )
 
 

@@ -6,14 +6,14 @@ from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 def add_relevant_features(data_set, date_column):
     """
-    This function adds all in the sub-package "feature_engineering" created columns
-    to the input dataset, based on the input date_column in case it is based on time.
+    This function adds all in this module created columns
+    to the input dataset, based on the passed date_column in case it is based on time.
     ----------------------------------------------
     :param
         data_set (pd.DataFrame): Dataframe to what the columns should be added.
-        date_column: The column we use for comparing the dates.
+        date_column (datetime): The column we use for comparing the dates.
     :return:
-        pd.DataFrame: The input dataframe with the new columns added.
+        pd.DataFrame: The passed dataframe with the new columns added.
     """
     data_set = create_holiday_column(data_set, date_column)
     data_set = create_season_column(data_set, date_column)
@@ -42,9 +42,10 @@ def add_relevant_features(data_set, date_column):
 def _get_weekday(df):
     """
     This function adds a column containing the weekday of each entry to the passed dataframe.
+    ----------------------------------------------
     :param
             df (pandas.DataFrame): Dataframe, where a column for the weekday should be added to.
-    :return:
+    :return: pandas.DataFrame including a column for weekday.
     """
     df["weekday"] = df["pickup_datetime"].dt.dayofweek
     return df
@@ -53,11 +54,13 @@ def _get_weekday(df):
 def _haversine_dist_vectorized(lon1, lat1, lon2, lat2):
     """
     This function calculates the haversine distance of two passed vectors of points.
+    ----------------------------------------------
     :param
            lon1 (float): The longitude of the first point.
            lat1 (float): The latitude of the first point.
            lon2 (float): The longitude of the second point.
            lat2 (float): The latitude of the second point.
+    :return: float: Haversine distance of the two passed vectors of points.
     """
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
     a = np.sin((lat2 - lat1) / 2.0) ** 2 + (
@@ -70,11 +73,13 @@ def _haversine_dist_vectorized(lon1, lat1, lon2, lat2):
 def _bearing_dist_vectorized(lon1, lat1, lon2, lat2):
     """
     This function calculates the bearing distance of two passed vectors of points.
+    ----------------------------------------------
     :param
            lon1 (float): The longitude of the first point.
            lat1 (float): The latitude of the first point.
            lon2 (float): The longitude of the second point.
            lat2 (float): The latitude of the second point.
+    :return: float: Bearing distance of the two passed vectors of points.
     """
     lon_diff = lon2 - lon1
     y = np.sin(lon_diff) * np.cos(lat2)
@@ -87,6 +92,7 @@ def _bearing_dist_vectorized(lon1, lat1, lon2, lat2):
 def _manhattan_dist_vectorized(df):
     """
     This function calculates the manhattan distance of two passed vectors of points.
+    ----------------------------------------------
     :param
            df (pandas.DataFrame): Dataframe, where a column for the manhattan distance should be added to.
     :return: pandas.DataFrame including a column for manhattan distance.
@@ -109,10 +115,10 @@ def _manhattan_dist_vectorized(df):
 
 def _get_season_in_ny(date_time):
     """
-    This function returns the season which the input date belongs to.
+    This function returns the season which the passed date belongs to.
     ----------------------------------------------
     :param
-        date_time: The date we want to get the season for.
+        date_time (datetime): The date we want to get the season for.
     :returns
         String: Name of the season.
     """
@@ -139,11 +145,11 @@ def create_season_column(data_set, date_column):
     This function adds a column stating if the date handed over is a holiday day in the US.
     ----------------------------------------------
     :param
-        data_set: Dataframe to what the column should be added.
-        date_column: The column we use for comparing the dates.
+        data_set (pandas.DataFrame): Dataframe to what the column should be added.
+        date_column (datetime): The column we use for comparing the dates.
 
     :returns
-        dataframe: The input dataframe with a season column added.
+        pandas.DataFrame: The input dataframe with a season column added.
     """
     data_set["Season"] = data_set[date_column].apply(_get_season_in_ny)
     return data_set
@@ -154,11 +160,11 @@ def create_holiday_column(data_set, date_column):
     This function adds a column saying if the date is a holiday day in NY.
     ----------------------------------------------
     :param
-        data_set: Dataframe to what the column should be added.
-        date_column: The column we use for comparing the dates.
+        data_set (pandas.DataFrame): Dataframe to what the column should be added.
+        date_column (datetime): The column we use for comparing the dates.
 
     :returns
-        dataframe: The input dataframe with a holiday day column added.
+        pandas.DataFrame: The input dataframe with a holiday day column added.
     """
     cal = calendar()
     holidays = cal.holidays(data_set[date_column].min(), data_set[date_column].max())
@@ -181,7 +187,7 @@ def get_covid_restrictions():
     https://mommypoppins.com/new-york-city-kids/schools/heres-the-nyc-public-school-calendar-for-2020-2021
     ----------------------------------------------
     :return
-        dictionary
+        dictionary: A dictionary including the timespans for covid restrictions each.
     """
     covid_restrictions = {
         "covid_new_cases_start": datetime(day=1, month=3, year=2020),
@@ -199,10 +205,10 @@ def create_covid_relevant_features(data_set, date_column):
     This function adds a column adds column for relevant covid restrictions matching the dates.
     ----------------------------------------------
     :param
-        data_set: Dataframe to what the columns should be added.
-        date_column: The column we use for comparing the dates.
+        data_set (pandas.DataFrame): Dataframe to what the columns should be added.
+        date_column (datetime): The column we use for comparing the dates.
     :return
-        dataframe: The input dataframe with covid restrictions columns added.
+        pandas.DataFrame: The passed dataframe with covid restrictions columns added.
     """
     covid_restrictions = get_covid_restrictions()
     data_set.loc[
