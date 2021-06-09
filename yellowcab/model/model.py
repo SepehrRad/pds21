@@ -129,23 +129,23 @@ def make_baseline_predictions(df):
         model=regression_model,
         scaler_type=None,
         relevant_features={
-        "target": "fare_amount",
-        "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-        "numerical_features": [
-            "trip_distance",
-            "trip_duration_minutes",
-            "pickup_month",
-            "pickup_day",
-            "pickup_hour",
-            "dropoff_month",
-            "dropoff_day",
-            "dropoff_hour",
-        ],
-        "cyclical_features": [],
+            "target": "fare_amount",
+            "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+            "numerical_features": [
+                "trip_distance",
+                "trip_duration_minutes",
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "dropoff_month",
+                "dropoff_day",
+                "dropoff_hour",
+            ],
+            "cyclical_features": [],
         },
         feature_selector=SelectFromModel(Lasso(alpha=0.05)),
         feature_selection=True,
-        model_name="base_reg_fare_amount"
+        model_name="base_reg_fare_amount",
     )
 
 
