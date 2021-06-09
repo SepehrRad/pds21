@@ -343,7 +343,7 @@ def clean_all_datasets(
     base_path=get_data_path(), relative_path="input/trip_data", verbose=False
 ):
     """
-    This function reads in all the data, cleans it and saves the cleaned dataframes as parquet files in the output
+    This function reads in all the data, cleans it and saves the cleaned1 dataframes as parquet files in the output
     directory.
 
     ----------------------------------------------
