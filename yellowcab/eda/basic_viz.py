@@ -18,7 +18,7 @@ def basic_plots(df, borough=None):
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
-        borough(String): Name of a borough to inspect, can be left blank to observe NYC completely.
+        borough(String): Name of a borough to inspect. If not set, all NYC trips get selected.
     :returns
 
     """

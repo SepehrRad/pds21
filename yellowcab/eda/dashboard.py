@@ -16,6 +16,7 @@ from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
 
+import yellowcab
 from yellowcab.io.input import read_geo_dataset
 from yellowcab.io.utils import get_zone_information
 
@@ -53,7 +54,7 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
+        df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
@@ -167,12 +168,12 @@ def _add_tile_layers(base_map=None):
 
 
 def _create_monthly_choropleth(
-    df,
-    month="Jan",
-    aspect="pickup",
-    log_count=False,
-    cmap="YlGn",
-    location="New York",
+        df,
+        month="Jan",
+        aspect="pickup",
+        log_count=False,
+        cmap="YlGn",
+        location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -350,14 +351,14 @@ def _generate_base_map(default_location="New York"):
 
 
 def _create_aggregator(
-    df,
-    month=None,
-    event=None,
-    aspect="pickup",
-    animated=False,
-    choropleth=False,
-    log_count=False,
-    event_heatmap=False,
+        df,
+        month=None,
+        event=None,
+        aspect="pickup",
+        animated=False,
+        choropleth=False,
+        log_count=False,
+        event_heatmap=False,
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -383,7 +384,7 @@ def _create_aggregator(
         df = df.loc[
             (df[f"{aspect}_datetime"] >= event[0])
             & (df[f"{aspect}_datetime"] < event[1])
-        ]
+            ]
     if choropleth:
         cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(
             ["DOLocationID"]
@@ -410,10 +411,10 @@ def _create_aggregator(
                         & (df.pickup_day == day),
                         [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
                     ]
-                    .groupby(cols_grp)
-                    .sum()
-                    .reset_index()
-                    .values.tolist()
+                        .groupby(cols_grp)
+                        .sum()
+                        .reset_index()
+                        .values.tolist()
                 )
             else:
                 df_hour_list.append(
@@ -423,10 +424,10 @@ def _create_aggregator(
                         & (df.dropoff_day == day),
                         [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
                     ]
-                    .groupby(cols_grp)
-                    .sum()
-                    .reset_index()
-                    .values.tolist()
+                        .groupby(cols_grp)
+                        .sum()
+                        .reset_index()
+                        .values.tolist()
                 )
         return df_hour_list
 
@@ -456,12 +457,12 @@ def _create_inferno_cmap():
 
 
 def _create_heat_map(
-    df,
-    aspect="pickup",
-    radius=15,
-    location="New York",
-    log_count=False,
-    inferno_colormap=False,
+        df,
+        aspect="pickup",
+        radius=15,
+        location="New York",
+        log_count=False,
+        inferno_colormap=False,
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
@@ -641,19 +642,19 @@ def _create_events_tab(df):
 
 
 def _create_event_choropleth(
-    df,
-    event=(
-        datetime.datetime(2020, 1, 1, 0, 0, 0),
-        datetime.datetime(2020, 1, 2, 0, 0, 0),
-    ),
-    timespan=(
-        datetime.datetime(2020, 1, 1, 0, 0, 0),
-        datetime.datetime(2021, 1, 1, 0, 0, 0),
-    ),
-    aspect="pickup",
-    log_count=False,
-    cmap="YlGn",
-    location="New York",
+        df,
+        event=(
+                datetime.datetime(2020, 1, 1, 0, 0, 0),
+                datetime.datetime(2020, 1, 2, 0, 0, 0),
+        ),
+        timespan=(
+                datetime.datetime(2020, 1, 1, 0, 0, 0),
+                datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
+        aspect="pickup",
+        log_count=False,
+        cmap="YlGn",
+        location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -672,8 +673,8 @@ def _create_event_choropleth(
         ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     if event == (
-        datetime.datetime(1, 1, 1, 1, 1, 1),
-        datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
     ):
         event = timespan
     data = _create_aggregator(
@@ -734,13 +735,13 @@ def _create_event_choropleth(
 
 
 def _create_zone_choropleth(
-    df,
-    month="all",
-    zone="1",
-    aspect="outbound",
-    log_count=False,
-    cmap="YlGn",
-    location="New York",
+        df,
+        month="all",
+        zone="1",
+        aspect="outbound",
+        log_count=False,
+        cmap="YlGn",
+        location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -890,7 +891,7 @@ def _create_zone_tab(df):
 
 
 def _create_zone_aggregator(
-    df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False
+        df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -923,7 +924,7 @@ def _create_zone_aggregator(
             df = df.loc[
                 (df[f"{location}_month"] == month)
                 & (df[f"{location_abr}LocationID"] == zone)
-            ]
+                ]
         else:
             df = df.loc[df[f"{location_abr}LocationID"] == zone]
     if choropleth:
@@ -933,9 +934,9 @@ def _create_zone_aggregator(
     if location == "pickup":
         df_agg = (
             df.groupby(dropoff_cols_grp)
-            .size()
-            .to_frame(f"{aspect}_count")
-            .reset_index()
+                .size()
+                .to_frame(f"{aspect}_count")
+                .reset_index()
         )
     elif location == "dropoff":
         df_agg = (
@@ -951,18 +952,18 @@ def _create_zone_aggregator(
 
 
 def _create_event_heat_map(
-    df,
-    aspect="pickup",
-    radius=15,
-    location="New York",
-    event=(
-        datetime.datetime(2020, 1, 1, 0, 0, 0),
-        datetime.datetime(2020, 1, 2, 0, 0, 0),
-    ),
-    timespan=(
-        datetime.datetime(2020, 1, 1, 0, 0, 0),
-        datetime.datetime(2021, 1, 1, 0, 0, 0),
-    ),
+        df,
+        aspect="pickup",
+        radius=15,
+        location="New York",
+        event=(
+                datetime.datetime(2020, 1, 1, 0, 0, 0),
+                datetime.datetime(2020, 1, 2, 0, 0, 0),
+        ),
+        timespan=(
+                datetime.datetime(2020, 1, 1, 0, 0, 0),
+                datetime.datetime(2021, 1, 1, 0, 0, 0),
+        ),
 ):
     """
     This function creates a folium heatmap with time based on different aspects of the given data.
@@ -978,16 +979,16 @@ def _create_event_heat_map(
         folium.HeatmapWithTime: The created HeatmapWithTime
     """
     if event == (
-        datetime.datetime(1, 1, 1, 1, 1, 1),
-        datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
+            datetime.datetime(1, 1, 1, 1, 1, 1),
     ):
         event = timespan
     base_map = _generate_base_map(default_location=location)
     map_data = _create_aggregator(df, aspect=aspect, event=event, event_heatmap=True)
     index = (
         pd.date_range(event[0], event[1], freq="H")
-        .strftime("%Y-%m-%d %H:%M:%S")
-        .tolist()
+            .strftime("%Y-%m-%d %H:%M:%S")
+            .tolist()
     )
     del index[-1]
     HeatMapWithTime(
@@ -1166,6 +1167,110 @@ def _create_duration_distribution_tab(df):
     return duration_distribution_tab
 
 
+def basic_plots(df, borough):
+    """
+    This function creates a set of six bar (sub)plots (3x monthly, 3x weekly), inspecting number of trips,
+    mean trip duration and mean passenger count. The parameter borough can be a assigned to a borough name of NYC to
+    inspect trip data for this specific borough or it can be left blank to inspect the whole data frame.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        borough(String): Name of a borough to inspect. If not set, all NYC trips get selected.
+    :returns
+
+    """
+    if borough is not 'NYC complete':
+        nyc_zones_df = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
+        borough_zones = nyc_zones_df.loc[nyc_zones_df['borough'] == borough]
+        borough_loc_ids = borough_zones['LocationID'].tolist()
+        borough_loc_ids = map(str, borough_loc_ids)
+        df = df.loc[(df['PULocationID'].isin(borough_loc_ids)) | (df['DOLocationID'].isin(borough_loc_ids))]
+
+    df_agg_count_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['pickup_month'], ['count'])
+    df_agg_mean_duration_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['trip_duration_minutes'],
+                                                           ['mean'])
+    df_agg_mean_passenger_mothly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['passenger_count'],
+                                                           ['mean'])
+
+    df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
+    df_agg_mean_duration_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['trip_duration_minutes'],
+                                                          ['mean'])
+    df_agg_mean_passenger_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['passenger_count'],
+                                                           ['mean'])
+
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+    axes[0, 0].bar(df_agg_count_monthly.index, df_agg_count_monthly['count_pickup_month'])
+    axes[0, 0].set_xlabel('Month')
+    axes[0, 0].set_ylabel('Number of trips')
+
+    axes[0, 1].bar(df_agg_mean_duration_monthly.index, df_agg_mean_duration_monthly['mean_trip_duration_minutes'])
+    axes[0, 1].set_xlabel('Month')
+    axes[0, 1].set_ylabel('Avg trip duration')
+
+    axes[0, 2].bar(df_agg_mean_passenger_mothly.index, df_agg_mean_passenger_mothly['mean_passenger_count'])
+    axes[0, 2].set_xlabel('Month')
+    axes[0, 2].set_ylabel('Avg passenger count')
+
+    axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'])
+    axes[1, 0].set_xlabel('Week')
+    axes[1, 0].set_ylabel('Number of trips')
+
+    axes[1, 1].bar(df_agg_mean_duration_weekly.index, df_agg_mean_duration_weekly['mean_trip_duration_minutes'])
+    axes[1, 1].set_xlabel('Week')
+    axes[1, 1].set_ylabel('Avg trip duration')
+
+    axes[1, 2].bar(df_agg_mean_passenger_weekly.index, df_agg_mean_passenger_weekly['mean_passenger_count'])
+    axes[1, 2].set_xlabel('Week')
+    axes[1, 2].set_ylabel('Avg passenger count')
+
+    plt.subplots_adjust(left=0.1, top=0.9)
+    fig.tight_layout(pad=3.0)
+    if borough is not None:
+        title = 'Basic plots for {boroughname}'.format(boroughname=borough)
+    else:
+        title = 'Basic plots for NYC'
+    fig.suptitle(t=title, fontsize=18, y=0.99)
+
+    mpl_pane = pn.pane.Matplotlib(fig, tight=True)
+    return mpl_pane
+
+
+def _create_basic_plots_tab(df):
+    """
+    This function creates plots for monthly trip duration distributions.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): Data that is used to make the distribution plot.
+    :return:
+        pn.Column: the created panel element
+
+    """
+    df_geo = read_geo_dataset("taxi_zones.geojson")
+    boroughs = list(df_geo['borough'].unique())
+    boroughs = np.insert(boroughs, 0, "NYC complete")
+    # delete EWR airport
+    boroughs = boroughs[boroughs != 'EWR']
+    boroughs_list = boroughs.tolist()
+    borough_options = pn.widgets.Select(name="Borough", options=boroughs_list)
+
+    dashboard = interact(
+        basic_plots,
+        borough=borough_options,
+        df=fixed(df),
+    )
+    title = pn.pane.Markdown("""# Basic plots""")
+
+    basic_plots_tab = pn.Column(
+        title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
+    )
+    return basic_plots_tab
+
+
 def create_dashboard(df):
     """
     This function creates an interactive panel dashboard.
@@ -1186,6 +1291,10 @@ def create_dashboard(df):
         "Duration distribution",
         _create_duration_distribution_tab(df),
     )
+    basic_plots_viz = (
+        "Basic plots",
+        _create_basic_plots_tab(df),
+    )
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
     event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
@@ -1195,6 +1304,7 @@ def create_dashboard(df):
         event_heatmap,
         plotly_express_animated_monthly,
         duration_distribution_monthly,
+        basic_plots_viz,
         zones,
         events,
     )
