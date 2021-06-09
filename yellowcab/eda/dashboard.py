@@ -5,10 +5,14 @@ from time import strptime
 
 import branca.colormap
 import folium
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import panel as pn
+import seaborn as sns
 from folium.plugins import HeatMap, HeatMapWithTime
+from matplotlib.figure import Figure
+from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
 
@@ -1088,6 +1092,80 @@ def _create_event_heatmap_tab(df):
     return general_heatmap_tab
 
 
+def monthly_visualization(df, month=None, hist=None, xlim=None):
+    """
+    This function visualizes the monthly distribution of trip duration of the given DataFrame, including comparison to
+    a normal distribution & returns the distribution plot.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame with trip data.
+        month(String): Name of selected month that gets observed.
+        hist(bool): Plot histogram bars or not.
+        xlim(int): Limit of x-axis.
+    :returns
+        pn.pane.Matplotlib(): Monthly distribution plot.
+    """
+    month = strptime(month, "%b").tm_mon
+    df_m = df.loc[df["pickup_month"] == month]
+
+    fig = Figure(figsize=(8, 6))
+    ax = fig.subplots()
+    l1 = sns.distplot(df_m["trip_duration_minutes"], ax=ax, hist=hist)
+    l2 = sns.distplot(
+        random.normal(size=5000, loc=df_m["trip_duration_minutes"].mean()),
+        hist=hist,
+        ax=ax,
+    )
+    l3 = ax.axvline(df_m["trip_duration_minutes"].mean(), linestyle="dashed")
+    ax.legend(
+        [l1, l2, l3],
+        labels=["Original distribution", "Normal distribution", "Mean"],
+        loc="upper right",
+        borderaxespad=0.3,
+    )
+    plt.setp(ax, xlim=(0, xlim))
+    ax.set_xlabel("Trip duration (minutes)")
+    ax.set_ylabel("Density")
+    mpl_pane = pn.pane.Matplotlib(fig, tight=True)
+    return mpl_pane
+
+
+def _create_duration_distribution_tab(df):
+    """
+    This function creates plots for monthly trip duration distributions.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): Data that is used to make the distribution plot.
+    :return:
+        pn.Column: the created panel element
+
+    """
+    months = [calendar.month_abbr[i] for i in range(1, 13)]
+    month_options = pn.widgets.Select(name="Month", options=months)
+    hist_options = pn.widgets.Checkbox(name="Histogram")
+    xlim_options = pn.widgets.IntSlider(
+        name="Range x-axis (minutes)", start=20, end=80, step=10, value=40
+    )
+
+    dashboard = interact(
+        monthly_visualization,
+        month=month_options,
+        hist=hist_options,
+        xlim=xlim_options,
+        df=fixed(df),
+    )
+    title = pn.pane.Markdown("""# Monthly trip duration distribution""")
+
+    duration_distribution_tab = pn.Column(
+        title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
+    )
+    return duration_distribution_tab
+
+
 def create_dashboard(df):
     """
     This function creates an interactive panel dashboard.
@@ -1104,15 +1182,20 @@ def create_dashboard(df):
         "Monthly Scatter Plot",
         _create_monthly_animated_tab(df),
     )
+    duration_distribution_monthly = (
+        "Duration distribution",
+        _create_duration_distribution_tab(df),
+    )
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
     event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
     dashboard = pn.Tabs(
         heatmap_general,
         choropleth_monthly,
-        plotly_express_animated_monthly,
-        events,
-        zones,
         event_heatmap,
+        plotly_express_animated_monthly,
+        duration_distribution_monthly,
+        zones,
+        events,
     )
     return dashboard

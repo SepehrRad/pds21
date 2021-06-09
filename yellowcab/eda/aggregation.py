@@ -8,7 +8,9 @@ def agg_stats(
 ):
     """
     This function calculates (user specified) aggregated statistics of two input series & returns them as DataFrame.
+
     ----------------------------------------------
+
     :param
         group_series(pd.Series): Data you want to group by.
         data_series(pd.Series): Data you want aggregated.
@@ -32,7 +34,9 @@ def agg_stats(
 def describe_stats(group_series, data_series):
     """
     This function calculates a set of aggregated statistics of two input series & returns them as DataFrame.
+
     ----------------------------------------------
+
     :param
         group_series(pd.Series): Data you want to group by.
         data_series(pd.Series): Data you want aggregated.
