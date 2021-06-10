@@ -37,23 +37,25 @@ def make_baseline_predictions(df):
         target="payment_type",
         model=classification_model,
         relevant_features={
-            "target": "payment_type",
-            "cyclical_features": [
-                "pickup_month",
-                "pickup_day",
-                "pickup_hour",
-                "dropoff_hour",
-                "dropoff_day",
-                "dropoff_month",
-            ],
-            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-            "numerical_features": [
-                "passenger_count",
-                "trip_distance",
-                "total_amount",
-                "trip_duration_minutes",
-            ],
+        "target": "payment_type",
+        "cyclical_features": [],
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "covid_lockdown",
+            "total_amount",
+        ],
+        "created_features": [
+            "Zone_dropoff_JFK Airport",
+            "Zone_dropoff_Flushing Meadows-Corona Park",
+            "Zone_dropoff_East Harlem North",
+            "Zone_dropoff_Central Harlem North",
+            "Zone_pickup_JFK Airport",
+            "Zone_pickup_East Harlem South",
+            "Zone_pickup_East Harlem North",
+            "Zone_pickup_Central Harlem North",
+        ]
         },
+        use_created_features=True,
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type",
     )
@@ -65,27 +67,29 @@ def make_baseline_predictions(df):
         target="payment_type",
         model=classification_model,
         relevant_features={
-            "target": "payment_type",
-            "cyclical_features": [
-                "pickup_month",
-                "pickup_day",
-                "pickup_hour",
-                "dropoff_hour",
-                "dropoff_day",
-                "dropoff_month",
-            ],
-            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-            "numerical_features": [
-                "passenger_count",
-                "trip_distance",
-                "total_amount",
-                "trip_duration_minutes",
-            ],
-        },
+        "target": "payment_type",
+        "cyclical_features": [],
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "covid_lockdown",
+            "total_amount",
+        ],
+        "created_features": [
+            "Zone_dropoff_JFK Airport",
+            "Zone_dropoff_Flushing Meadows-Corona Park",
+            "Zone_dropoff_East Harlem North",
+            "Zone_dropoff_Central Harlem North",
+            "Zone_pickup_JFK Airport",
+            "Zone_pickup_East Harlem South",
+            "Zone_pickup_East Harlem North",
+            "Zone_pickup_Central Harlem North",
+        ]
+    },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type_nm",
         use_sampler=True,
         sampler=nr,
+        use_created_features=True,
     )
 
     # base_line regression for "trip_distance"
@@ -202,6 +206,7 @@ def build_fare_amount_model_base(df):
                                 "trip_duration_minutes",
                             ],
                         },
+
 
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     model = xgb.XGBRegressor(n_jobs=-1, n_estimators=100)
@@ -322,7 +327,7 @@ def build_fare_amount_model_optimized(df, manhattan=False):
 
 def build_payment_type_model_base(df):
     """
-    This Function predicts a fare amount based on training data, using XGBoost Regressor.
+    This Function predicts a payment type based on training data, using XGBoost Classifier.
     This Function should be called only with a sub sample of the available data.
     This is a basic model with no hyper parameter being tuned.
     -------------------------------------------------------------------------------
@@ -341,7 +346,6 @@ def build_payment_type_model_base(df):
             "trip_distance",
             "total_amount",
             "trip_duration_minutes",
-            "passenger_count",
             "Holiday",
             "covid_lockdown",
             "covid_school_restrictions",
@@ -356,9 +360,13 @@ def build_payment_type_model_base(df):
             "weekday",
         ],
     }
-
-    feature_selector = SelectKBest(score_func=f_classif, k=10)
-    model = xgb.XGBClassifier(n_jobs=-1, n_estimators=100, objective="multi:softmax", num_class=4)
+    nr = NearMiss()
+    feature_selector = SelectKBest(score_func=f_classif, k=5)
+    model = xgb.XGBClassifier(n_jobs=-1,
+                              n_estimators=100,
+                              objective="multi:softmax",
+                              num_class=4
+                              )
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -371,12 +379,15 @@ def build_payment_type_model_base(df):
         feature_selector=feature_selector,
         show_feature_importance=True,
         drop_first_category=False,
+        weigh_classes=False,
+        use_sampler=True,
+        sampler=nr,
     )
 
 
 def payment_type_hyper_parameter_optimization(df):
     """
-    This Function run a grid search on the data and print out the best hyper parameters for the payment type model
+    This Function runs a grid search on the data and prints out the best hyper parameters for the payment type model
     This Function should be called only with a sub sample of the available data.
     -------------------------------------------------------------------------------
     :param
@@ -397,18 +408,30 @@ def payment_type_hyper_parameter_optimization(df):
             "Zone_dropoff_JFK Airport",
             "Zone_dropoff_Flushing Meadows-Corona Park",
             "Zone_dropoff_East Harlem North",
-            "Zone_pickup_Central Harlem North",
+            "Zone_dropoff_Central Harlem North",
             "Zone_pickup_JFK Airport",
             "Zone_pickup_East Harlem South",
+            "Zone_pickup_East Harlem North",
+            "Zone_pickup_Central Harlem North",
         ]
     }
-    model = xgb.XGBClassifier(n_jobs=-1, subsample=0.7, colsample_bytree=0.8, objective="multi:softmax", num_class=4)
+
+    model = xgb.XGBClassifier(n_jobs=-1,
+                              subsample=0.7,
+                              colsample_bytree=0.8,
+                              objective="multi:softmax",
+                              num_class=4)
     model_params = {
-        "xgb_payment_type_model__max_depth": [3, 5,6],
-        "xgb_payment_type_model__min_child_weight": [1, 4, 7],
-        "xgb_payment_type_model__max_delta_step": [0, 1, 3],
-        "xgb_payment_type_model__reg_lambda": [0, 1, 7],
+        "xgb_payment_type_model__learning_rate": [0.05, 0.1],
+        "xgb_payment_type_model__max_depth": [5, 7],
+        "xgb_payment_type_model__min_child_weight": [3, 5],
+        "xgb_payment_type_model__reg_lambda": [2, 4, 6],
+        "xgb_payment_type_model__subsample": [0.7, 0.9],
+        "xgb_payment_type_model__colsample_bytree": [0.7, 0.9],
+        "xgb_payment_type_model__n_estimators": [80],
+        "xgb_payment_type_model__max_delta_step": [0, 5]
     }
+
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -422,45 +445,61 @@ def payment_type_hyper_parameter_optimization(df):
         drop_first_category=False,
         is_grid_search=True,
         grid_search_params=model_params,
-        scoring="f1",
+        scoring="f1_micro",
         use_created_features=True,
+        weigh_classes=True,
     )
 
 
-def build_payment_type_model_optimized(df):
+def build_payment_type_model_optimized(df, manhattan=False):
     """
-    This Function predicts a payment type based training data, using XGBoost Classifier.
+    This Function predicts a payment type based on training data, using XGBoost Classifier.
     This model uses the optimized hyper parameters and the selected features in the base model
     -------------------------------------------------------------------------------
+    :todo: update values according to optimization
     :param
         df(pandas.DataFrame): the given pandas data frame containing data
                                   used for prediction.
+        manhattan(bool): If set to true the model will only considers the pickup/dropoff from/to manhattan. Default: False
+
     """
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
         "target": "payment_type",
-        "categorical_features": [],
-        "numerical_features": [
-            "trip_distance",
-            "trip_duration_minutes",
-            "pickup_month",
-            "pickup_hour",
-        ],
         "cyclical_features": [],
-
+        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "numerical_features": [
+            "covid_lockdown",
+            "total_amount",
+        ],
+        "created_features": [
+            "Zone_dropoff_JFK Airport",
+            "Zone_dropoff_Flushing Meadows-Corona Park",
+            "Zone_dropoff_East Harlem North",
+            "Zone_dropoff_Central Harlem North",
+            "Zone_pickup_JFK Airport",
+            "Zone_pickup_East Harlem South",
+            "Zone_pickup_East Harlem North",
+            "Zone_pickup_Central Harlem North",
+        ]
     }
 
+    nr = NearMiss()
+
     model = xgb.XGBClassifier(
-        n_jobs=-1,
-        n_estimators=80,
-        learning_rate=0.1,
-        max_depth=10,
-        min_child_weight=1,
-        reg_lambda=10,
-        subsample=0.7,
-        colsample_bytree=0.9,
-    )
+            n_jobs=-1,
+            n_estimators=80,
+            learning_rate=0.05,
+            max_depth=7,
+            min_child_weight=3,
+            reg_lambda=5,
+            subsample=0.7,
+            colsample_bytree=0.9,
+            objective="multi:softmax",
+            num_class=4,
+        )
+
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -472,4 +511,9 @@ def build_payment_type_model_optimized(df):
         feature_selection=False,
         show_feature_importance=True,
         drop_first_category=False,
+        is_manhattan=manhattan,
+        use_created_features=True,
+        weigh_classes=True,
+        use_sampler=True,
+        sampler=nr
     )
