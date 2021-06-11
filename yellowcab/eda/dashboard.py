@@ -1181,17 +1181,21 @@ def basic_plots(df, borough):
     :returns
 
     """
-    if borough is not 'NYC complete':
-        nyc_zones_df = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
-        borough_zones = nyc_zones_df.loc[nyc_zones_df['borough'] == borough]
-        borough_loc_ids = borough_zones['LocationID'].tolist()
-        borough_loc_ids = map(str, borough_loc_ids)
-        df = df.loc[(df['PULocationID'].isin(borough_loc_ids)) | (df['DOLocationID'].isin(borough_loc_ids))]
+    if borough != 'NYC complete':
+        if borough != 'Airports':
+            nyc_zones_df = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
+            borough_zones = nyc_zones_df.loc[nyc_zones_df['borough'] == borough]
+            borough_loc_ids = borough_zones['LocationID'].tolist()
+            borough_loc_ids = map(str, borough_loc_ids)
+            df = df.loc[(df['PULocationID'].isin(borough_loc_ids)) | (df['DOLocationID'].isin(borough_loc_ids))]
+        if borough == 'Airports':
+            airport_ids = ['1', '132', '138']
+            df = df.loc[(df['PULocationID'].isin(airport_ids)) | (df['DOLocationID'].isin(airport_ids))]
 
     df_agg_count_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['pickup_month'], ['count'])
     df_agg_mean_duration_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['trip_duration_minutes'],
                                                            ['mean'])
-    df_agg_mean_passenger_mothly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['passenger_count'],
+    df_agg_mean_passenger_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['passenger_count'],
                                                            ['mean'])
 
     df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
@@ -1208,9 +1212,9 @@ def basic_plots(df, borough):
 
     axes[0, 1].bar(df_agg_mean_duration_monthly.index, df_agg_mean_duration_monthly['mean_trip_duration_minutes'])
     axes[0, 1].set_xlabel('Month')
-    axes[0, 1].set_ylabel('Avg trip duration')
+    axes[0, 1].set_ylabel('Avg trip duration (minutes)')
 
-    axes[0, 2].bar(df_agg_mean_passenger_mothly.index, df_agg_mean_passenger_mothly['mean_passenger_count'])
+    axes[0, 2].bar(df_agg_mean_passenger_monthly.index, df_agg_mean_passenger_monthly['mean_passenger_count'])
     axes[0, 2].set_xlabel('Month')
     axes[0, 2].set_ylabel('Avg passenger count')
 
@@ -1220,7 +1224,7 @@ def basic_plots(df, borough):
 
     axes[1, 1].bar(df_agg_mean_duration_weekly.index, df_agg_mean_duration_weekly['mean_trip_duration_minutes'])
     axes[1, 1].set_xlabel('Week')
-    axes[1, 1].set_ylabel('Avg trip duration')
+    axes[1, 1].set_ylabel('Avg trip duration (minutes)')
 
     axes[1, 2].bar(df_agg_mean_passenger_weekly.index, df_agg_mean_passenger_weekly['mean_passenger_count'])
     axes[1, 2].set_xlabel('Week')
@@ -1228,10 +1232,7 @@ def basic_plots(df, borough):
 
     plt.subplots_adjust(left=0.1, top=0.9)
     fig.tight_layout(pad=3.0)
-    if borough is not None:
-        title = 'Basic plots for {boroughname}'.format(boroughname=borough)
-    else:
-        title = 'Basic plots for NYC'
+    title = 'Basic plots for {boroughname}'.format(boroughname=borough)
     fig.suptitle(t=title, fontsize=18, y=0.99)
 
     mpl_pane = pn.pane.Matplotlib(fig, tight=True)
@@ -1253,6 +1254,7 @@ def _create_basic_plots_tab(df):
     df_geo = read_geo_dataset("taxi_zones.geojson")
     boroughs = list(df_geo['borough'].unique())
     boroughs = np.insert(boroughs, 0, "NYC complete")
+    boroughs = np.append(boroughs, "Airports")
     # delete EWR airport
     boroughs = boroughs[boroughs != 'EWR']
     boroughs_list = boroughs.tolist()
