@@ -1196,7 +1196,7 @@ def basic_plots(df, borough):
     df_agg_mean_duration_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['trip_duration_minutes'],
                                                            ['mean'])
     df_agg_mean_passenger_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['passenger_count'],
-                                                           ['mean'])
+                                                            ['mean'])
 
     df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
     df_agg_mean_duration_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['trip_duration_minutes'],
@@ -1217,6 +1217,7 @@ def basic_plots(df, borough):
     axes[0, 2].bar(df_agg_mean_passenger_monthly.index, df_agg_mean_passenger_monthly['mean_passenger_count'])
     axes[0, 2].set_xlabel('Month')
     axes[0, 2].set_ylabel('Avg passenger count')
+    axes[0, 2].set_ylim(1, 3)
 
     axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'])
     axes[1, 0].set_xlabel('Week')
@@ -1229,6 +1230,74 @@ def basic_plots(df, borough):
     axes[1, 2].bar(df_agg_mean_passenger_weekly.index, df_agg_mean_passenger_weekly['mean_passenger_count'])
     axes[1, 2].set_xlabel('Week')
     axes[1, 2].set_ylabel('Avg passenger count')
+    axes[1, 2].set_ylim(1, 3)
+
+    plt.subplots_adjust(left=0.1, top=0.9)
+    fig.tight_layout(pad=3.0)
+    title = 'Basic plots for {boroughname}'.format(boroughname=borough)
+    fig.suptitle(t=title, fontsize=18, y=0.99)
+
+    mpl_pane = pn.pane.Matplotlib(fig, tight=True)
+    return mpl_pane
+
+
+def basic_plots2(df, borough, feature):
+    """
+    This function creates a set of six bar (sub)plots (3x monthly, 3x weekly), inspecting number of trips,
+    mean trip duration and mean passenger count. The parameter borough can be a assigned to a borough name of NYC to
+    inspect trip data for this specific borough or it can be left blank to inspect the whole data frame.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        borough(String): Name of a borough to inspect. If not set, all NYC trips get selected.
+    :returns
+
+    """
+    if borough != 'NYC complete':
+        if borough != 'Airports':
+            nyc_zones_df = yellowcab.io.read_geo_dataset('taxi_zones.geojson')
+            borough_zones = nyc_zones_df.loc[nyc_zones_df['borough'] == borough]
+            borough_loc_ids = borough_zones['LocationID'].tolist()
+            borough_loc_ids = map(str, borough_loc_ids)
+            df = df.loc[(df['PULocationID'].isin(borough_loc_ids)) | (df['DOLocationID'].isin(borough_loc_ids))]
+        if borough == 'Airports':
+            airport_ids = ['1', '132', '138']
+            df = df.loc[(df['PULocationID'].isin(airport_ids)) | (df['DOLocationID'].isin(airport_ids))]
+
+    df_agg_count_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['pickup_month'], ['count'])
+    df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
+
+    df_agg_mean_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df[feature], ['mean'])
+    df_agg_mean_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df[feature], ['mean'])
+
+    #featurelist = ['Trip duration (minutes)', 'Trip distance', 'Total amount ($)', 'Tip amount ($)', 'Passenger count']
+
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+
+    col_feature = 'Mean {featurename}'.format(featurename=feature)
+    col_list = ['Number of trips', col_feature]
+
+    for ax, col in zip(axes[0], col_list):
+        ax.set_title(col)
+
+    # counting plots
+    axes[0, 0].bar(df_agg_count_monthly.index, df_agg_count_monthly['count_pickup_month'])
+    axes[0, 0].set_xlabel('Month')
+
+    axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'])
+    axes[1, 0].set_xlabel('Week')
+
+    # mean plots
+    axes[0, 1].bar(df_agg_mean_monthly.index, df_agg_mean_monthly['mean_{featurename}'.format(featurename=feature)])
+    axes[0, 1].set_xlabel('Month')
+
+    axes[1, 1].bar(df_agg_mean_weekly.index, df_agg_mean_weekly['mean_{featurename}'.format(featurename=feature)])
+    axes[1, 1].set_xlabel('Week')
+
+    line = plt.Line2D((.5, .5), (.05, .95), color="k", linewidth=2)
+    fig.add_artist(line)
 
     plt.subplots_adjust(left=0.1, top=0.9)
     fig.tight_layout(pad=3.0)
@@ -1260,13 +1329,16 @@ def _create_basic_plots_tab(df):
     boroughs_list = boroughs.tolist()
     borough_options = pn.widgets.Select(name="Borough", options=boroughs_list)
 
+    featurelist = ['trip_duration_minutes', 'trip_distance', 'total_amount', 'tip_amount', 'passenger_count']
+    feature_options = pn.widgets.Select(name="Features", options=featurelist)
+
     dashboard = interact(
-        basic_plots,
+        basic_plots2,
         borough=borough_options,
+        feature=feature_options,
         df=fixed(df),
     )
-    title = pn.pane.Markdown("""# Basic plots""")
-
+    title = ""
     basic_plots_tab = pn.Column(
         title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
     )

@@ -54,6 +54,7 @@ def basic_plots(df, borough=None):
     axes[0, 2].bar(df_agg_mean_passenger_mothly.index, df_agg_mean_passenger_mothly['mean_passenger_count'])
     axes[0, 2].set_xlabel('Month')
     axes[0, 2].set_ylabel('Avg passenger count')
+    axes[0, 2].set_ylim(1, 3)
 
     axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'])
     axes[1, 0].set_xlabel('Week')
@@ -66,6 +67,7 @@ def basic_plots(df, borough=None):
     axes[1, 2].bar(df_agg_mean_passenger_weekly.index, df_agg_mean_passenger_weekly['mean_passenger_count'])
     axes[1, 2].set_xlabel('Week')
     axes[1, 2].set_ylabel('Avg passenger count')
+    axes[1, 2].set_ylim(1, 3)
 
     plt.subplots_adjust(left=0.1, top=0.9)
     fig.tight_layout(pad=3.0)
