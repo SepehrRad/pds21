@@ -42,8 +42,8 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
     if use_created_features:
-        final_feature_list = flatten_list(list(created_features.values()))
-        df = df[final_feature_list]
+        mask = flatten_list(list(created_features.values()))
+        df = df[mask]
     return df
 
 
