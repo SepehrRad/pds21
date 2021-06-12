@@ -30,7 +30,7 @@ def make_baseline_predictions(df):
     df = add_relevant_features(df, "pickup_datetime")
 
     nr = NearMiss()
-    """
+
     # base_line classification for "payment_type"
     make_predictions(
         df=df,
@@ -88,7 +88,7 @@ def make_baseline_predictions(df):
         use_sampler=True,
         sampler=nr,
     )
-    """
+
     # base_line regression for "trip_distance"
     make_predictions(
         df=df,
