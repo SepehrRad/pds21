@@ -48,7 +48,7 @@ def make_baseline_predictions(df):
             ],
             "created_features": [
                 "Zone_pickup_JFK Airport",
-            ]
+            ],
         },
         use_created_features=True,
         scaler_type="standard_scaler",
@@ -73,7 +73,7 @@ def make_baseline_predictions(df):
             ],
             "created_features": [
                 "Zone_pickup_JFK Airport",
-            ]
+            ],
         },
         scaler_type="standard_scaler",
         model_name="base_clas_payment_type_nm",
@@ -81,7 +81,6 @@ def make_baseline_predictions(df):
         sampler=nr,
         use_created_features=True,
     )
-
 
     # base_line regression for "trip_distance"
     make_predictions(
@@ -116,7 +115,6 @@ def make_baseline_predictions(df):
         use_sampler=False,
         sampler=None,
     )
-
 
 
 def trip_distance_regression_base(df):
@@ -357,11 +355,9 @@ def build_payment_type_model_base(df):
     }
     rus = RandomUnderSampler(random_state=7)
     feature_selector = SelectKBest(score_func=f_classif, k=5)
-    model = xgb.XGBClassifier(n_jobs=-1,
-                              n_estimators=100,
-                              objective="multi:softmax",
-                              num_class=4
-                              )
+    model = xgb.XGBClassifier(
+        n_jobs=-1, n_estimators=100, objective="multi:softmax", num_class=4
+    )
     make_predictions(
         df=df,
         relevant_features=relevant_features,
@@ -403,16 +399,18 @@ def payment_type_hyper_parameter_optimization(df):
         ],
         "created_features": [
             "Zone_pickup_JFK Airport",
-        ]
+        ],
     }
 
     rus = RandomUnderSampler(random_state=7)
 
-    model = xgb.XGBClassifier(n_jobs=-1,
-                              subsample=0.7,
-                              colsample_bytree=0.8,
-                              objective="multi:softmax",
-                              num_class=4)
+    model = xgb.XGBClassifier(
+        n_jobs=-1,
+        subsample=0.7,
+        colsample_bytree=0.8,
+        objective="multi:softmax",
+        num_class=4,
+    )
     model_params = {
         "xgb_payment_type_model__learning_rate": [0.05, 0.1, 0.2],
         "xgb_payment_type_model__max_depth": [3, 5, 7],
@@ -470,7 +468,7 @@ def build_payment_type_model_optimized(df, manhattan=False):
         ],
         "created_features": [
             "Zone_pickup_JFK Airport",
-        ]
+        ],
     }
     rus = RandomUnderSampler(random_state=7)
 
