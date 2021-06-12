@@ -27,6 +27,7 @@ def make_baseline_predictions(df):
         max_iter=5000,
     )
     regression_model = LinearRegression(n_jobs=-1)
+    df = add_relevant_features(df, "pickup_datetime")
 
     nr = NearMiss()
 
@@ -93,13 +94,29 @@ def make_baseline_predictions(df):
         df=df,
         prediction_type="regression",
         target="trip_distance",
-        model=regression_model,
         relevant_features={
             "target": "trip_distance",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"],
+            "cyclical_features": [],
+            "numerical_features": [
+                "passenger_count",
+                "Holiday",
+                "covid_lockdown",
+                "covid_school_restrictions",
+                "covid_new_cases",
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "haversine_distance",
+                "bearing_distance",
+                "manhattan_distance",
+                "weekend",
+                "weekday",
+            ],
         },
+        feature_selector=SelectFromModel(Lasso(alpha=0.05)),
+        feature_selection=True,
+        model=regression_model,
         scaler_type=None,
         model_name="base_reg_trip_distance",
     )
@@ -114,16 +131,25 @@ def make_baseline_predictions(df):
         relevant_features={
             "target": "fare_amount",
             "categorical_features": ["Zone_dropoff", "Zone_pickup"],
-            "cyclical_features": ["pickup_month", "pickup_day", "pickup_hour"],
-            "numerical_features": ["passenger_count"],
+            "numerical_features": [
+                "trip_distance",
+                "trip_duration_minutes",
+                "pickup_month",
+                "pickup_day",
+                "pickup_hour",
+                "dropoff_month",
+                "dropoff_day",
+                "dropoff_hour",
+            ],
+            "cyclical_features": [],
         },
+        feature_selector=SelectFromModel(Lasso(alpha=0.05)),
+        feature_selection=True,
         model_name="base_reg_fare_amount",
-        use_sampler=False,
-        sampler=None,
     )
 
 
-def trip_distance_regression_base(df):
+def build_trip_distance_model_base(df):
     """
     This function predicts the trip distance with using xgboost. Information is used that was available at
     the start of the trip (including additional created features).
@@ -134,7 +160,7 @@ def trip_distance_regression_base(df):
                                         accuracy scores or to boost their performance.
     """
 
-    feature_selector = SelectFromModel(Lasso(alpha=0.01))
+    feature_selector = SelectFromModel(Lasso(alpha=0.05))
     df = add_relevant_features(df, "pickup_datetime")
 
     make_predictions(
@@ -169,6 +195,112 @@ def trip_distance_regression_base(df):
         use_sampler=False,
         show_feature_importance=True,
         sampler=None,
+    )
+
+
+def trip_distance_hyper_parameter_optimization(df):
+    """
+    This Function run a grid search on the data and print out the best hyper parameters for a the trip distance model
+    This Function should be called only with a sub sample of the available data.
+    -------------------------------------------------------------------------------
+    :param
+        df(pandas.DataFrame): the given pandas data frame containing data
+                                  used for grid search.
+        manhattan(bool): If set to true the model will only considers the
+                             pickup/dropoff from/to manhattan. Default: False
+    """
+    # The pickup month/day/hour will not be transformed as
+    # there is no need for cyclical transformation when using a decision tree
+    df = add_relevant_features(df, "pickup_datetime")
+    relevant_features = {
+        "target": "trip_distance",
+        "categorical_features": [],
+        "numerical_features": [
+            "pickup_month",
+            "pickup_day",
+            "haversine_distance",
+            "bearing_distance",
+            "manhattan_distance",
+        ],
+        "cyclical_features": [],
+    }
+
+    model = xgb.XGBRegressor(n_jobs=-1, subsample=0.7, colsample_bytree=0.8)
+
+    model_params = {
+        "xgb_trip_distance_model__learning_rate": [0.1, 0.05],
+        "xgb_trip_distance_model__max_depth": [5, 8, 10],
+        "xgb_trip_distance_model__min_child_weight": [5, 7],
+        "xgb_trip_distance_model__reg_lambda": [5, 7, 10],
+        "xgb_trip_distance_model__subsample": [0.7, 0.9],
+        "xgb_trip_distance_model__colsample_bytree": [0.7, 0.9],
+        "xgb_trip_distance_model__n_estimators": [80],
+    }
+
+    make_predictions(
+        df=df,
+        relevant_features=relevant_features,
+        target="trip_distance",
+        scaler_type=None,
+        prediction_type="regression",
+        model_name="xgb_trip_distance_model",
+        model=model,
+        feature_selection=False,
+        show_feature_importance=True,
+        drop_first_category=False,
+        is_grid_search=True,
+        grid_search_params=model_params,
+        scoring="neg_mean_absolute_error",
+    )
+
+
+def build_trip_distance_model_optimized(df, manhattan=False):
+    """
+    This Function predicts a trip distance based training data, using XGBoost Regressor.
+    This model uses the optimized hyper parameters and the selected features in the base model
+    -------------------------------------------------------------------------------
+    :param
+        df(pandas.DataFrame): the given pandas data frame containing data
+                                  used for prediction.
+    """
+    # The pickup month/day/hour will not be transformed as
+    # there is no need for cyclical transformation when using a decision tree
+    df = add_relevant_features(df, "pickup_datetime")
+    relevant_features = {
+        "target": "trip_distance",
+        "categorical_features": [],
+        "numerical_features": [
+            "pickup_month",
+            "pickup_day",
+            "haversine_distance",
+            "bearing_distance",
+            "manhattan_distance",
+        ],
+        "cyclical_features": [],
+    }
+
+    model = xgb.XGBRegressor(
+        n_jobs=-1,
+        n_estimators=80,
+        learning_rate=0.1,
+        max_depth=12,
+        min_child_weight=1,
+        reg_lambda=7,
+        subsample=0.9,
+        colsample_bytree=0.7,
+    )
+    make_predictions(
+        df=df,
+        relevant_features=relevant_features,
+        target="trip_distance",
+        scaler_type=None,
+        prediction_type="regression",
+        model_name="xgb_model_trip_distance_optimized",
+        model=model,
+        feature_selection=False,
+        show_feature_importance=True,
+        drop_first_category=False,
+        is_manhattan=manhattan,
     )
 
 
