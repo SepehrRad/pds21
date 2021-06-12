@@ -265,26 +265,25 @@ def make_predictions(
             X_test=X_test,
             pipeline=pipeline,
         )
+    elif not weigh_classes:
+        return find_best_parameters_for_model(
+                pipeline=pipeline,
+                X_train=X_train,
+                y_train=y_train,
+                model_name=model_name,
+                model_params=grid_search_params,
+                scoring=scoring,
+            )
     else:
-        if not weigh_classes:
-            return find_best_parameters_for_model(
-                pipeline=pipeline,
-                X_train=X_train,
-                y_train=y_train,
-                model_name=model_name,
-                model_params=grid_search_params,
-                scoring=scoring,
-            )
-        else:
-            return find_best_parameters_for_model(
-                pipeline=pipeline,
-                X_train=X_train,
-                y_train=y_train,
-                model_name=model_name,
-                model_params=grid_search_params,
-                scoring=scoring,
-                sample_weight=pipeline_sample_weight
-            )
+        return find_best_parameters_for_model(
+            pipeline=pipeline,
+            X_train=X_train,
+            y_train=y_train,
+            model_name=model_name,
+            model_params=grid_search_params,
+            scoring=scoring,
+            sample_weight=pipeline_sample_weight
+        )
 
 def find_best_parameters_for_model(
         pipeline, X_train, y_train, model_params, model_name, scoring, sample_weight=None
