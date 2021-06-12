@@ -1136,14 +1136,14 @@ def monthly_visualization(df, month=None, hist=None, xlim=None):
 
 def _create_duration_distribution_tab(df):
     """
-    This function creates plots for monthly trip duration distributions.
+    This function creates plots for monthly trip duration distributions and a comparison to normal distribution.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): Data that is used to make the distribution plot.
     :return:
-        pn.Column: the created panel element
+        pn.pane.Matplotlib(): Monthly distribution plot.
 
     """
     months = [calendar.month_abbr[i] for i in range(1, 13)]
@@ -1170,17 +1170,19 @@ def _create_duration_distribution_tab(df):
 
 def basic_plots(df, borough, pu_do, feature):
     """
-    This function creates a set of six bar (sub)plots (3x monthly, 3x weekly), inspecting number of trips,
-    mean trip duration and mean passenger count. The parameter borough can be a assigned to a borough name of NYC to
-    inspect trip data for this specific borough or it can be left blank to inspect the whole data frame.
+    This function creates a Figure of 4 subplots (barplots) which give a basic overview about trip data and features.
+    The left sided plots show information regarding the total trip number (monthly, weekly) of the selected borough.
+    The ride sided plots show information regarding the selected feature.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): DataFrame to be processed.
         borough(String): Name of a borough to inspect. If not set, all NYC trips get selected.
+        pu_do(String): 'pickup' or 'dropoff' trips get investigated.
+        feature(String): Feature-coloumn to be investigated in the right sided barplots.
     :returns
-
+        pn.pane.Matplotlib(): Basic plots.
     """
     geojson_df = read_geo_dataset("taxi_zones.geojson")
 
@@ -1298,14 +1300,16 @@ def basic_plots(df, borough, pu_do, feature):
 
 def _create_basic_plots_tab(df):
     """
-    This function creates plots for monthly trip duration distributions.
+    This function creates a Figure of 4 subplots (barplots) which give a basic overview about trip data and features.
+    The left sided plots show information regarding the total trip number (monthly, weekly) of the selected borough.
+    The ride sided plots show information regarding the selected feature.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): Data that is used to make the distribution plot.
     :return:
-        pn.Column: the created panel element
+        pn.pane.Matplotlib(): Basic plots.
 
     """
     df_geo = read_geo_dataset("taxi_zones.geojson")
