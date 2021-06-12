@@ -9,11 +9,18 @@ from sklearn.preprocessing import RobustScaler, StandardScaler
 from sklearn.utils.class_weight import compute_sample_weight
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import flatten_list, get_random_state, get_zone_information
+from yellowcab.io.utils import (flatten_list, get_random_state,
+                                get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first=False, use_created_features=False):
+def _make_data_preparation(
+    df,
+    relevant_features,
+    is_manhattan=False,
+    drop_first=False,
+    use_created_features=False,
+):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
@@ -37,8 +44,8 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first
     mask = flatten_list(list(relevant_features.values()))
     if is_manhattan:
         df = df.loc[
-             (df.Borough_pickup == "Manhattan") | (df.Borough_dropoff == "Manhattan"), :
-             ]
+            (df.Borough_pickup == "Manhattan") | (df.Borough_dropoff == "Manhattan"), :
+        ]
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
     if use_created_features:
@@ -48,7 +55,7 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first
 
 
 def _make_pipeline(
-        model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
+    model, model_name, feature_selector=None, feature_selection=False, scaler_type=None
 ):
     """
     This function assembles several steps that can be cross-validated together
@@ -161,25 +168,25 @@ def _get_sample_weight(y_train):
 
 
 def make_predictions(
-        df,
-        prediction_type,
-        target,
-        model,
-        model_name,
-        scaler_type,
-        relevant_features,
-        feature_selector=None,
-        feature_selection=False,
-        use_sampler=False,
-        sampler=None,
-        show_feature_importance=False,
-        drop_first_category=True,
-        is_grid_search=False,
-        grid_search_params=None,
-        scoring=None,
-        is_manhattan=False,
-        use_created_features=False,
-        weigh_classes=False,
+    df,
+    prediction_type,
+    target,
+    model,
+    model_name,
+    scaler_type,
+    relevant_features,
+    feature_selector=None,
+    feature_selection=False,
+    use_sampler=False,
+    sampler=None,
+    show_feature_importance=False,
+    drop_first_category=True,
+    is_grid_search=False,
+    grid_search_params=None,
+    scoring=None,
+    is_manhattan=False,
+    use_created_features=False,
+    weigh_classes=False,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -240,7 +247,9 @@ def make_predictions(
 
     if weigh_classes:
         sample_weight = _get_sample_weight(y_train)
-        pipeline_sample_weight = {pipeline.steps[-1][0] + '__sample_weight': sample_weight}
+        pipeline_sample_weight = {
+            pipeline.steps[-1][0] + "__sample_weight": sample_weight
+        }
 
     if not is_grid_search:
         if not weigh_classes:
@@ -283,11 +292,12 @@ def make_predictions(
                 model_name=model_name,
                 model_params=grid_search_params,
                 scoring=scoring,
-                sample_weight=pipeline_sample_weight
+                sample_weight=pipeline_sample_weight,
             )
 
+
 def find_best_parameters_for_model(
-        pipeline, X_train, y_train, model_params, model_name, scoring, sample_weight=None
+    pipeline, X_train, y_train, model_params, model_name, scoring, sample_weight=None
 ):
     """
     This function performs a grid search with three cv on the training set.
