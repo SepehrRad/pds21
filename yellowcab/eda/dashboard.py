@@ -55,7 +55,7 @@ def create_animated_monthly_plot(df, aspect="pickup"):
 
 
 def _create_plotly_monthly_plot(
-        df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
+    df, map_style="carto-positron", month=1, aspect="pickup", cmap="inferno"
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
@@ -169,12 +169,12 @@ def _add_tile_layers(base_map=None):
 
 
 def _create_monthly_choropleth(
-        df,
-        month="Jan",
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    month="Jan",
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -352,14 +352,14 @@ def _generate_base_map(default_location="New York"):
 
 
 def _create_aggregator(
-        df,
-        month=None,
-        event=None,
-        aspect="pickup",
-        animated=False,
-        choropleth=False,
-        log_count=False,
-        event_heatmap=False,
+    df,
+    month=None,
+    event=None,
+    aspect="pickup",
+    animated=False,
+    choropleth=False,
+    log_count=False,
+    event_heatmap=False,
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -385,7 +385,7 @@ def _create_aggregator(
         df = df.loc[
             (df[f"{aspect}_datetime"] >= event[0])
             & (df[f"{aspect}_datetime"] < event[1])
-            ]
+        ]
     if choropleth:
         cols_grp.extend(["PULocationID"]) if aspect == "pickup" else cols_grp.extend(
             ["DOLocationID"]
@@ -412,10 +412,10 @@ def _create_aggregator(
                         & (df.pickup_day == day),
                         [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
                     ]
-                        .groupby(cols_grp)
-                        .sum()
-                        .reset_index()
-                        .values.tolist()
+                    .groupby(cols_grp)
+                    .sum()
+                    .reset_index()
+                    .values.tolist()
                 )
             else:
                 df_hour_list.append(
@@ -425,10 +425,10 @@ def _create_aggregator(
                         & (df.dropoff_day == day),
                         [f"centers_lat_{aspect}", f"centers_long_{aspect}", "count"],
                     ]
-                        .groupby(cols_grp)
-                        .sum()
-                        .reset_index()
-                        .values.tolist()
+                    .groupby(cols_grp)
+                    .sum()
+                    .reset_index()
+                    .values.tolist()
                 )
         return df_hour_list
 
@@ -458,12 +458,12 @@ def _create_inferno_cmap():
 
 
 def _create_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        location="New York",
-        log_count=False,
-        inferno_colormap=False,
+    df,
+    aspect="pickup",
+    radius=15,
+    location="New York",
+    log_count=False,
+    inferno_colormap=False,
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
@@ -643,19 +643,19 @@ def _create_events_tab(df):
 
 
 def _create_event_choropleth(
-        df,
-        event=(
-                datetime.datetime(2020, 1, 1, 0, 0, 0),
-                datetime.datetime(2020, 1, 2, 0, 0, 0),
-        ),
-        timespan=(
-                datetime.datetime(2020, 1, 1, 0, 0, 0),
-                datetime.datetime(2021, 1, 1, 0, 0, 0),
-        ),
-        aspect="pickup",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    event=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2020, 1, 2, 0, 0, 0),
+    ),
+    timespan=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2021, 1, 1, 0, 0, 0),
+    ),
+    aspect="pickup",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -674,8 +674,8 @@ def _create_event_choropleth(
         ValueError: If the aggregation aspect is not 'pickup'/'dropoff'
     """
     if event == (
-            datetime.datetime(1, 1, 1, 1, 1, 1),
-            datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
     ):
         event = timespan
     data = _create_aggregator(
@@ -736,13 +736,13 @@ def _create_event_choropleth(
 
 
 def _create_zone_choropleth(
-        df,
-        month="all",
-        zone="1",
-        aspect="outbound",
-        log_count=False,
-        cmap="YlGn",
-        location="New York",
+    df,
+    month="all",
+    zone="1",
+    aspect="outbound",
+    log_count=False,
+    cmap="YlGn",
+    location="New York",
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
@@ -892,7 +892,7 @@ def _create_zone_tab(df):
 
 
 def _create_zone_aggregator(
-        df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False
+    df, month=None, zone=None, aspect="outbound", choropleth=False, log_count=False
 ):
     """
     This function aggregates the given data based on the other parameters set.
@@ -925,7 +925,7 @@ def _create_zone_aggregator(
             df = df.loc[
                 (df[f"{location}_month"] == month)
                 & (df[f"{location_abr}LocationID"] == zone)
-                ]
+            ]
         else:
             df = df.loc[df[f"{location_abr}LocationID"] == zone]
     if choropleth:
@@ -935,9 +935,9 @@ def _create_zone_aggregator(
     if location == "pickup":
         df_agg = (
             df.groupby(dropoff_cols_grp)
-                .size()
-                .to_frame(f"{aspect}_count")
-                .reset_index()
+            .size()
+            .to_frame(f"{aspect}_count")
+            .reset_index()
         )
     elif location == "dropoff":
         df_agg = (
@@ -953,18 +953,18 @@ def _create_zone_aggregator(
 
 
 def _create_event_heat_map(
-        df,
-        aspect="pickup",
-        radius=15,
-        location="New York",
-        event=(
-                datetime.datetime(2020, 1, 1, 0, 0, 0),
-                datetime.datetime(2020, 1, 2, 0, 0, 0),
-        ),
-        timespan=(
-                datetime.datetime(2020, 1, 1, 0, 0, 0),
-                datetime.datetime(2021, 1, 1, 0, 0, 0),
-        ),
+    df,
+    aspect="pickup",
+    radius=15,
+    location="New York",
+    event=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2020, 1, 2, 0, 0, 0),
+    ),
+    timespan=(
+        datetime.datetime(2020, 1, 1, 0, 0, 0),
+        datetime.datetime(2021, 1, 1, 0, 0, 0),
+    ),
 ):
     """
     This function creates a folium heatmap with time based on different aspects of the given data.
@@ -980,16 +980,16 @@ def _create_event_heat_map(
         folium.HeatmapWithTime: The created HeatmapWithTime
     """
     if event == (
-            datetime.datetime(1, 1, 1, 1, 1, 1),
-            datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
+        datetime.datetime(1, 1, 1, 1, 1, 1),
     ):
         event = timespan
     base_map = _generate_base_map(default_location=location)
     map_data = _create_aggregator(df, aspect=aspect, event=event, event_heatmap=True)
     index = (
         pd.date_range(event[0], event[1], freq="H")
-            .strftime("%Y-%m-%d %H:%M:%S")
-            .tolist()
+        .strftime("%Y-%m-%d %H:%M:%S")
+        .tolist()
     )
     del index[-1]
     HeatMapWithTime(
@@ -1186,112 +1186,147 @@ def basic_plots(df, borough, pu_do, feature):
     """
     geojson_df = read_geo_dataset("taxi_zones.geojson")
 
-    if borough != 'NYC complete':
-        if borough != 'Airports':
-            if pu_do == 'pickup':
-                df = df.loc[df['pickup_borough'] == borough]
+    if borough != "NYC complete":
+        if borough != "Airports":
+            if pu_do == "pickup":
+                df = df.loc[df["pickup_borough"] == borough]
             else:
-                df = df.loc[df['dropoff_borough'] == borough]
-        if borough == 'Airports':
-            if pu_do == 'pickup':
-                df = df.loc[(df['pickup_zone'].str.contains('Airport'))]
+                df = df.loc[df["dropoff_borough"] == borough]
+        if borough == "Airports":
+            if pu_do == "pickup":
+                df = df.loc[(df["pickup_zone"].str.contains("Airport"))]
             else:
-                df = df.loc[(df['dropoff_zone'].str.contains('Airport'))]
+                df = df.loc[(df["dropoff_zone"].str.contains("Airport"))]
 
     # number of trips dataframes
-    df_agg_count_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['pickup_month'], ['count'])
-    df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
+    df_agg_count_monthly = yellowcab.eda.agg_stats(
+        df["pickup_datetime"].dt.month, df["pickup_month"], ["count"]
+    )
+    df_agg_count_weekly = yellowcab.eda.agg_stats(
+        df["pickup_datetime"].dt.week, df["pickup_month"], ["count"]
+    )
 
     # feature dataframes
-    if feature != 'start_or_destination':
+    if feature != "start_or_destination":
         # mean plots
-        df_agg_mean_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df[feature], ['mean'])
-        df_agg_mean_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df[feature], ['mean'])
+        df_agg_mean_monthly = yellowcab.eda.agg_stats(
+            df["pickup_datetime"].dt.month, df[feature], ["mean"]
+        )
+        df_agg_mean_weekly = yellowcab.eda.agg_stats(
+            df["pickup_datetime"].dt.week, df[feature], ["mean"]
+        )
     else:
         # PU-DO-Plots
-        if pu_do == 'pickup':
-            col1 = 'DOLocationID'
-            col2 = 'dropoff_borough'
+        if pu_do == "pickup":
+            col1 = "DOLocationID"
+            col2 = "dropoff_borough"
         else:
-            col1 = 'PULocationID'
-            col2 = 'pickup_borough'
+            col1 = "PULocationID"
+            col2 = "pickup_borough"
 
         dopu_loc_ser_ids = df[col1].value_counts()
         dopu_loc_ser_ids.sort_values(ascending=False, inplace=True)
         dopu_loc_ser_ids = dopu_loc_ser_ids[:10]
         df_dopu_ids = dopu_loc_ser_ids.to_frame().reset_index()
-        df_dopu_ids = df_dopu_ids.rename(columns={'index': col1,
-                                                  col1: 'Count'})
+        df_dopu_ids = df_dopu_ids.rename(columns={"index": col1, col1: "Count"})
         dopu_loc_ser_borough = df[col2].value_counts()
         dopu_loc_ser_borough.sort_values(ascending=False, inplace=True)
         dopu_loc_ser_borough = dopu_loc_ser_borough[:10]
         df_dopu_boroughs = dopu_loc_ser_borough.to_frame().reset_index()
-        df_dopu_boroughs = df_dopu_boroughs.rename(columns={'index': col2,
-                                                            col2: 'Count'})
+        df_dopu_boroughs = df_dopu_boroughs.rename(
+            columns={"index": col2, col2: "Count"}
+        )
 
     # create figure column names
-    if pu_do == 'pickup':
-        col_name_start_or_destination = 'Dropoff areas of trips started at {boroughname}'.format(boroughname=borough)
+    if pu_do == "pickup":
+        col_name_start_or_destination = (
+            "Dropoff areas of trips started at {boroughname}".format(
+                boroughname=borough
+            )
+        )
     else:
-        col_name_start_or_destination = 'Pickup areas of trips ended at {boroughname}'.format(boroughname=borough)
+        col_name_start_or_destination = (
+            "Pickup areas of trips ended at {boroughname}".format(boroughname=borough)
+        )
 
     featureDict = {
-        'trip_duration_minutes': 'Trip Duration (minutes)',
-        'trip_distance': 'Trip Distance (miles)',
-        'total_amount': 'Total Amount ($)',
-        'tip_amount': 'Tip Amount ($)',
-        'passenger_count': 'Passenger Count',
-        'start_or_destination': col_name_start_or_destination}
+        "trip_duration_minutes": "Trip Duration (minutes)",
+        "trip_distance": "Trip Distance (miles)",
+        "total_amount": "Total Amount ($)",
+        "tip_amount": "Tip Amount ($)",
+        "passenger_count": "Passenger Count",
+        "start_or_destination": col_name_start_or_destination,
+    }
 
-    col_feature = '{featurename}'.format(featurename=featureDict[feature])
-    col_total_number = 'Total number of trips with {pudo} at {boroughname}'.format(pudo=pu_do, boroughname=borough)
+    col_feature = "{featurename}".format(featurename=featureDict[feature])
+    col_total_number = "Total number of trips with {pudo} at {boroughname}".format(
+        pudo=pu_do, boroughname=borough
+    )
     col_list = [col_total_number, col_feature]
 
     fig = Figure(figsize=(15, 10))
     axes = fig.subplots(2, 2)
     # number of trips plots
-    axes[0, 0].bar(df_agg_count_monthly.index, df_agg_count_monthly['count_pickup_month'], color='orange')
-    axes[0, 0].set_xlabel('Month')
-    axes[0, 0].set_ylabel('Number of trips')
-    axes[0, 0].ticklabel_format(useOffset=False, style='plain', axis='y')
+    axes[0, 0].bar(
+        df_agg_count_monthly.index,
+        df_agg_count_monthly["count_pickup_month"],
+        color="orange",
+    )
+    axes[0, 0].set_xlabel("Month")
+    axes[0, 0].set_ylabel("Number of trips")
+    axes[0, 0].ticklabel_format(useOffset=False, style="plain", axis="y")
 
-    axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'], color='orange')
-    axes[1, 0].set_xlabel('Week')
-    axes[1, 0].set_ylabel('Number of trips')
-    axes[1, 0].ticklabel_format(useOffset=False, style='plain', axis='y')
+    axes[1, 0].bar(
+        df_agg_count_weekly.index,
+        df_agg_count_weekly["count_pickup_month"],
+        color="orange",
+    )
+    axes[1, 0].set_xlabel("Week")
+    axes[1, 0].set_ylabel("Number of trips")
+    axes[1, 0].ticklabel_format(useOffset=False, style="plain", axis="y")
 
-    if feature != 'start_or_destination':
+    if feature != "start_or_destination":
         # mean plots
-        axes[0, 1].bar(df_agg_mean_monthly.index, df_agg_mean_monthly['mean_{featurename}'.format(featurename=feature)])
-        axes[0, 1].set_xlabel('Month')
-        axes[0, 1].set_ylabel('Mean {featurename}'.format(featurename=featureDict[feature]))
-        axes[0, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
+        axes[0, 1].bar(
+            df_agg_mean_monthly.index,
+            df_agg_mean_monthly["mean_{featurename}".format(featurename=feature)],
+        )
+        axes[0, 1].set_xlabel("Month")
+        axes[0, 1].set_ylabel(
+            "Mean {featurename}".format(featurename=featureDict[feature])
+        )
+        axes[0, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
 
-        axes[1, 1].bar(df_agg_mean_weekly.index, df_agg_mean_weekly['mean_{featurename}'.format(featurename=feature)])
-        axes[1, 1].set_xlabel('Week')
-        axes[1, 1].set_ylabel('Mean {featurename}'.format(featurename=featureDict[feature]))
-        axes[1, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
+        axes[1, 1].bar(
+            df_agg_mean_weekly.index,
+            df_agg_mean_weekly["mean_{featurename}".format(featurename=feature)],
+        )
+        axes[1, 1].set_xlabel("Week")
+        axes[1, 1].set_ylabel(
+            "Mean {featurename}".format(featurename=featureDict[feature])
+        )
+        axes[1, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
 
-        col_feature = 'Mean {featurename}'.format(featurename=featureDict[feature])
+        col_feature = "Mean {featurename}".format(featurename=featureDict[feature])
 
     else:
         # count plots
-        axes[0, 1].bar(df_dopu_ids[col1], df_dopu_ids['Count'])
-        axes[0, 1].set_xlabel('Location IDs')
-        axes[0, 1].set_ylabel('Number of trips')
-        axes[0, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
+        axes[0, 1].bar(df_dopu_ids[col1], df_dopu_ids["Count"])
+        axes[0, 1].set_xlabel("Location IDs")
+        axes[0, 1].set_ylabel("Number of trips")
+        axes[0, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
 
-        axes[1, 1].bar(df_dopu_boroughs[col2], df_dopu_boroughs['Count'])
-        axes[1, 1].set_xlabel('Boroughs')
-        axes[1, 1].set_ylabel('Number of trips')
-        axes[1, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
+        axes[1, 1].bar(df_dopu_boroughs[col2], df_dopu_boroughs["Count"])
+        axes[1, 1].set_xlabel("Boroughs")
+        axes[1, 1].set_ylabel("Number of trips")
+        axes[1, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
 
     for ax, col in zip(axes[0], col_list):
         ax.set_title(col)
 
     fig.subplots_adjust(left=0.1, top=0.9)
     fig.tight_layout(pad=3.0)
-    title = 'Basic plots for {boroughname}'.format(boroughname=borough)
+    title = "Basic plots for {boroughname}".format(boroughname=borough)
     fig.suptitle(t=title, fontsize=18, y=0.99)
 
     mpl_pane = pn.pane.Matplotlib(fig, tight=True)
@@ -1315,35 +1350,50 @@ def _create_basic_plots_tab(df):
     df_geo = read_geo_dataset("taxi_zones.geojson")
     df_geo["LocationID"] = df_geo["LocationID"].astype("str")
 
-    boroughs = list(df_geo['borough'].unique())
+    boroughs = list(df_geo["borough"].unique())
     boroughs = np.insert(boroughs, 0, "NYC complete")
     boroughs = np.insert(boroughs, 0, "Airports")
     # delete EWR airport
-    boroughs = boroughs[boroughs != 'EWR']
+    boroughs = boroughs[boroughs != "EWR"]
     boroughs_list = boroughs.tolist()
     borough_options = pn.widgets.Select(name="Borough", options=boroughs_list)
 
-    feature_list = ['trip_duration_minutes',
-                    'trip_distance',
-                    'total_amount',
-                    'tip_amount',
-                    'passenger_count',
-                    'start_or_destination']
+    feature_list = [
+        "trip_duration_minutes",
+        "trip_distance",
+        "total_amount",
+        "tip_amount",
+        "passenger_count",
+        "start_or_destination",
+    ]
     feature_options = pn.widgets.Select(name="Features", options=feature_list)
 
-    pu_do_list = ['pickup',
-                  'dropoff']
-    pu_do_options = pn.widgets.Select(name="Trips with pickup or dropoff in the selected borough", options=pu_do_list)
+    pu_do_list = ["pickup", "dropoff"]
+    pu_do_options = pn.widgets.Select(
+        name="Trips with pickup or dropoff in the selected borough", options=pu_do_list
+    )
 
     # add start and end zone + borough to trip dataframe
-    df_viz = df.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='PULocationID',
-                      right_on='LocationID')
-    df_viz.rename(columns={'zone': 'pickup_zone', 'borough': 'pickup_borough'}, inplace=True)
-    df_viz = df_viz.drop(['LocationID'], axis=1)
-    df_viz = df_viz.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='DOLocationID',
-                          right_on='LocationID')
-    df_viz.rename(columns={'zone': 'dropoff_zone', 'borough': 'dropoff_borough'}, inplace=True)
-    df_viz = df_viz.drop(['LocationID'], axis=1)
+    df_viz = df.merge(
+        df_geo[["LocationID", "zone", "borough"]],
+        how="left",
+        left_on="PULocationID",
+        right_on="LocationID",
+    )
+    df_viz.rename(
+        columns={"zone": "pickup_zone", "borough": "pickup_borough"}, inplace=True
+    )
+    df_viz = df_viz.drop(["LocationID"], axis=1)
+    df_viz = df_viz.merge(
+        df_geo[["LocationID", "zone", "borough"]],
+        how="left",
+        left_on="DOLocationID",
+        right_on="LocationID",
+    )
+    df_viz.rename(
+        columns={"zone": "dropoff_zone", "borough": "dropoff_borough"}, inplace=True
+    )
+    df_viz = df_viz.drop(["LocationID"], axis=1)
 
     dashboard = interact(
         basic_plots,
