@@ -12,6 +12,7 @@ import panel as pn
 import seaborn as sns
 from folium.plugins import HeatMap, HeatMapWithTime
 from matplotlib.figure import Figure
+from matplotlib.ticker import Formatter
 from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
@@ -1185,50 +1186,52 @@ def basic_plots(df, borough, pu_do, feature):
 
     if borough != 'NYC complete':
         if borough != 'Airports':
-            borough_zones = geojson_df.loc[geojson_df['borough'] == borough]
-            borough_loc_ids = borough_zones['LocationID'].tolist()
-            borough_loc_ids = map(str, borough_loc_ids)
             if pu_do == 'pickup':
-                df = df.loc[df['PULocationID'].isin(borough_loc_ids)]
+                df = df.loc[df['pickup_borough'] == borough]
             else:
-                df = df.loc[df['DOLocationID'].isin(borough_loc_ids)]
+                df = df.loc[df['dropoff_borough'] == borough]
         if borough == 'Airports':
-            df_airports = geojson_df.loc[geojson_df['zone'].str.contains('Airport')]
-            airport_ids = df_airports['LocationID'].tolist()
-            airport_ids
             if pu_do == 'pickup':
-                df = df.loc[(df['PULocationID'].isin(airport_ids))]
+                df = df.loc[(df['pickup_zone'].str.contains('Airport'))]
             else:
-                df = df.loc[(df['DOLocationID'].isin(airport_ids))]
+                df = df.loc[(df['dropoff_zone'].str.contains('Airport'))]
 
     # number of trips dataframes
     df_agg_count_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df['pickup_month'], ['count'])
     df_agg_count_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df['pickup_month'], ['count'])
 
     # feature dataframes
-    if feature != 'DOLocationID' and feature != 'DOLocationBorough':
+    if feature != 'start_or_destination':
+        # mean plots
         df_agg_mean_monthly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.month, df[feature], ['mean'])
         df_agg_mean_weekly = yellowcab.eda.agg_stats(df['pickup_datetime'].dt.week, df[feature], ['mean'])
     else:
+        # PU-DO-Plots
         if pu_do == 'pickup':
-            do_loc_ser = df['DOLocationID'].value_counts()
-            do_loc_ser.sort_values(ascending=False, inplace=True)
-            do_loc_ser = do_loc_ser[:10]
-            df_trip_destinations = do_loc_ser.to_frame().reset_index()
-            df_trip_destinations = df_trip_destinations.rename(columns={'index': 'DOLocationID',
-                                                                        'DOLocationID': 'Count'})
+            col1 = 'DOLocationID'
+            col2 = 'dropoff_borough'
         else:
-            do_loc_ser = df['PULocationID'].value_counts()
-            do_loc_ser.sort_values(ascending=False, inplace=True)
-            do_loc_ser = do_loc_ser[:10]
-            # TODO: Add names to zone-IDs
-            # TODO: Lower plot for boroughs
-            # geo_id_rows = geojson_df.loc[geojson_df['LocationID'].isin(do_loc_ser)]
-            df_trip_starts = do_loc_ser.to_frame().reset_index()
-            df_trip_starts = df_trip_starts.rename(columns={'index': 'PULocationID',
-                                                            'PULocationID': 'Count'})
-            # df_gg_count_LocID_monthly = yellowcab.eda.agg_stats(df['DOLocationID'], df[feature], ['count'])
-            # df_gg_count_LocID_weekly = yellowcab.eda.agg_stats(df['DOLocationID'], df[feature], ['count'])
+            col1 = 'PULocationID'
+            col2 = 'pickup_borough'
+
+        dopu_loc_ser_ids = df[col1].value_counts()
+        dopu_loc_ser_ids.sort_values(ascending=False, inplace=True)
+        dopu_loc_ser_ids = dopu_loc_ser_ids[:10]
+        df_dopu_ids = dopu_loc_ser_ids.to_frame().reset_index()
+        df_dopu_ids = df_dopu_ids.rename(columns={'index': col1,
+                                                  col1: 'Count'})
+        dopu_loc_ser_borough = df[col2].value_counts()
+        dopu_loc_ser_borough.sort_values(ascending=False, inplace=True)
+        dopu_loc_ser_borough = dopu_loc_ser_borough[:10]
+        df_dopu_boroughs = dopu_loc_ser_borough.to_frame().reset_index()
+        df_dopu_boroughs = df_dopu_boroughs.rename(columns={'index': col2,
+                                                            col2: 'Count'})
+
+    # create figure column names
+    if pu_do == 'pickup':
+        col_name_start_or_destination = 'Dropoff areas of trips started at {boroughname}'.format(boroughname=borough)
+    else:
+        col_name_start_or_destination = 'Pickup areas of trips ended at {boroughname}'.format(boroughname=borough)
 
     featureDict = {
         'trip_duration_minutes': 'Trip Duration (minutes)',
@@ -1236,56 +1239,50 @@ def basic_plots(df, borough, pu_do, feature):
         'total_amount': 'Total Amount ($)',
         'tip_amount': 'Tip Amount ($)',
         'passenger_count': 'Passenger Count',
-        'DOLocationID': 'Drop-Off Location ID'}
+        'start_or_destination': col_name_start_or_destination}
+
+    col_feature = '{featurename}'.format(featurename=featureDict[feature])
+    col_total_number = 'Total number of trips with {pudo} at {boroughname}'.format(pudo=pu_do, boroughname=borough)
+    col_list = [col_total_number, col_feature]
 
     fig = Figure(figsize=(15, 10))
     axes = fig.subplots(2, 2)
-
     # number of trips plots
     axes[0, 0].bar(df_agg_count_monthly.index, df_agg_count_monthly['count_pickup_month'], color='orange')
     axes[0, 0].set_xlabel('Month')
     axes[0, 0].set_ylabel('Number of trips')
+    axes[0, 0].ticklabel_format(useOffset=False, style='plain', axis='y')
 
     axes[1, 0].bar(df_agg_count_weekly.index, df_agg_count_weekly['count_pickup_month'], color='orange')
     axes[1, 0].set_xlabel('Week')
     axes[1, 0].set_ylabel('Number of trips')
+    axes[1, 0].ticklabel_format(useOffset=False, style='plain', axis='y')
 
-    if feature != 'DOLocationID' and feature != 'DOLocationBorough':
+    if feature != 'start_or_destination':
         # mean plots
         axes[0, 1].bar(df_agg_mean_monthly.index, df_agg_mean_monthly['mean_{featurename}'.format(featurename=feature)])
         axes[0, 1].set_xlabel('Month')
         axes[0, 1].set_ylabel('Mean {featurename}'.format(featurename=featureDict[feature]))
+        axes[0, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
 
         axes[1, 1].bar(df_agg_mean_weekly.index, df_agg_mean_weekly['mean_{featurename}'.format(featurename=feature)])
         axes[1, 1].set_xlabel('Week')
         axes[1, 1].set_ylabel('Mean {featurename}'.format(featurename=featureDict[feature]))
+        axes[1, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
 
         col_feature = 'Mean {featurename}'.format(featurename=featureDict[feature])
 
     else:
         # count plots
-        if pu_do == 'pickup':
-            axes[0, 1].bar(df_trip_destinations['DOLocationID'], df_trip_destinations['Count'])
-            axes[0, 1].set_xlabel('Destination Location IDs')
-            axes[0, 1].set_ylabel('Number of trips')
+        axes[0, 1].bar(df_dopu_ids[col1], df_dopu_ids['Count'])
+        axes[0, 1].set_xlabel('Location IDs')
+        axes[0, 1].set_ylabel('Number of trips')
+        axes[0, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
 
-            axes[1, 1].bar(df_trip_destinations['DOLocationID'], df_trip_destinations['Count'])
-        else:
-            axes[0, 1].bar(df_trip_starts['PULocationID'], df_trip_starts['Count'])
-            axes[0, 1].set_xlabel('Start Location IDs')
-            axes[0, 1].set_ylabel('Number of trips')
-
-            axes[1, 1].bar(df_trip_starts['PULocationID'], df_trip_starts['Count'])
-        '''axes[0, 1].set_xlabel('Month')
-        axes[0, 1].set_ylabel('{featurename}'.format(featurename=featureDict[feature]))
-
-        axes[1, 1].bar(df_gg_count_LocID_weekly.index, df_gg_count_LocID_weekly['count_{featurename}'
-                       .format(featurename=feature)])
-        axes[1, 1].set_xlabel('Week')
-        axes[1, 1].set_ylabel('{featurename}'.format(featurename=featureDict[feature]))
-'''
-        col_feature = '{featurename}'.format(featurename=featureDict[feature])
-    col_list = ['Number of trips', col_feature]
+        axes[1, 1].bar(df_dopu_boroughs[col2], df_dopu_boroughs['Count'])
+        axes[1, 1].set_xlabel('Boroughs')
+        axes[1, 1].set_ylabel('Number of trips')
+        axes[1, 1].ticklabel_format(useOffset=False, style='plain', axis='y')
 
     for ax, col in zip(axes[0], col_list):
         ax.set_title(col)
@@ -1312,9 +1309,11 @@ def _create_basic_plots_tab(df):
 
     """
     df_geo = read_geo_dataset("taxi_zones.geojson")
+    df_geo["LocationID"] = df_geo["LocationID"].astype("str")
+
     boroughs = list(df_geo['borough'].unique())
     boroughs = np.insert(boroughs, 0, "NYC complete")
-    boroughs = np.append(boroughs, "Airports")
+    boroughs = np.insert(boroughs, 0, "Airports")
     # delete EWR airport
     boroughs = boroughs[boroughs != 'EWR']
     boroughs_list = boroughs.tolist()
@@ -1325,24 +1324,29 @@ def _create_basic_plots_tab(df):
                     'total_amount',
                     'tip_amount',
                     'passenger_count',
-                    'DOLocationID']
+                    'start_or_destination']
     feature_options = pn.widgets.Select(name="Features", options=feature_list)
 
     pu_do_list = ['pickup',
                   'dropoff']
-    pu_do_options = pn.widgets.Select(name="Trips that start/end here", options=pu_do_list)
+    pu_do_options = pn.widgets.Select(name="Trips with pickup or dropoff in the selected borough", options=pu_do_list)
 
-    #df_viz = df.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='PULocationID', right_on='LocationID')
-    #df_viz.rename(columns={'zone': 'start_zone', 'borough': 'start_borough'}, inplace=True)
-    #df_viz = df.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='DOLocationID', right_on='LocationID')
-    #df_viz.rename(columns={'zone': 'end_zone', 'borough': 'end_borough'}, inplace=True)
+    # add start and end zone + borough to trip dataframe
+    df_viz = df.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='PULocationID',
+                      right_on='LocationID')
+    df_viz.rename(columns={'zone': 'pickup_zone', 'borough': 'pickup_borough'}, inplace=True)
+    df_viz = df_viz.drop(['LocationID'], axis=1)
+    df_viz = df_viz.merge(df_geo[['LocationID', 'zone', 'borough']], how='left', left_on='DOLocationID',
+                          right_on='LocationID')
+    df_viz.rename(columns={'zone': 'dropoff_zone', 'borough': 'dropoff_borough'}, inplace=True)
+    df_viz = df_viz.drop(['LocationID'], axis=1)
 
     dashboard = interact(
         basic_plots,
         borough=borough_options,
         feature=feature_options,
         pu_do=pu_do_options,
-        df=fixed(df),
+        df=fixed(df_viz),
     )
     title = ""
     basic_plots_tab = pn.Column(
