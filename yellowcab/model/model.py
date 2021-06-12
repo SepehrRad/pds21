@@ -83,7 +83,6 @@ def make_baseline_predictions(df):
     )
 
 
-'''
     # base_line regression for "trip_distance"
     make_predictions(
         df=df,
@@ -117,7 +116,7 @@ def make_baseline_predictions(df):
         use_sampler=False,
         sampler=None,
     )
-'''
+
 
 
 def trip_distance_regression_base(df):
@@ -182,23 +181,20 @@ def build_fare_amount_model_base(df):
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
-                            "target": "payment_type",
-                            "cyclical_features": [
-                                "pickup_month",
-                                "pickup_day",
-                                "pickup_hour",
-                                "dropoff_hour",
-                                "dropoff_day",
-                                "dropoff_month",
-                            ],
-                            "categorical_features": ["Zone_pickup", "Zone_dropoff"],
-                            "numerical_features": [
-                                "passenger_count",
-                                "trip_distance",
-                                "total_amount",
-                                "trip_duration_minutes",
-                            ],
-                        },
+        "target": "fare_amount",
+        "categorical_features": ["Zone_dropoff", "Zone_pickup"],
+        "numerical_features": [
+            "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_day",
+            "pickup_hour",
+            "dropoff_month",
+            "dropoff_day",
+            "dropoff_hour",
+        ],
+        "cyclical_features": [],
+    }
 
     feature_selector = SelectFromModel(Lasso(alpha=0.1))
     model = xgb.XGBRegressor(n_jobs=-1, n_estimators=100)
@@ -229,18 +225,15 @@ def fare_amount_hyper_parameter_optimization(df):
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
-        "target": "payment_type",
-        "cyclical_features": [],
-        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "target": "fare_amount",
+        "categorical_features": [],
         "numerical_features": [
-            "covid_lockdown",
-            "total_amount",
-            "passenger_count",
             "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_hour",
         ],
-        "created_features": [
-            "Zone_pickup_JFK Airport",
-        ]
+        "cyclical_features": [],
     }
 
     model = xgb.XGBRegressor(n_jobs=-1, subsample=0.7, colsample_bytree=0.8)
@@ -283,18 +276,15 @@ def build_fare_amount_model_optimized(df, manhattan=False):
     # The pickup month/day/hour will not be transformed as
     # there is no need for cyclical transformation when using a decision tree
     relevant_features = {
-        "target": "payment_type",
-        "cyclical_features": [],
-        "categorical_features": ["Zone_pickup", "Zone_dropoff"],
+        "target": "fare_amount",
+        "categorical_features": [],
         "numerical_features": [
-            "covid_lockdown",
-            "total_amount",
-            "passenger_count",
             "trip_distance",
+            "trip_duration_minutes",
+            "pickup_month",
+            "pickup_hour",
         ],
-        "created_features": [
-            "Zone_pickup_JFK Airport",
-        ]
+        "cyclical_features": [],
     }
 
     model = xgb.XGBRegressor(
