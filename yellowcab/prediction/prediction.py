@@ -6,13 +6,21 @@ from sklearn import metrics
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
+from sklearn.utils.class_weight import compute_sample_weight
 
 from yellowcab.io.output import save_model
-from yellowcab.io.utils import flatten_list, get_random_state, get_zone_information
+from yellowcab.io.utils import (flatten_list, get_random_state,
+                                get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 
-def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first=False):
+def _make_data_preparation(
+    df,
+    relevant_features,
+    is_manhattan=False,
+    drop_first=False,
+    use_created_features=False,
+):
     """
     This function reduces the dataframe to one containing only relevant features
     for prediction purposes.
@@ -21,10 +29,17 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first
         df (pandas.DataFrame): The given pandas data frame with all initial features.
         relevant_features (list): The given features upon which the model should be created.
         is_manhattan(bool): If True only the manhattan data gets selected.
+        use_created_features(bool): Denotes if columns created during the data preparation step are included
+        in relevant features and should be used.
     :return:
         pandas.DataFrame: Data frame containing only those features which
              are relevant for prediction.
     """
+    if use_created_features:
+        created_features = relevant_features.copy()
+        created_features.pop("categorical_features")
+    if "created_features" in relevant_features:
+        relevant_features.pop("created_features")
     df = get_zone_information(df, zone_file="taxi_zones.csv")
     mask = flatten_list(list(relevant_features.values()))
     if is_manhattan:
@@ -33,7 +48,9 @@ def _make_data_preparation(df, relevant_features, is_manhattan=False, drop_first
         ]
     df = df[mask]
     df = transform_columns(df=df, col_dict=relevant_features, drop_first=drop_first)
-
+    if use_created_features:
+        mask = flatten_list(list(created_features.values()))
+        df = df[mask]
     return df
 
 
@@ -137,6 +154,19 @@ def _get_information_for_feature_selection(pipeline, X_train):
     )
 
 
+def _get_sample_weight(y_train):
+    """
+    This function calculates class weights for XGBClassifier in order to balance out the imbalanced class distribution.
+    ----------------------------------------------
+    :param
+           df (pandas.DataFrame): The given pandas data frame containing data.
+           target (String): Dependent variable for prediction purposes.
+
+    """
+    sample_weight = compute_sample_weight("balanced", y_train)
+    return sample_weight
+
+
 def make_predictions(
     df,
     prediction_type,
@@ -155,6 +185,8 @@ def make_predictions(
     grid_search_params=None,
     scoring=None,
     is_manhattan=False,
+    use_created_features=False,
+    weigh_classes=False,
 ):
     """
     This function predicts and prints the prediction scores of a prediction
@@ -176,6 +208,8 @@ def make_predictions(
            grid_search_params (dict): The grid search parameter space that should be used.
            scoring(String): the scoring methode which will be used in the grid search cv.
            is_manhattan(bool): Builds a prediction model only for manhattan data
+           use_created_features(bool): Denotes if columns created during the data preparation step are included in relevant features and should be used.
+           weigh_classes(bool): denotes if the target classes should be weight to help with a imbalance dataset
     """
     if not is_grid_search:
         print(
@@ -192,10 +226,12 @@ def make_predictions(
         relevant_features=relevant_features,
         drop_first=drop_first_category,
         is_manhattan=is_manhattan,
+        use_created_features=use_created_features,
     )
     X_train, X_test, y_train, y_test = _make_train_test_split(
         df=df, target=target, sampler=sampler, use_sampler=use_sampler
     )
+
     if feature_selection:
         pipeline = _make_pipeline(
             model=model,
@@ -209,8 +245,17 @@ def make_predictions(
             model=model, model_name=model_name, scaler_type=scaler_type
         )
 
+    if weigh_classes:
+        sample_weight = _get_sample_weight(y_train)
+        pipeline_sample_weight = {
+            pipeline.steps[-1][0] + "__sample_weight": sample_weight
+        }
+
     if not is_grid_search:
-        pipeline = pipeline.fit(X_train, y_train)
+        if not weigh_classes:
+            pipeline = pipeline.fit(X_train, y_train)
+        else:
+            pipeline = pipeline.fit(X_train, y_train, **pipeline_sample_weight)
         if feature_selection:
             _get_information_for_feature_selection(pipeline=pipeline, X_train=X_train)
         if show_feature_importance and feature_selection:
@@ -229,7 +274,7 @@ def make_predictions(
             X_test=X_test,
             pipeline=pipeline,
         )
-    else:
+    elif not weigh_classes:
         return find_best_parameters_for_model(
             pipeline=pipeline,
             X_train=X_train,
@@ -238,10 +283,20 @@ def make_predictions(
             model_params=grid_search_params,
             scoring=scoring,
         )
+    else:
+        return find_best_parameters_for_model(
+            pipeline=pipeline,
+            X_train=X_train,
+            y_train=y_train,
+            model_name=model_name,
+            model_params=grid_search_params,
+            scoring=scoring,
+            sample_weight=pipeline_sample_weight,
+        )
 
 
 def find_best_parameters_for_model(
-    pipeline, X_train, y_train, model_params, model_name, scoring
+    pipeline, X_train, y_train, model_params, model_name, scoring, sample_weight=None
 ):
     """
     This function performs a grid search with three cv on the training set.
@@ -255,6 +310,7 @@ def find_best_parameters_for_model(
            X_train (pandas.DataFrame): Training features
            y_train (pandas.DataFrame): Target
            pipeline (sklearn.pipeline): The pipeline with the model and transformers which will be used for grid search.
+           sample_weight (dict): Sample weight to be used during model fit.
     """
     print(f"Running grid search for {model_name} based on {scoring}")
     grid_pipeline = GridSearchCV(
@@ -265,7 +321,10 @@ def find_best_parameters_for_model(
         scoring=scoring,
         verbose=True,
     )
-    grid_pipeline.fit(X_train, y_train)
+    if sample_weight is None:
+        grid_pipeline.fit(X_train, y_train)
+    else:
+        grid_pipeline.fit(X_train, y_train, **sample_weight)
     print(f"Best {scoring} Score was: {grid_pipeline.best_score_}")
     print(f"The best hyper parameters for {model_name} are:")
     print(grid_pipeline.best_params_)
