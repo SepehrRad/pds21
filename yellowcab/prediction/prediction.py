@@ -10,7 +10,7 @@ from sklearn.utils.class_weight import compute_sample_weight
 
 from yellowcab.input_output.output import save_model
 from yellowcab.input_output.utils import (flatten_list, get_random_state,
-                                get_zone_information)
+                                          get_zone_information)
 from yellowcab.preprocessing import transform_columns
 
 

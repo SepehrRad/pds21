@@ -32,7 +32,7 @@ def save_model(model, model_name):
     file_name = "{}.pkl".format(model_name)
     pickle.dump(model, open(os.path.join(get_data_path(), "output", file_name), "wb"))
 
-    
+
 def write_parquet_file(df, filename, path=get_data_path()):
     """
     This function reads a pd.Dataframe saves it as a parquet.
@@ -46,5 +46,3 @@ def write_parquet_file(df, filename, path=get_data_path()):
         df.to_parquet(path)
     except FileNotFoundError:
         print("Data file not found. Path was " + path)
-
-
