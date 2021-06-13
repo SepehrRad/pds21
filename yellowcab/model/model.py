@@ -4,7 +4,7 @@ from sklearn.feature_selection import SelectFromModel, SelectKBest, f_classif
 from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression
 
 from ..feature_engineering import add_relevant_features
-from ..io import get_random_state
+from ..input_output import get_random_state
 from ..prediction import make_predictions
 
 

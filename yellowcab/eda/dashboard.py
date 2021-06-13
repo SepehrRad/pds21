@@ -16,8 +16,8 @@ from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
 
-from yellowcab.io.input import read_geo_dataset
-from yellowcab.io.utils import get_zone_information
+from yellowcab.input_output.input import read_geo_dataset
+from yellowcab.input_output.utils import get_zone_information
 
 
 def create_animated_monthly_plot(df, aspect="pickup"):

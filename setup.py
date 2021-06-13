@@ -13,7 +13,10 @@ requirements = [
     "folium",
     "plotly",
     "branca",
+    "panel",
     "xgboost",
+    "typer",
+    "pyfiglet",
     "tqdm",
     "imblearn",
 ]

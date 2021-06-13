@@ -1,14 +1,12 @@
 import os
 import pickle
 
-import geopandas
-
 from .utils import get_data_path
 
 
 def write_parquet(df, filename, base_path=get_data_path(), relative_path="output"):
     """
-    This function reads a pd.Dataframe, casts it to a GeoDataFrame and saves it as a parquet.
+    This function reads a pd.Dataframe and saves it as a parquet.
 
     ----------------------------------------------
 
@@ -30,7 +28,23 @@ def save_model(model, model_name):
     This function saves a trained model in a pickle file in our output folder.
     :param model: The name of the model that we want to save.
     :param model_name: For specifying to what task the model belongs to.
-    :return:
     """
     file_name = "{}.pkl".format(model_name)
     pickle.dump(model, open(os.path.join(get_data_path(), "output", file_name), "wb"))
+
+    
+def write_parquet_file(df, filename, path=get_data_path()):
+    """
+    This function reads a pd.Dataframe saves it as a parquet.
+    ----------------------------------------------
+    :param
+        df(pd.Dataframe): Given dataframe.
+        path(String): Path to data directory. Defaults to wd/data.
+    """
+    path = os.path.join(path, filename)
+    try:
+        df.to_parquet(path)
+    except FileNotFoundError:
+        print("Data file not found. Path was " + path)
+
+

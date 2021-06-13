@@ -9,7 +9,7 @@ from .utils import get_data_path
 
 
 def read_parquet(
-    file, base_path=get_data_path(), relative_path="input/trip_data", columns=None
+        file, base_path=get_data_path(), relative_path="input/trip_data", columns=None
 ):
     """
     This function reads a parquet file & returns it as a pd.DataFrame.
@@ -33,8 +33,29 @@ def read_parquet(
         print("Data file not found. Path was " + path)
 
 
+def read_parquet_file(
+        path: str
+):
+    """
+    This function reads a parquet file & returns it as a single pd.DataFrame.
+    ----------------------------------------------
+    :param
+        path(String): Path to data file.
+    :returns
+        pd.DataFrame: The corresponding DataFrame.
+    """
+    try:
+        dataset = pq.ParquetDataset(path)
+        table = dataset.read()
+        df = table.to_pandas()
+        df = df.reset_index(drop=True)
+        return df
+    except FileNotFoundError:
+        print("Data file not found. Path was " + path)
+
+
 def read_parquet_dataset(
-    base_path=get_data_path(), relative_path="input/trip_data", columns=None
+        base_path=get_data_path(), relative_path="input/trip_data", columns=None
 ):
     """
     This function reads a directory of parquet files & returns them as a single pd.DataFrame.
@@ -59,11 +80,11 @@ def read_parquet_dataset(
 
 
 def read_parquet_sample(
-    file,
-    base_path=get_data_path(),
-    relative_path="input/trip_data",
-    columns=None,
-    frac=0.1,
+        file,
+        base_path=get_data_path(),
+        relative_path="input/trip_data",
+        columns=None,
+        frac=0.1,
 ):
     """
     This function reads a parquet file & returns a random data sample as a pd.DataFrame.
@@ -86,7 +107,7 @@ def read_parquet_sample(
 
 
 def read_parquet_dataset_sample(
-    base_path=get_data_path(), relative_path="input/trip_data", columns=None, frac=0.1
+        base_path=get_data_path(), relative_path="input/trip_data", columns=None, frac=0.1
 ):
     """
     This function reads a directory of parquet files & returns a random data sample in a single pd.DataFrame.
@@ -108,7 +129,7 @@ def read_parquet_dataset_sample(
 
 
 def read_geo_dataset(
-    geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"
+        geojson_file, base_path=get_data_path(), relative_path="input/taxi_zones"
 ):
     """
     This function reads a geojson and an associated csv file & returns it as a pd.DataFrame.
