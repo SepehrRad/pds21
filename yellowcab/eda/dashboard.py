@@ -25,7 +25,9 @@ from yellowcab.io.utils import get_zone_information
 def create_animated_monthly_plot(df, aspect="pickup"):
     """
     This function creates an animated plotly express plot based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -59,7 +61,9 @@ def _create_plotly_monthly_plot(
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
         map_style(String): Tile layer style of the choropleth map.
@@ -94,7 +98,9 @@ def _create_plotly_monthly_plot(
 def _create_monthly_animated_tab(df):
     """
     This function creates a plotly express tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -149,7 +155,9 @@ def _add_tile_layers(base_map=None):
     """
     This function adds four tile layers (cartodbpositron, cartodbdark_matter, stamenterrain, openstreetmap) to a given
     base map.
+
     ----------------------------------------------
+
     :param
         base_map(folium.Map): The given base map.
     """
@@ -178,7 +186,9 @@ def _create_monthly_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
@@ -255,7 +265,9 @@ def _create_monthly_choropleth(
 def _create_choropleth_tab(df):
     """
     This function creates a folium choropleth tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -312,7 +324,9 @@ def _create_choropleth_tab(df):
 def _generate_base_map(default_location="New York"):
     """
     This function creates a base folium map.
+
     ----------------------------------------------
+
     :param
         default_location(String): The default location of the base map.
     :return:
@@ -363,7 +377,9 @@ def _create_aggregator(
 ):
     """
     This function aggregates the given data based on the other parameters set.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that should be aggregated.
         month(int): Shows the data for this month only.
@@ -443,7 +459,9 @@ def _create_aggregator(
 def _create_inferno_cmap():
     """
     This function creates an inferno cmap for folium.
+
     ----------------------------------------------
+
     :return:
         branca.colormap: The inferno colormap.
         defaultdict: The gradient map which can be added to the map.
@@ -467,7 +485,9 @@ def _create_heat_map(
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -498,7 +518,9 @@ def _create_heat_map(
 def _create_general_heatmap_tab(df):
     """
     This function creates a folium heatmap tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
     :return:
@@ -542,7 +564,9 @@ def _create_general_heatmap_tab(df):
 def _create_events_tab(df):
     """
     This function creates a folium choropleth tab for events with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -659,7 +683,9 @@ def _create_event_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         event(datetime tuple): The desired event which will be aggregated.
@@ -746,7 +772,9 @@ def _create_zone_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
@@ -830,7 +858,9 @@ def _create_zone_choropleth(
 def _create_zone_tab(df):
     """
     This function creates a folium choropleth tab to pick a certain zone with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -896,7 +926,9 @@ def _create_zone_aggregator(
 ):
     """
     This function aggregates the given data based on the other parameters set.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that should be aggregated.
         month(int): Shows the data for this month only.
@@ -968,7 +1000,9 @@ def _create_event_heat_map(
 ):
     """
     This function creates a folium heatmap with time based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -1008,7 +1042,9 @@ def _create_event_heat_map(
 def _create_event_heatmap_tab(df):
     """
     This function creates a folium heatmap with time tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap with time.
     :return:
@@ -1184,7 +1220,6 @@ def basic_plots(df, borough, pu_do, feature):
     :returns
         pn.pane.Matplotlib(): Basic plots.
     """
-    geojson_df = read_geo_dataset("taxi_zones.geojson")
 
     if borough != 'NYC complete':
         if borough != 'Airports':
@@ -1362,7 +1397,9 @@ def _create_basic_plots_tab(df):
 def create_dashboard(df):
     """
     This function creates an interactive panel dashboard.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the interactive.
     :return:
