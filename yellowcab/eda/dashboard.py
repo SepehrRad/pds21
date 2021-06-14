@@ -12,18 +12,23 @@ import panel as pn
 import seaborn as sns
 from folium.plugins import HeatMap, HeatMapWithTime
 from matplotlib.figure import Figure
+from matplotlib.ticker import Formatter
 from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
 
 from yellowcab.input_output.input import read_geo_dataset
 from yellowcab.input_output.utils import get_zone_information
+from yellowcab.eda import agg_stats
+
 
 
 def create_animated_monthly_plot(df, aspect="pickup"):
     """
     This function creates an animated plotly express plot based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -57,7 +62,9 @@ def _create_plotly_monthly_plot(
 ):
     """
     This function creates a plotly express plot based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the animated plot.
         map_style(String): Tile layer style of the choropleth map.
@@ -92,7 +99,9 @@ def _create_plotly_monthly_plot(
 def _create_monthly_animated_tab(df):
     """
     This function creates a plotly express tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -147,7 +156,9 @@ def _add_tile_layers(base_map=None):
     """
     This function adds four tile layers (cartodbpositron, cartodbdark_matter, stamenterrain, openstreetmap) to a given
     base map.
+
     ----------------------------------------------
+
     :param
         base_map(folium.Map): The given base map.
     """
@@ -176,7 +187,9 @@ def _create_monthly_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
@@ -253,7 +266,9 @@ def _create_monthly_choropleth(
 def _create_choropleth_tab(df):
     """
     This function creates a folium choropleth tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -310,7 +325,9 @@ def _create_choropleth_tab(df):
 def _generate_base_map(default_location="New York"):
     """
     This function creates a base folium map.
+
     ----------------------------------------------
+
     :param
         default_location(String): The default location of the base map.
     :return:
@@ -361,7 +378,9 @@ def _create_aggregator(
 ):
     """
     This function aggregates the given data based on the other parameters set.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that should be aggregated.
         month(int): Shows the data for this month only.
@@ -441,7 +460,9 @@ def _create_aggregator(
 def _create_inferno_cmap():
     """
     This function creates an inferno cmap for folium.
+
     ----------------------------------------------
+
     :return:
         branca.colormap: The inferno colormap.
         defaultdict: The gradient map which can be added to the map.
@@ -465,7 +486,9 @@ def _create_heat_map(
 ):
     """
     This function creates a folium heatmap based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -496,7 +519,9 @@ def _create_heat_map(
 def _create_general_heatmap_tab(df):
     """
     This function creates a folium heatmap tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
     :return:
@@ -540,7 +565,9 @@ def _create_general_heatmap_tab(df):
 def _create_events_tab(df):
     """
     This function creates a folium choropleth tab for events with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -657,7 +684,9 @@ def _create_event_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         event(datetime tuple): The desired event which will be aggregated.
@@ -744,7 +773,9 @@ def _create_zone_choropleth(
 ):
     """
     This function creates a folium choropleth based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
         month(String): The desired month which will be aggregated.
@@ -828,7 +859,9 @@ def _create_zone_choropleth(
 def _create_zone_tab(df):
     """
     This function creates a folium choropleth tab to pick a certain zone with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the choropleth.
     :return:
@@ -894,7 +927,9 @@ def _create_zone_aggregator(
 ):
     """
     This function aggregates the given data based on the other parameters set.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that should be aggregated.
         month(int): Shows the data for this month only.
@@ -966,7 +1001,9 @@ def _create_event_heat_map(
 ):
     """
     This function creates a folium heatmap with time based on different aspects of the given data.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap.
         aspect(String): Aggregates data based on given aspect. Allowed values are pickup or dropoff.
@@ -1006,7 +1043,9 @@ def _create_event_heat_map(
 def _create_event_heatmap_tab(df):
     """
     This function creates a folium heatmap with time tab with interactive widgets.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the heatmap with time.
     :return:
@@ -1134,14 +1173,14 @@ def monthly_visualization(df, month=None, hist=None, xlim=None):
 
 def _create_duration_distribution_tab(df):
     """
-    This function creates plots for monthly trip duration distributions.
+    This function creates plots for monthly trip duration distributions and a comparison to normal distribution.
 
     ----------------------------------------------
 
     :param
         df(pd.DataFrame): Data that is used to make the distribution plot.
     :return:
-        pn.Column: the created panel element
+        pn.pane.Matplotlib(): Monthly distribution plot.
 
     """
     months = [calendar.month_abbr[i] for i in range(1, 13)]
@@ -1166,10 +1205,252 @@ def _create_duration_distribution_tab(df):
     return duration_distribution_tab
 
 
+def basic_plots(df, borough, pu_do, feature):
+    """
+    This function creates a Figure of 4 subplots (barplots) which give a basic overview about trip data and features.
+    The left sided plots show information regarding the total trip number (monthly, weekly) of the selected borough.
+    The ride sided plots show information regarding the selected feature.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): DataFrame to be processed.
+        borough(String): Name of a borough to inspect. If not set, all NYC trips get selected.
+        pu_do(String): 'pickup' or 'dropoff' trips get investigated.
+        feature(String): Feature-coloumn to be investigated in the right sided barplots.
+    :returns
+        pn.pane.Matplotlib(): Basic plots.
+    """
+
+    if borough != "NYC complete":
+        if borough != "Airports":
+            if pu_do == "pickup":
+                df = df.loc[df["pickup_borough"] == borough]
+            else:
+                df = df.loc[df["dropoff_borough"] == borough]
+        if borough == "Airports":
+            if pu_do == "pickup":
+                df = df.loc[(df["pickup_zone"].str.contains("Airport"))]
+            else:
+                df = df.loc[(df["dropoff_zone"].str.contains("Airport"))]
+
+    # number of trips dataframes
+    df_agg_count_monthly = agg_stats(
+        df["pickup_datetime"].dt.month, df["pickup_month"], ["count"]
+    )
+    df_agg_count_weekly = agg_stats(
+        df["pickup_datetime"].dt.week, df["pickup_month"], ["count"]
+    )
+
+    # feature dataframes
+    if feature != "start_or_destination":
+        # mean plots
+        df_agg_mean_monthly = agg_stats(
+            df["pickup_datetime"].dt.month, df[feature], ["mean"]
+        )
+        df_agg_mean_weekly = agg_stats(
+            df["pickup_datetime"].dt.week, df[feature], ["mean"]
+        )
+    else:
+        # PU-DO-Plots
+        if pu_do == "pickup":
+            col1 = "DOLocationID"
+            col2 = "dropoff_borough"
+        else:
+            col1 = "PULocationID"
+            col2 = "pickup_borough"
+
+        dopu_loc_ser_ids = df[col1].value_counts()
+        dopu_loc_ser_ids.sort_values(ascending=False, inplace=True)
+        dopu_loc_ser_ids = dopu_loc_ser_ids[:10]
+        df_dopu_ids = dopu_loc_ser_ids.to_frame().reset_index()
+        df_dopu_ids = df_dopu_ids.rename(columns={"index": col1, col1: "Count"})
+        dopu_loc_ser_borough = df[col2].value_counts()
+        dopu_loc_ser_borough.sort_values(ascending=False, inplace=True)
+        dopu_loc_ser_borough = dopu_loc_ser_borough[:10]
+        df_dopu_boroughs = dopu_loc_ser_borough.to_frame().reset_index()
+        df_dopu_boroughs = df_dopu_boroughs.rename(
+            columns={"index": col2, col2: "Count"}
+        )
+
+    # create figure column names
+    if pu_do == "pickup":
+        col_name_start_or_destination = (
+            "Dropoff areas of trips started at {boroughname}".format(
+                boroughname=borough
+            )
+        )
+    else:
+        col_name_start_or_destination = (
+            "Pickup areas of trips ended at {boroughname}".format(boroughname=borough)
+        )
+
+    featureDict = {
+        "trip_duration_minutes": "Trip Duration (minutes)",
+        "trip_distance": "Trip Distance (miles)",
+        "total_amount": "Total Amount ($)",
+        "tip_amount": "Tip Amount ($)",
+        "passenger_count": "Passenger Count",
+        "start_or_destination": col_name_start_or_destination,
+    }
+
+    col_feature = "{featurename}".format(featurename=featureDict[feature])
+    col_total_number = "Total number of trips with {pudo} at {boroughname}".format(
+        pudo=pu_do, boroughname=borough
+    )
+    col_list = [col_total_number, col_feature]
+
+    fig = Figure(figsize=(15, 10))
+    axes = fig.subplots(2, 2)
+    # number of trips plots
+    axes[0, 0].bar(
+        df_agg_count_monthly.index,
+        df_agg_count_monthly["count_pickup_month"],
+        color="orange",
+    )
+    axes[0, 0].set_xlabel("Month")
+    axes[0, 0].set_ylabel("Number of trips")
+    axes[0, 0].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+    axes[1, 0].bar(
+        df_agg_count_weekly.index,
+        df_agg_count_weekly["count_pickup_month"],
+        color="orange",
+    )
+    axes[1, 0].set_xlabel("Week")
+    axes[1, 0].set_ylabel("Number of trips")
+    axes[1, 0].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+    if feature != "start_or_destination":
+        # mean plots
+        axes[0, 1].bar(
+            df_agg_mean_monthly.index,
+            df_agg_mean_monthly["mean_{featurename}".format(featurename=feature)],
+        )
+        axes[0, 1].set_xlabel("Month")
+        axes[0, 1].set_ylabel(
+            "Mean {featurename}".format(featurename=featureDict[feature])
+        )
+        axes[0, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+        axes[1, 1].bar(
+            df_agg_mean_weekly.index,
+            df_agg_mean_weekly["mean_{featurename}".format(featurename=feature)],
+        )
+        axes[1, 1].set_xlabel("Week")
+        axes[1, 1].set_ylabel(
+            "Mean {featurename}".format(featurename=featureDict[feature])
+        )
+        axes[1, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+        col_feature = "Mean {featurename}".format(featurename=featureDict[feature])
+
+    else:
+        # count plots
+        axes[0, 1].bar(df_dopu_ids[col1], df_dopu_ids["Count"])
+        axes[0, 1].set_xlabel("Location IDs")
+        axes[0, 1].set_ylabel("Number of trips")
+        axes[0, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+        axes[1, 1].bar(df_dopu_boroughs[col2], df_dopu_boroughs["Count"])
+        axes[1, 1].set_xlabel("Boroughs")
+        axes[1, 1].set_ylabel("Number of trips")
+        axes[1, 1].ticklabel_format(useOffset=False, style="plain", axis="y")
+
+    for ax, col in zip(axes[0], col_list):
+        ax.set_title(col)
+
+    fig.subplots_adjust(left=0.1, top=0.9)
+    fig.tight_layout(pad=3.0)
+    title = "Basic plots for {boroughname}".format(boroughname=borough)
+    fig.suptitle(t=title, fontsize=18, y=0.99)
+
+    mpl_pane = pn.pane.Matplotlib(fig, tight=True)
+    return mpl_pane
+
+
+def _create_basic_plots_tab(df):
+    """
+    This function creates a Figure of 4 subplots (barplots) which give a basic overview about trip data and features.
+    The left sided plots show information regarding the total trip number (monthly, weekly) of the selected borough.
+    The ride sided plots show information regarding the selected feature.
+
+    ----------------------------------------------
+
+    :param
+        df(pd.DataFrame): Data that is used to make the distribution plot.
+    :return:
+        pn.pane.Matplotlib(): Basic plots.
+
+    """
+    df_geo = read_geo_dataset("taxi_zones.geojson")
+    df_geo["LocationID"] = df_geo["LocationID"].astype("str")
+
+    boroughs = list(df_geo["borough"].unique())
+    boroughs = np.insert(boroughs, 0, "NYC complete")
+    boroughs = np.insert(boroughs, 0, "Airports")
+    # delete EWR airport
+    boroughs = boroughs[boroughs != "EWR"]
+    boroughs_list = boroughs.tolist()
+    borough_options = pn.widgets.Select(name="Borough", options=boroughs_list)
+
+    feature_list = [
+        "trip_duration_minutes",
+        "trip_distance",
+        "total_amount",
+        "tip_amount",
+        "passenger_count",
+        "start_or_destination",
+    ]
+    feature_options = pn.widgets.Select(name="Features", options=feature_list)
+
+    pu_do_list = ["pickup", "dropoff"]
+    pu_do_options = pn.widgets.Select(
+        name="Trips with pickup or dropoff in the selected borough", options=pu_do_list
+    )
+
+    # add start and end zone + borough to trip dataframe
+    df_viz = df.merge(
+        df_geo[["LocationID", "zone", "borough"]],
+        how="left",
+        left_on="PULocationID",
+        right_on="LocationID",
+    )
+    df_viz.rename(
+        columns={"zone": "pickup_zone", "borough": "pickup_borough"}, inplace=True
+    )
+    df_viz = df_viz.drop(["LocationID"], axis=1)
+    df_viz = df_viz.merge(
+        df_geo[["LocationID", "zone", "borough"]],
+        how="left",
+        left_on="DOLocationID",
+        right_on="LocationID",
+    )
+    df_viz.rename(
+        columns={"zone": "dropoff_zone", "borough": "dropoff_borough"}, inplace=True
+    )
+    df_viz = df_viz.drop(["LocationID"], axis=1)
+
+    dashboard = interact(
+        basic_plots,
+        borough=borough_options,
+        feature=feature_options,
+        pu_do=pu_do_options,
+        df=fixed(df_viz),
+    )
+    title = ""
+    basic_plots_tab = pn.Column(
+        title, pn.Row(dashboard[1], dashboard[0], height=1300, width=1500)
+    )
+    return basic_plots_tab
+
+
 def create_dashboard(df):
     """
     This function creates an interactive panel dashboard.
+
     ----------------------------------------------
+
     :param
         df(pd.DataFrame): Data that is used to make the interactive.
     :return:
@@ -1186,6 +1467,10 @@ def create_dashboard(df):
         "Duration distribution",
         _create_duration_distribution_tab(df),
     )
+    basic_plots_viz = (
+        "Basic plots",
+        _create_basic_plots_tab(df),
+    )
     events = ("Events", _create_events_tab(df))
     zones = ("Zone", _create_zone_tab(df))
     event_heatmap = ("Event Heatmap", _create_event_heatmap_tab(df))
@@ -1195,6 +1480,7 @@ def create_dashboard(df):
         event_heatmap,
         plotly_express_animated_monthly,
         duration_distribution_monthly,
+        basic_plots_viz,
         zones,
         events,
     )
