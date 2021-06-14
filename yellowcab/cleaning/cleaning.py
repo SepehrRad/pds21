@@ -9,9 +9,9 @@ from pyod.models.hbos import HBOS
 from scipy.stats import zscore
 from tqdm import tqdm
 
-from yellowcab.io.input import read_geo_dataset, read_parquet
-from yellowcab.io.output import write_parquet
-from yellowcab.io.utils import get_data_path
+from yellowcab.input_output.input import read_geo_dataset, read_parquet
+from yellowcab.input_output.output import write_parquet
+from yellowcab.input_output.utils import get_data_path
 
 warnings.filterwarnings("ignore")
 
@@ -287,7 +287,7 @@ def _merge_geodata(df):
     return df_gdf.reset_index(drop=True)
 
 
-def _clean_dataset(df, month, verbose=False):
+def clean_dataset(df, month, verbose=False):
     """
     This function combines all functions of this 'cleaning'-class to detect and delete outliers and faulty trips.
     Furthermore the geodata is getting merged.
@@ -364,7 +364,7 @@ def clean_all_datasets(
         # assumes 01.parquet,02.parquet,...
         month = int(parquet_file.split(".parquet")[0])
         print(f"Started cleaning the {calendar.month_name[month]} data set")
-        cleaned_df = _clean_dataset(
+        cleaned_df = clean_dataset(
             read_parquet(parquet_file), month=month, verbose=verbose
         )
         write_parquet(

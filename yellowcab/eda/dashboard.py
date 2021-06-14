@@ -17,9 +17,10 @@ from numpy import random
 from panel.interact import fixed, interact
 from plotly import express as px
 
-import yellowcab
-from yellowcab.io.input import read_geo_dataset
-from yellowcab.io.utils import get_zone_information
+from yellowcab.input_output.input import read_geo_dataset
+from yellowcab.input_output.utils import get_zone_information
+from yellowcab.eda import agg_stats
+
 
 
 def create_animated_monthly_plot(df, aspect="pickup"):
@@ -1234,20 +1235,20 @@ def basic_plots(df, borough, pu_do, feature):
                 df = df.loc[(df["dropoff_zone"].str.contains("Airport"))]
 
     # number of trips dataframes
-    df_agg_count_monthly = yellowcab.eda.agg_stats(
+    df_agg_count_monthly = agg_stats(
         df["pickup_datetime"].dt.month, df["pickup_month"], ["count"]
     )
-    df_agg_count_weekly = yellowcab.eda.agg_stats(
+    df_agg_count_weekly = agg_stats(
         df["pickup_datetime"].dt.week, df["pickup_month"], ["count"]
     )
 
     # feature dataframes
     if feature != "start_or_destination":
         # mean plots
-        df_agg_mean_monthly = yellowcab.eda.agg_stats(
+        df_agg_mean_monthly = agg_stats(
             df["pickup_datetime"].dt.month, df[feature], ["mean"]
         )
-        df_agg_mean_weekly = yellowcab.eda.agg_stats(
+        df_agg_mean_weekly = agg_stats(
             df["pickup_datetime"].dt.week, df[feature], ["mean"]
         )
     else:
