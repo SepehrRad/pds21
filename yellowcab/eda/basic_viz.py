@@ -1,12 +1,5 @@
-import os
-
-import numpy as np
-import pandas as pd
-import seaborn as sns
 from matplotlib import pyplot as plt
-
 import yellowcab.eda.aggregation
-from yellowcab.io import get_data_path
 
 
 def basic_plots(df, borough=None):
