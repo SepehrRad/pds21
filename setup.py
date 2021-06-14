@@ -19,6 +19,8 @@ requirements = [
     "pyfiglet",
     "tqdm",
     "imblearn",
+    "panel",
+    "seaborn",
 ]
 
 setup(
