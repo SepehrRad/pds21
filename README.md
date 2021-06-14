@@ -1,6 +1,9 @@
 # PDS Project 2021
 Programming Data Science Project "Yellow Cab".
 University of Cologne - Summer Semester 2021
+
+yellowcab is a python package developed to enabling users to analyze New York taxi trip data. Interactive dashboards allows a quick and easy start in data exploration and visualization of various aspects of the data. Pre-trained machine learning models can be used to predict varius aspects of taxi trips. New models can be added using the implemented general procedure including data preparation, building a pipeline and reult validation. 
+
 ## Group
 
 * Nina Annika Erlacher
@@ -40,11 +43,20 @@ If you do not want to use the Demo, we recommend running the following command i
 
 ## CLI
 
-yellowcab also provides a CLI to clean/transform data aswell prediciting fare amount, trip distance and payment type with pre-trained models. To use the CLI go to the yellowcab directory in your console and run one of the following commands.
+yellowcab also provides a CLI to clean data aswell prediciting fare amount, trip distance and payment type with pre-trained models. To use the CLI go to the yellowcab directory in your console and run one of the following commands.
 
-To clean and transform data:
+To clean data:
 
-``
+```
+python cli.py transform [input_file_path.parquet] [month] [output_file_name.parquet] [output_file_path]
+
+```
+
+To predict fare amount, trip distance and payment type:
+
+```
+python cli.py transform [input_file_path.parquet] [output_file_name.parquet] [output_file_path] [manhattan]
+```
 
 ## Troubleshooting
 
