@@ -33,6 +33,25 @@ def read_parquet(
         print("Data file not found. Path was " + path)
 
 
+def read_parquet_file(path: str):
+    """
+    This function reads a parquet file & returns it as a single pd.DataFrame.
+    ----------------------------------------------
+    :param
+        path(String): Path to data file.
+    :returns
+        pd.DataFrame: The corresponding DataFrame.
+    """
+    try:
+        dataset = pq.ParquetDataset(path)
+        table = dataset.read()
+        df = table.to_pandas()
+        df = df.reset_index(drop=True)
+        return df
+    except FileNotFoundError:
+        print("Data file not found. Path was " + path)
+
+
 def read_parquet_dataset(
     base_path=get_data_path(), relative_path="input/trip_data", columns=None
 ):

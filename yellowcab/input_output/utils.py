@@ -4,12 +4,20 @@ import pandas as pd
 
 
 def get_data_path():
+    """
+    This function finds the data directory of the project.
+    ----------------------------------------------
+    :returns
+        path(String): The path to data directory
+    """
+
     if os.path.isdir(os.path.join(os.getcwd(), "data")):
-        return os.path.join(os.getcwd(), "data")
+        path = os.path.join(os.getcwd(), "data")
     elif os.path.isdir(os.path.join(os.getcwd(), "..", "data")):
-        return os.path.join(os.getcwd(), "..", "data")
+        path = os.path.join(os.getcwd(), "..", "data")
     else:
         raise FileNotFoundError
+    return path
 
 
 def get_zone_information(
