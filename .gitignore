@@ -10,7 +10,8 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-data/input
+data/input/cleaned
+data/input/trip_data
 data/output/cleaned_feature
 dist/
 downloads/
