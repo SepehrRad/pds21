@@ -62,7 +62,7 @@ python cli.py predict [input_file_path.parquet] [output_file_name.parquet] [outp
 
 ### Cleaning
 
-#### detecting all data as outlier
+#### Detecting all data as outlier
 
 Please update pandas( >= v.1.2.4) and numpy(>=1.20.2)
 
