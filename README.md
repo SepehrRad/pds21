@@ -64,11 +64,13 @@ python cli.py predict [input_file_path.parquet] [output_file_name.parquet] [outp
 
 #### Detecting all data as outlier
 
-Please update pandas( >= v.1.2.4) and numpy(>=1.20.2)
+Please update pandas(>= v.1.2.4) and numpy(>=v.1.20.2).
 
 ### Dashboard
 
-#### Version
+#### Error DateTimeRangeInput
+
+Please update panel(>= v.0.11.0).
 
 #### Maps dont show up
 
