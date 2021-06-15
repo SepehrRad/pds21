@@ -20,7 +20,7 @@ We recommend to setup a virtual environment or conda environment with python ver
 pip install notebook
 ```
 
-Download the cleaned data set from:
+Download the cleaned data set from [here](https://filedn.eu/lvIIS1QB2KmSUjz5Gvx9LYb/cleaned.zip)
 
 Put the cleaned data into data/input/cleaned to run our Notebook Demo.
 
@@ -55,7 +55,7 @@ python cli.py transform [input_file_path.parquet] [month] [output_file_name.parq
 To predict fare amount, trip distance and payment type:
 
 ```
-python cli.py transform [input_file_path.parquet] [output_file_name.parquet] [output_file_path] [manhattan]
+python cli.py predict [input_file_path.parquet] [output_file_name.parquet] [output_file_path] [manhattan]
 ```
 
 ## Troubleshooting
