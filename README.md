@@ -2,7 +2,7 @@
 Programming Data Science Project "Yellow Cab".
 University of Cologne - Summer Semester 2021
 
-yellowcab is a python package developed to enabling users to analyze New York taxi trip data. Interactive dashboards allows a quick and easy start in data exploration and visualization of various aspects of the data. Pre-trained machine learning models can be used to predict varius aspects of taxi trips. New models can be added using the implemented general procedure including data preparation, building a pipeline and reult validation. 
+yellowcab is a python package developed to enabling users to analyze New York taxi trip data. Interactive dashboards allows a quick and easy start in data exploration and visualization of various aspects of the data. Pre-trained machine learning models can be used to predict varius aspects of taxi trips. New models can be added using the implemented general procedure including data preparation, building a pipeline and result validation. 
 
 ## Group
 
